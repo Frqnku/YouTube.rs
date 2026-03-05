@@ -1,0 +1,30 @@
+[package]
+name = "application"
+version = "0.1.0"
+edition = "2024"
+description = "Application layer orchestrating use cases, commands and queries."
+
+[dependencies]
+# Domain layer
+domain = { path = "../domain" }
+
+# Async runtime for use cases
+tokio = { workspace = true }
+
+async-trait = { workspace = true }
+chrono = { workspace = true }
+time = { workspace = true }
+
+# Serialization for DTOs
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+uuid = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Validation
+validator = { workspace = true }
+regex = { workspace = true }
