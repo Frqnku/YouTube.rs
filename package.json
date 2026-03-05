@@ -1,0 +1,11 @@
+{
+  "name": "youtube",
+  "private": true,
+  "scripts": {
+    "tailwind": "npx @tailwindcss/cli -i ./style/tailwind.css -o ./target/site/pkg/youtube.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}

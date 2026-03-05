@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* =========================
+   YouTube Design Tokens
+   ========================= */
+
+:root {
+  /* Backgrounds */
+  --yt-bg: #ffffff;
+  --yt-bg-secondary: #f9f9f9;
+  --yt-bg-tertiary: #f1f1f1;
+
+  /* Text */
+  --yt-text-primary: #0f0f0f;
+  --yt-text-secondary: #606060;
+  --yt-text-muted: #909090;
+
+  /* Borders */
+  --yt-border: #e5e5e5;
+
+  /* Brand */
+  --yt-red: #ff0000;
+  --yt-red-hover: #cc0000;
+
+  /* States */
+  --yt-focus: #3ea6ff;
+  --yt-error: #ff4e45;
+}
+
+/* Dark mode (YouTube default look) */
+.dark {
+  --yt-bg: #0f0f0f;
+  --yt-bg-secondary: #181818;
+  --yt-bg-tertiary: #272727;
+
+  --yt-text-primary: #f1f1f1;
+  --yt-text-secondary: #aaaaaa;
+  --yt-text-muted: #717171;
+
+  --yt-border: #303030;
+
+  --yt-red: #ff0000;
+  --yt-red-hover: #ff1a1a;
+
+  --yt-focus: #3ea6ff;
+  --yt-error: #ff4e45;
+}
+
+/* =========================
+   Tailwind Theme Mapping
+   ========================= */
+
+@theme inline {
+  --color-bg: var(--yt-bg);
+  --color-bg-secondary: var(--yt-bg-secondary);
+  --color-bg-tertiary: var(--yt-bg-tertiary);
+
+  --color-text: var(--yt-text-primary);
+  --color-text-secondary: var(--yt-text-secondary);
+  --color-text-muted: var(--yt-text-muted);
+
+  --color-border: var(--yt-border);
+
+  --color-primary: var(--yt-red);
+  --color-primary-hover: var(--yt-red-hover);
+
+  --color-focus: var(--yt-focus);
+  --color-error: var(--yt-error);
+}
+
+/* =========================
+   Base Styles
+   ========================= */
+
+@layer base {
+  body {
+    @apply bg-bg text-text antialiased;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+}
+
+/* =========================
+   Utilities
+   ========================= */
+
+@layer utilities {
+  /* Focus ring similar to YouTube */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-2 focus:ring-offset-bg transition;
+  }
+
+  /* YouTube primary button */
+  .btn-primary {
+    @apply bg-primary text-white px-4 py-2 rounded-full text-sm font-medium transition hover:bg-primary-hover;
+  }
+
+  /* Secondary button (subscribe etc) */
+  .btn-secondary {
+    @apply bg-bg-tertiary text-text px-4 py-2 rounded-full text-sm hover:bg-border transition;
+  }
+
+  /* Input style like YouTube search */
+  .input-yt {
+    @apply bg-bg-secondary border border-border rounded-full px-4 py-2 text-sm text-text placeholder-text-muted;
+  }
+
+  /* Card (video preview container) */
+  .yt-card {
+    @apply rounded-xl overflow-hidden bg-bg-secondary hover:bg-bg-tertiary transition;
+  }
+
+  /* Sidebar item */
+  .sidebar-item {
+    @apply flex items-center gap-4 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-tertiary hover:text-text transition;
+  }
+
+  /* Icon button */
+  .icon-btn {
+    @apply p-2 rounded-full hover:bg-bg-tertiary transition;
+  }
+}

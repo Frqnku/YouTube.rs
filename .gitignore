@@ -1,0 +1,6 @@
+.env
+/target
+/node_modules
+Cargo.lock
+pnpm-lock.yaml
+.DS_Store
