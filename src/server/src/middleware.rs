@@ -6,8 +6,9 @@ use axum::{
     response::{IntoResponse, Redirect, Response},
 };
 use axum_extra::extract::cookie::CookieJar;
-use application::{dtos::CurrentUserDto, services::TokenService};
+use application::services::TokenService;
 use infrastructure::services::JwtService;
+use interface::app::CurrentUser;
 
 pub async fn get_current_user(
     mut req: Request,
@@ -18,7 +19,12 @@ pub async fn get_current_user(
     if let Some(cookie) = jar.get("token") {
         let token_provider = JwtService::new(jwt_secret);
         if let Ok(current_user) = token_provider.verify_token(cookie.value()) {
-                req.extensions_mut().insert(current_user);
+                req.extensions_mut().insert(
+                    CurrentUser {
+                        name: current_user.name,
+                        profile_picture: current_user.profile_picture,
+                    }
+                );
         }
     }
 
@@ -38,7 +44,7 @@ pub async fn require_auth(
 
     let current_user = req
         .extensions()
-        .get::<CurrentUserDto>();
+        .get::<CurrentUser>();
 
     if current_user.is_none() {
         return Redirect::to("/").into_response();

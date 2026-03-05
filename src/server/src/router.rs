@@ -13,8 +13,7 @@ use leptos_axum::{
 };
 use tower_http::services::ServeDir;
 
-use application::dtos::CurrentUserDto;
-use interface::{app::App, shell::shell, state::AppState};
+use interface::{app::{App, CurrentUser}, shell::shell, state::AppState};
 
 use crate::middleware::{get_current_user, require_auth};
 
@@ -51,14 +50,16 @@ pub async fn server_fn_handler(
 ) -> impl IntoResponse {
     let user = request
         .extensions()
-        .get::<CurrentUserDto>()
+        .get::<CurrentUser>()
         .cloned();
 
     handle_server_fns_with_context(
         move || {
             provide_context(state.pool.clone());
             provide_context(state.jwt_secret.clone());
-            provide_context(user.clone());
+            if let Some(user) = user.clone() {
+                provide_context(user);
+            }
         },
         request,
     )
@@ -74,14 +75,16 @@ pub async fn leptos_routes_handler(
 
     let user = req
         .extensions()
-        .get::<CurrentUserDto>()
+        .get::<CurrentUser>()
         .cloned();
 
     let handler = render_app_to_stream_with_context(
         move || {
             provide_context(app_state.pool.clone());
             provide_context(app_state.jwt_secret.clone());
-            provide_context(user.clone());
+            if let Some(user) = user.clone() {
+                provide_context(user);
+            }
         },
         move || shell(leptos_options.clone()),
     );

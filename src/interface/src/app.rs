@@ -2,14 +2,43 @@ use leptos::prelude::*;
 use leptos_meta::{Meta, provide_meta_context};
 use leptos_router::StaticSegment;
 use leptos_router::components::{Route, Router, Routes};
+use serde::{Deserialize, Serialize};
 
-use crate::components::ui::{Navbar, Sidebar};
-use crate::routes::protected::{PageHistory, PageLikedVideos};
-use crate::routes::public::PageHome;
+use crate::components::ui::layout::{Navbar, Sidebar};
+use crate::routes::protected::{HistoryPage, LikedVideosPage};
+use crate::routes::public::{HomePage, SigninPage};
+use crate::api::user::auth::get_current_user;
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CurrentUser {
+    pub name: String,
+    pub profile_picture: Option<String>,
+}
+
+#[derive(Clone, Copy)]
+pub struct CurrentUserContext {
+    pub current_user: RwSignal<Option<CurrentUser>>,
+}
 
 #[component]
 pub fn App() -> impl IntoView {
     provide_meta_context();
+
+    let current_user_signal = RwSignal::new(use_context::<CurrentUser>());
+    provide_context(CurrentUserContext {
+        current_user: current_user_signal,
+    });
+
+    let current_user_resource = Resource::new(
+        move || (),
+        move |_| async move { get_current_user().await.ok().flatten() },
+    );
+
+    Effect::new(move |_| {
+        if let Some(current_user) = current_user_resource.get() {
+            current_user_signal.set(current_user);
+        }
+    });
 
     view! {
         <Meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -20,9 +49,10 @@ pub fn App() -> impl IntoView {
                 <Sidebar />
                 <main class="flex-1">
                     <Routes fallback=|| PageNotFound.into_view()>
-                        <Route path=StaticSegment("") view=PageHome />
-                        <Route path=StaticSegment("history") view=PageHistory />
-                        <Route path=StaticSegment("liked-videos") view=PageLikedVideos />
+                        <Route path=StaticSegment("") view=HomePage />
+                        <Route path=StaticSegment("signin") view=SigninPage />
+                        <Route path=StaticSegment("history") view=HistoryPage />
+                        <Route path=StaticSegment("liked-videos") view=LikedVideosPage />
                     </Routes>
                 </main>
             </div>
