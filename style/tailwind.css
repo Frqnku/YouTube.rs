@@ -119,6 +119,11 @@
     @apply flex items-center gap-4 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-tertiary hover:text-text transition;
   }
 
+  /* Active sidebar item */
+  .sidebar-item-active {
+    @apply bg-bg-tertiary text-text font-semibold;
+  }
+
   /* Icon button */
   .icon-btn {
     @apply p-2 rounded-full hover:bg-bg-tertiary transition;
