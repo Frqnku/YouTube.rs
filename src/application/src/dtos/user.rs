@@ -1,11 +1,11 @@
 use domain::user::value_objects::{Email, OAuthProvider};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
 use super::_utils::{non_empty_string, valid_email};
 
-#[derive(Debug, Clone, Deserialize, Validate)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct CurrentUserDto {
     pub id: Uuid,
     #[validate(custom(function = "non_empty_string"))]
@@ -19,7 +19,7 @@ impl CurrentUserDto {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Validate)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct OAuthUserDto {
     pub provider: OAuthProvider,
     #[validate(custom(function = "non_empty_string"))]

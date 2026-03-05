@@ -9,6 +9,7 @@ use application::{commands::AuthenticateWithOAuth, dtos::OAuthUserDto, services:
 #[cfg(feature = "ssr")]
 use infrastructure::{repositories::PgUserRepository, services::{JwtService, GoogleOAuthService}};
 
+use crate::app::CurrentUser;
 use crate::api::{_errors::{AppServerError, OptionExt, ValidateExt}, _helpers::{Cookie, CookieOptions}};
 
 #[server]
@@ -34,11 +35,11 @@ pub async fn oauth(
     };
 
     // 2️⃣ Validate state parameter against cookie
-    let csrf = oauth_state.split("|").next().unwrap_or_default();
+    let csrf = oauth_state.split("&next=").next().unwrap_or_default();
     if cookie_state != csrf {
         return Err(AppServerError::new("invalid_oauth_state", "OAuth state parameter does not match cookie".to_string()));
     }
-    let redirect_to = oauth_state.split("|").nth(1);
+    let redirect_to = oauth_state.split("&next=").nth(1);
 
     // 3️⃣ Call infra OAuth service to get OAuthUserDto
     let oauth_service: Box<dyn OAuthService> = match provider {
@@ -90,7 +91,14 @@ pub async fn oauth(
         .into_response_headers(&response);
 
     // 8️⃣ Ok
-    Ok(redirect_to.unwrap_or("/").to_string())
+    let redirect_to = redirect_to.unwrap_or("/").to_string();
+    let safe_redirect_to = if redirect_to.contains("/signin") {
+        "/".to_string()
+    } else {
+        redirect_to
+    };
+
+    Ok(safe_redirect_to)
 }
 
 #[server]
@@ -128,7 +136,7 @@ pub async fn generate_oauth_url(
         ])
         .into_response_headers(&response);
 
-    let state = format!("{}|{}", csrf, redirect_to);
+    let state = format!("{}&next={}", csrf, redirect_to);
     let state = encode(&state);
     let redirect_uri = encode(&redirect_uri);
 
@@ -146,6 +154,11 @@ pub async fn generate_oauth_url(
     };
 
     Ok(oauth_url)
+}
+
+#[server]
+pub async fn get_current_user() -> Result<Option<CurrentUser>, AppServerError> {
+    Ok(use_context::<CurrentUser>())
 }
 
 #[server]
