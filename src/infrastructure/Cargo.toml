@@ -1,0 +1,67 @@
+[package]
+name = "infrastructure"
+version = "0.1.0"
+edition = "2024"
+description = "Concrete implementations: DB, email, OAuth, media, config."
+
+[dependencies]
+# Domain and application layers
+domain = { path = "../domain" }
+application = { path = "../application" }
+
+# Async runtime
+tokio = { workspace = true }
+async-trait = { workspace = true }
+time = { workspace = true }
+
+# Database ORM
+sqlx = { workspace = true , features = ["runtime-tokio-rustls", "postgres", "macros"] }
+
+# OAuth
+oauth2 = { version = "4", features = ["reqwest"] }
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+
+# JWT
+jsonwebtoken = "9.3"
+
+# Email
+lettre = { version = "0.11", default-features = false, features = [
+    "builder",
+    "smtp-transport",
+    "tokio1",
+    "tokio1-rustls",
+
+    # crypto
+    "ring",
+
+    # certificats racines (Windows / Linux / macOS)
+    "rustls-native-certs",
+] }
+
+
+# Config / environment
+config = { workspace = true }
+
+# Chrono
+chrono = { workspace = true }
+
+# Error
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+log = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Random generation for tokens
+rand = "0.8"
+base64 = "0.22"
+
+# UUID
+uuid = { workspace = true }
