@@ -1,0 +1,28 @@
+[package]
+name = "domain"
+version = "0.1.0"
+edition = "2024"
+description = "Domain layer with entities, value objects, repositories traits and business services."
+
+[dependencies]
+# Serialization for DTOs or persistence
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+async-trait = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+uuid = { workspace = true }
+chrono = { workspace = true }
+time = { workspace = true }
+
+# Validation for domain value objects
+validator = { workspace = true }
+regex = { workspace = true }
+
+# Sqlx for error types
+sqlx = { workspace = true }
+argon2 = "0.5.3"
