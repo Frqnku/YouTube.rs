@@ -28,7 +28,8 @@ pub async fn build_app_router(
 
     Ok(Router::new()
         .nest_service("/pkg", ServeDir::new("target/site/pkg"))
-        .nest_service("/assets", ServeDir::new("target/site"))
+        .nest_service("/assets", ServeDir::new("target/site/assets"))
+        .nest_service("/videos", ServeDir::new("videos"))
         .route(
             "/api/{*fn_name}",
             get(server_fn_handler).post(server_fn_handler),

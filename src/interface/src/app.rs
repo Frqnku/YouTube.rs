@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::components::ui::layout::{Navbar, Sidebar};
 use crate::routes::protected::{HistoryPage, LikedVideosPage};
-use crate::routes::public::{HomePage, SigninPage};
+use crate::routes::public::{HomePage, SigninPage, WatchPage};
 use crate::api::user::auth::get_current_user;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -53,6 +53,7 @@ pub fn App() -> impl IntoView {
                         <Route path=StaticSegment("signin") view=SigninPage />
                         <Route path=StaticSegment("history") view=HistoryPage />
                         <Route path=StaticSegment("liked-videos") view=LikedVideosPage />
+                        <Route path=StaticSegment("watch") view=WatchPage />
                     </Routes>
                 </main>
             </div>
