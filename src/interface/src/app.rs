@@ -4,7 +4,7 @@ use leptos_router::StaticSegment;
 use leptos_router::components::{Route, Router, Routes};
 use serde::{Deserialize, Serialize};
 
-use crate::components::ui::layout::{Navbar, Sidebar};
+use crate::components::ui::layout::{header::Header, Sidebar};
 use crate::routes::protected::{HistoryPage, LikedVideosPage};
 use crate::routes::public::{HomePage, SigninPage, WatchPage};
 use crate::api::user::auth::get_current_user;
@@ -44,7 +44,7 @@ pub fn App() -> impl IntoView {
         <Meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
         <Router>
-            <Navbar />
+            <Header />
             <div class="flex min-h-[calc(100dvh-3.5rem)] bg-bg">
                 <Sidebar />
                 <main class="flex-1">

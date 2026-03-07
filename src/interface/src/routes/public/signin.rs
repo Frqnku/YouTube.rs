@@ -78,7 +78,7 @@ pub fn SigninPage() -> impl IntoView {
                 {/* Pending State */}
                 <Show when=move || matches!(oauth_state.get(), OAuthState::Pending) fallback=move || view! {
                     {/* Error State - rendered conditionally */}
-                    <p class="text-text-secondary">"An error occurred during authentication."</p>
+                    <p class="text-text-secondary">"An error occurred during authentication, try again."</p>
                 }>
                     {/* Loading Icon */}
                     <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center">

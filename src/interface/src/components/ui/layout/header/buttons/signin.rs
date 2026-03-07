@@ -3,7 +3,7 @@ use leptos::prelude::*;
 use crate::api::user::auth::GenerateOauthUrl;
 
 #[component]
-pub fn LoginButton() -> impl IntoView {
+pub fn SigninButton() -> impl IntoView {
     let generate_oauth_url_action = ServerAction::<GenerateOauthUrl>::new();
 
     let handle_login = move |_| {

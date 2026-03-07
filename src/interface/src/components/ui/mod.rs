@@ -1,2 +1,2 @@
-pub mod buttons;
 pub mod layout;
+pub mod icons;
