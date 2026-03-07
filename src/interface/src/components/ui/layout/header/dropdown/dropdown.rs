@@ -68,6 +68,9 @@ pub fn HeaderDropdown(
     active_more_submenu: RwSignal<Option<ActiveSubmenu>>,
     on_select_location: Callback<String>,
     on_close: Callback<()>,
+    is_authenticated: bool,
+    user_name: String,
+    user_profile_picture: String,
 ) -> impl IntoView {
     let should_load_locations = RwSignal::new(false);
     let locations_resource = LocalResource::new(move || {
@@ -100,6 +103,9 @@ pub fn HeaderDropdown(
                     active_more_submenu=active_more_submenu
                     should_load_locations=should_load_locations
                     on_close=on_close
+                    is_authenticated=is_authenticated
+                    user_name=user_name.clone()
+                    user_profile_picture=user_profile_picture.clone()
                 />
             </Show>
         </div>

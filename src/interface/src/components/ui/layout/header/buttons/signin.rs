@@ -34,14 +34,12 @@ pub fn SigninButton() -> impl IntoView {
     });
 
     view! {
-        <div class="w-full">
-            <button
-                type="button"
-                class="btn-secondary text-xs md:text-sm"
-                on:click=handle_login
-            >
-                Sign in
-            </button>
-        </div>
+        <button
+            type="button"
+            class="btn-secondary text-xs md:text-sm"
+            on:click=handle_login
+        >
+            Sign in
+        </button>
     }
 }

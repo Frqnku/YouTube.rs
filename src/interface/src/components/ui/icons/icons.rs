@@ -11,6 +11,8 @@ pub enum IconKind {
     Menu,
     ChevronRight,
     ChevronLeft,
+    DotMenu,
+    Logout,
 }
 
 #[component]
@@ -25,6 +27,22 @@ pub fn Icon(kind: IconKind) -> impl IntoView {
         IconKind::Menu => view! { <MenuIcon /> }.into_any(),
         IconKind::ChevronRight => view! { <ChevronRightIcon /> }.into_any(),
         IconKind::ChevronLeft => view! { <ChevronLeftIcon /> }.into_any(),
+        IconKind::DotMenu => view! { <DotMenuIcon /> }.into_any(),
+        IconKind::Logout => view! { <LogoutIcon /> }.into_any(),
+    }
+}
+
+#[component]
+fn LogoutIcon() -> impl IntoView {
+    view! {
+        <svg xmlns="http://www.w3.org/2000/svg" class="" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line y2="12" y1="12" x1="21" x2="9"></line></svg>
+    }
+}
+
+#[component]
+fn DotMenuIcon() -> impl IntoView {
+    view! {
+        <svg xmlns="http://www.w3.org/2000/svg" class="" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle r="1" cy="12" cx="12"></circle><circle cx="12" r="1" cy="5"></circle><circle r="1" cy="19" cx="12"></circle></svg>
     }
 }
 
