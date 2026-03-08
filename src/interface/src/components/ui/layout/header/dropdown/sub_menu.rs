@@ -6,7 +6,6 @@ use crate::components::ui::layout::header::{buttons::menu_items::{BackMenuItem, 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ActiveSubmenu {
     Appearance,
-    Language,
     Locations,
 }
 
@@ -37,14 +36,6 @@ fn AppearanceSubmenu(on_close: Callback<()>) -> impl IntoView {
     view! {
         <LeafMenuItem label="Light mode" on_select=on_select_light_mode />
         <LeafMenuItem label="Dark mode" on_select=on_select_dark_mode />
-    }
-}
-
-#[component]
-fn LanguageSubmenu(on_close: Callback<()>) -> impl IntoView {
-    view! {
-        <LeafMenuItem label="English" on_select=on_close />
-        <LeafMenuItem label="French" on_select=on_close />
     }
 }
 
@@ -110,9 +101,6 @@ pub fn SubmenuContainer(
             match active_more_submenu.get() {
                 Some(ActiveSubmenu::Appearance) => {
                     view! { <AppearanceSubmenu on_close=on_close /> }.into_any()
-                }
-                Some(ActiveSubmenu::Language) => {
-                    view! { <LanguageSubmenu on_close=on_close /> }.into_any()
                 }
                 Some(ActiveSubmenu::Locations) => {
                     view! {

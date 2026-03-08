@@ -35,7 +35,6 @@ pub fn RootDropdownMenu(
     user_profile_picture: String,
 ) -> impl IntoView {
     let open_appearance = Callback::new(move |_| active_more_submenu.set(Some(ActiveSubmenu::Appearance)));
-    let open_language = Callback::new(move |_| active_more_submenu.set(Some(ActiveSubmenu::Language)));
     let open_locations = Callback::new(move |_| {
         active_more_submenu.set(Some(ActiveSubmenu::Locations));
         should_load_locations.set(true);
@@ -58,7 +57,6 @@ pub fn RootDropdownMenu(
         }}
 
         <BranchMenuItem label="Appearance" icon=IconKind::Moon on_select=open_appearance />
-        <BranchMenuItem label="Display language" icon=IconKind::Translate on_select=open_language />
         <BranchMenuItem label="Location" icon=IconKind::Globe on_select=open_locations />
 
         {if is_authenticated {
