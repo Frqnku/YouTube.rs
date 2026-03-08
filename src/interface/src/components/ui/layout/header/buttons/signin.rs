@@ -1,12 +1,22 @@
 use leptos::prelude::*;
 
-use crate::api::user::auth::GenerateOauthUrl;
+use crate::{
+    api::user::auth::GenerateOauthUrl,
+    components::ui::icons::{Icon, IconKind},
+};
 
-#[component]
-pub fn SigninButton() -> impl IntoView {
+fn use_google_signin() -> Callback<()> {
     let generate_oauth_url_action = ServerAction::<GenerateOauthUrl>::new();
 
-    let handle_login = move |_| {
+    Effect::new(move || {
+        if let Some(Ok(oauth_url)) = generate_oauth_url_action.value().get() {
+            if let Some(window) = web_sys::window() {
+                let _ = window.location().set_href(&oauth_url);
+            }
+        }
+    });
+
+    Callback::new(move |_| {
         let redirect_to = web_sys::window()
             .and_then(|window| {
                 let location = window.location();
@@ -21,25 +31,36 @@ pub fn SigninButton() -> impl IntoView {
             provider: "google".to_string(),
             redirect_to,
         });
-    };
+    })
+}
 
-    Effect::new(move || {
-        if let Some(Ok(oauth_url)) = generate_oauth_url_action.value().get() {
-            web_sys::window()
-                .unwrap()
-                .location()
-                .set_href(&oauth_url)
-                .unwrap();
-        }
-    });
+#[component]
+pub fn SigninButton() -> impl IntoView {
+    let on_signin = use_google_signin();
 
     view! {
         <button
             type="button"
             class="btn-secondary text-xs md:text-sm"
-            on:click=handle_login
+            on:click=move |_| on_signin.run(())
         >
             Sign in
+        </button>
+    }
+}
+
+#[component]
+pub fn SigninFromSettingsButton() -> impl IntoView {
+    let on_signin = use_google_signin();
+
+    view! {
+        <button
+            type="button"
+            class="flex w-full items-center gap-2 px-4 py-2 text-left text-base text-text transition hover:bg-bg-tertiary"
+            on:click=move |_| on_signin.run(())
+        >
+            <Icon kind=IconKind::Settings />
+            <span>"Settings"</span>
         </button>
     }
 }

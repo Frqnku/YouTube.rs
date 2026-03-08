@@ -4,7 +4,7 @@ use crate::{
     components::ui::{
         icons::IconKind,
         layout::header::{
-            buttons::menu_items::{BranchMenuItem, LogoutButton, MenuLink},
+            buttons::{menu_items::{BranchMenuItem, LogoutButton, MenuLink}, SigninFromSettingsButton},
             dropdown::ActiveSubmenu,
         },
     },
@@ -67,7 +67,12 @@ pub fn RootDropdownMenu(
             }
                 .into_any()
         } else {
-            view! { <div class="border-t border-border"></div> }.into_any()
+            view! {
+                <div class="border-t border-border"></div>
+                <SigninFromSettingsButton />
+                <div class="border-t border-border"></div>
+            }
+                .into_any()
         }}
 
         <MenuLink label="Let's connect!" icon=IconKind::LinkedIn href="https://www.linkedin.com/in/ugo-tiberto-729a55279/" new_tab=true on_select=on_close />
