@@ -112,6 +112,7 @@ fn GuestActions(
                 <Show when=move || is_more_menu_open.get()>
                     <HeaderDropdown
                         active_more_submenu=active_more_submenu
+                        selected_country_code=selected_country_code
                         on_select_location=on_select_location
                         on_close=close_menu
                         is_authenticated=false
@@ -185,6 +186,7 @@ fn ProfileMenu(
             <Show when=move || is_more_menu_open.get()>
                 <HeaderDropdown
                     active_more_submenu=active_more_submenu
+                    selected_country_code=selected_country_code
                     on_select_location=on_select_location
                     on_close=close_menu
                     is_authenticated=true

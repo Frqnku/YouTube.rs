@@ -1,6 +1,7 @@
 use leptos::prelude::*;
 
 use crate::app::{ThemeContext, ThemeMode};
+use crate::components::ui::icons::{Icon, IconKind};
 use crate::components::ui::layout::header::{buttons::menu_items::{BackMenuItem, LeafMenuItem}, dropdown::LocationOption};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -33,15 +34,49 @@ fn AppearanceSubmenu(on_close: Callback<()>) -> impl IntoView {
         })
     };
 
+    let is_light_selected = move || {
+        theme_context
+            .map(|ctx| ctx.mode.get() == ThemeMode::Light)
+            .unwrap_or(true)
+    };
+    let is_dark_selected = move || {
+        theme_context
+            .map(|ctx| ctx.mode.get() == ThemeMode::Dark)
+            .unwrap_or(false)
+    };
+
     view! {
-        <LeafMenuItem label="Light mode" on_select=on_select_light_mode />
-        <LeafMenuItem label="Dark mode" on_select=on_select_dark_mode />
+        <button
+            type="button"
+            class="flex w-full items-center gap-2 px-4 py-2 text-left text-base text-text transition hover:bg-bg-tertiary"
+            on:click=move |_| on_select_light_mode.run(())
+        >
+            <div class="mr-2 flex h-5 w-5 items-center justify-center">
+                <Show when=is_light_selected >
+                    <Icon kind=IconKind::Check />
+                </Show>
+            </div>
+            <span>"Light mode"</span>
+        </button>
+        <button
+            type="button"
+            class="flex w-full items-center gap-2 px-4 py-2 text-left text-base text-text transition hover:bg-bg-tertiary"
+            on:click=move |_| on_select_dark_mode.run(())
+        >
+            <div class="mr-2 flex h-5 w-5 items-center justify-center">
+                <Show when=is_dark_selected>
+                    <Icon kind=IconKind::Check />
+                </Show>
+            </div>
+            <span>"Dark mode"</span>
+        </button>
     }
 }
 
 #[component]
 fn LocationsSubmenu(
     locations_resource: LocalResource<Result<Vec<LocationOption>, String>>,
+    selected_country_code: RwSignal<String>,
     on_select_location: Callback<String>,
 ) -> impl IntoView {
     view! {
@@ -67,13 +102,25 @@ fn LocationsSubmenu(
                             .into_iter()
                             .map(|location| {
                                 let on_select = on_select_location;
+                                let selected_country_code = selected_country_code;
+                                let location_iso2_for_click = location.iso2.clone();
+                                let location_iso2_for_check = location.iso2;
                                 view! {
                                     <button
                                         type="button"
-                                        class="block w-full px-4 py-2 text-left text-base text-text transition hover:bg-bg-tertiary"
-                                        on:click=move |_| on_select.run(location.iso2.clone())
+                                        class="flex w-full items-center gap-2 px-4 py-2 text-left text-base text-text transition hover:bg-bg-tertiary"
+                                        on:click=move |_| on_select.run(location_iso2_for_click.clone())
                                     >
-                                        {location.country}
+                                        <div class="mr-2 flex h-5 w-5 items-center justify-center">
+                                            <Show when=move || {
+                                                selected_country_code
+                                                    .get()
+                                                    .eq_ignore_ascii_case(&location_iso2_for_check)
+                                            }>
+                                                <Icon kind=IconKind::Check />
+                                            </Show>
+                                        </div>
+                                        <span>{location.country}</span>
                                     </button>
                                 }
                             })
@@ -90,6 +137,7 @@ fn LocationsSubmenu(
 pub fn SubmenuContainer(
     active_more_submenu: RwSignal<Option<ActiveSubmenu>>,
     locations_resource: LocalResource<Result<Vec<LocationOption>, String>>,
+    selected_country_code: RwSignal<String>,
     on_select_location: Callback<String>,
     on_close: Callback<()>,
 ) -> impl IntoView {
@@ -106,6 +154,7 @@ pub fn SubmenuContainer(
                     view! {
                         <LocationsSubmenu
                             locations_resource=locations_resource
+                            selected_country_code=selected_country_code
                             on_select_location=on_select_location
                         />
                     }

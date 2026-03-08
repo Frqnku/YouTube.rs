@@ -66,6 +66,7 @@ async fn fetch_locations() -> Result<Vec<LocationOption>, String> {
 #[component]
 pub fn HeaderDropdown(
     active_more_submenu: RwSignal<Option<ActiveSubmenu>>,
+    selected_country_code: RwSignal<String>,
     on_select_location: Callback<String>,
     on_close: Callback<()>,
     is_authenticated: bool,
@@ -85,7 +86,15 @@ pub fn HeaderDropdown(
     });
 
     view! {
-        <div class="absolute right-0 top-10 z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-lg">
+        <div
+            class=move || {
+                if is_authenticated {
+                    "absolute right-10 top-0 z-50 w-2xs overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-lg"
+                } else {
+                    "absolute right-0 top-10 z-50 mt-2 w-2xs overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-lg"
+                }
+            }
+        >
             <Show
                 when=move || active_more_submenu.get().is_none()
                 fallback=move || {
@@ -93,6 +102,7 @@ pub fn HeaderDropdown(
                         <SubmenuContainer
                             active_more_submenu=active_more_submenu
                             locations_resource=locations_resource
+                            selected_country_code=selected_country_code
                             on_select_location=on_select_location
                             on_close=on_close
                         />

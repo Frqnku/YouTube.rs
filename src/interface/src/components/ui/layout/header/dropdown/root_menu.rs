@@ -47,9 +47,9 @@ pub fn RootDropdownMenu(
                     user_name=user_name
                     user_profile_picture=user_profile_picture
                 />
-                <div class="mx-2 border-t border-border"></div>
+                <div class="border-t border-border"></div>
                 <LogoutButton on_close=on_close />
-                <div class="mx-2 border-t border-border"></div>
+                <div class="border-t border-border"></div>
             }
                 .into_any()
         } else {
@@ -61,13 +61,13 @@ pub fn RootDropdownMenu(
 
         {if is_authenticated {
             view! {
-                <div class="mx-2 border-t border-border"></div>
+                <div class="border-t border-border"></div>
                 <MenuLink label="Settings" icon=IconKind::Settings href="/settings" new_tab=false on_select=on_close />
-                <div class="mx-2 border-t border-border"></div>
+                <div class="border-t border-border"></div>
             }
                 .into_any()
         } else {
-            view! { <div class="mx-2 border-t border-border"></div> }.into_any()
+            view! { <div class="border-t border-border"></div> }.into_any()
         }}
 
         <MenuLink label="Let's connect!" icon=IconKind::LinkedIn href="https://www.linkedin.com/in/ugo-tiberto-729a55279/" new_tab=true on_select=on_close />
