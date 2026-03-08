@@ -128,4 +128,10 @@
   .icon-btn {
     @apply p-2 rounded-full hover:bg-bg-tertiary transition;
   }
+
+  /* Text 2xs for country code */
+  .text-2xs {
+    font-size: 0.625rem; /* 10px */
+    line-height: 0.875rem; /* 14px */
+  }
 }

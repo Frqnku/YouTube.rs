@@ -165,7 +165,7 @@ fn ProfileMenu(
         <div node_ref=profile_menu_ref class="relative flex items-center gap-2">
             <button
                 type="button"
-                class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-bg-tertiary text-sm font-semibold text-text"
+                class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-bg-tertiary text-sm font-semibold text-text"
                 title="Open profile menu"
                 on:click=move |_| {
                     is_more_menu_open.update(|open| *open = !*open);

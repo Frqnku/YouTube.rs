@@ -17,7 +17,7 @@ pub fn HeaderLeft(country_code: Signal<String>) -> impl IntoView {
 #[component]
 fn YouTubeLogo(country_code: Signal<String>) -> impl IntoView {
     view! {
-        <a href="/" class="flex items-center gap-2">
+        <a href="/" class="flex items-center gap-1">
             <svg
                 class="h-5 w-auto text-text"
                 viewBox="0 0 93 20"
@@ -40,7 +40,7 @@ fn YouTubeLogo(country_code: Signal<String>) -> impl IntoView {
                 </g>
             </svg>
 
-            <span id="country-code" class="style-scope ytd-topbar-logo-renderer text-xs text-text-secondary">
+            <span id="country-code" class="text-2xs text-text-secondary mb-5">
                 {move || country_code.get()}
             </span>
         </a>
