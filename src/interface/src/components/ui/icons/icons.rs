@@ -1,4 +1,4 @@
-use leptos::prelude::*;
+use leptos::{prelude::*, svg::view};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IconKind {
@@ -13,6 +13,11 @@ pub enum IconKind {
     ChevronLeft,
     DotMenu,
     Logout,
+    Home,
+    HomeSelected,
+    History,
+    ThumbsUp,
+    ThumbsUpSelected,
 }
 
 #[component]
@@ -29,6 +34,11 @@ pub fn Icon(kind: IconKind) -> impl IntoView {
         IconKind::ChevronLeft => view! { <ChevronLeftIcon /> }.into_any(),
         IconKind::DotMenu => view! { <DotMenuIcon /> }.into_any(),
         IconKind::Logout => view! { <LogoutIcon /> }.into_any(),
+        IconKind::Home => view! { <HomeIcon /> }.into_any(),
+        IconKind::HomeSelected => view! { <HomeSelectedIcon /> }.into_any(),
+        IconKind::History => view! { <HistoryIcon /> }.into_any(),
+        IconKind::ThumbsUp => view! { <ThumbsUpIcon /> }.into_any(),
+        IconKind::ThumbsUpSelected => view! { <ThumbsUpSelectedIcon /> }.into_any(),
     }
 }
 
@@ -106,5 +116,40 @@ fn SearchIcon() -> impl IntoView {
 fn MenuIcon() -> impl IntoView {
     view! {
         <svg xmlns="http://www.w3.org/2000/svg" class="" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x2="20" y2="12" x1="4" y1="12"></line><line y1="6" x1="4" x2="20" y2="6"></line><line y2="18" x2="20" y1="18" x1="4"></line></svg>
+    }
+}
+
+#[component]
+fn HistoryIcon() -> impl IntoView {
+    view! {
+        <svg xmlns="http://www.w3.org/2000/svg" class="" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>
+    }
+}
+
+#[component]
+fn HomeIcon() -> impl IntoView {
+    view! {
+        <svg xmlns="http://www.w3.org/2000/svg" class="" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m11.485 2.143-8 4.8-2 1.2a1 1 0 001.03 1.714L3 9.567V20a2 2 0 002 2h5v-8h4v8h5a2 2 0 002-2V9.567l.485.29a1 1 0 001.03-1.714l-2-1.2-8-4.8a1 1 0 00-1.03 0Z"></path></svg>
+    }
+}
+
+#[component]
+fn HomeSelectedIcon() -> impl IntoView {
+    view! {
+        <svg xmlns="http://www.w3.org/2000/svg" class="" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m11.485 2.143-8 4.8-2 1.2a1 1 0 001.03 1.714L3 9.567V20a2 2 0 002 2h5v-8h4v8h5a2 2 0 002-2V9.567l.485.29a1 1 0 001.03-1.714l-2-1.2-8-4.8a1 1 0 00-1.03 0Z"></path></svg>
+    }
+}
+
+#[component]
+fn ThumbsUpIcon() -> impl IntoView {
+    view! {
+        <svg xmlns="http://www.w3.org/2000/svg" class="" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"></path><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path></svg>
+    }
+}
+
+#[component]
+fn ThumbsUpSelectedIcon() -> impl IntoView {
+    view! {
+        <svg xmlns="http://www.w3.org/2000/svg" class="" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 10v12"></path><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path></svg>
     }
 }
