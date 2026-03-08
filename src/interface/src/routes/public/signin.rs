@@ -75,16 +75,20 @@ pub fn SigninPage() -> impl IntoView {
 
     view! {
         <div class="flex min-h-dvh flex-col items-center justify-center bg-bg px-4">
-                {/* Pending State */}
-                <Show when=move || matches!(oauth_state.get(), OAuthState::Pending) fallback=move || view! {
-                    {/* Error State - rendered conditionally */}
-                    <p class="text-text-secondary">"An error occurred during authentication, try again."</p>
-                }>
-                    {/* Loading Icon */}
-                    <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center">
-                        <div class="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary"/>
-                    </div>
-                </Show>
+            {move || {
+                match oauth_state.get() {
+                    OAuthState::Pending | OAuthState::Success => view! {
+                        <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center">
+                            <div class="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary"></div>
+                        </div>
+                    }
+                    .into_any(),
+                    OAuthState::Error => view! {
+                        <p class="text-text-secondary">"An error occurred during authentication, try again."</p>
+                    }
+                    .into_any(),
+                }
+            }}
         </div>
     }
 }
