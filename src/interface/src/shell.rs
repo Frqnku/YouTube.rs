@@ -19,6 +19,11 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 // Favicon
                 <link rel="icon" href="/favicon.ico" />
 
+                // Theme bootstrap: apply persisted theme before first paint to avoid flicker.
+                <script>
+                    "(function(){try{var t=localStorage.getItem('yt-theme');if(t==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(_){}})();"
+                </script>
+
                 // CSS
                 <link rel="preload" href="/pkg/youtube.css" r#as="style" fetchpriority="high" />
                 <link rel="stylesheet" href="/pkg/youtube.css" />

@@ -1,5 +1,6 @@
 use leptos::prelude::*;
 
+use crate::app::{ThemeContext, ThemeMode};
 use crate::components::ui::layout::header::{buttons::menu_items::{BackMenuItem, LeafMenuItem}, dropdown::LocationOption};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -11,9 +12,31 @@ pub enum ActiveSubmenu {
 
 #[component]
 fn AppearanceSubmenu(on_close: Callback<()>) -> impl IntoView {
+    let theme_context = use_context::<ThemeContext>();
+
+    let on_select_light_mode = {
+        let on_close = on_close;
+        Callback::new(move |_| {
+            if let Some(theme) = theme_context {
+                theme.set_mode.run(ThemeMode::Light);
+            }
+            on_close.run(());
+        })
+    };
+
+    let on_select_dark_mode = {
+        let on_close = on_close;
+        Callback::new(move |_| {
+            if let Some(theme) = theme_context {
+                theme.set_mode.run(ThemeMode::Dark);
+            }
+            on_close.run(());
+        })
+    };
+
     view! {
-        <LeafMenuItem label="Light mode" on_select=on_close />
-        <LeafMenuItem label="Dark mode" on_select=on_close />
+        <LeafMenuItem label="Light mode" on_select=on_select_light_mode />
+        <LeafMenuItem label="Dark mode" on_select=on_select_dark_mode />
     }
 }
 
