@@ -37,7 +37,7 @@ pub fn Sidebar() -> impl IntoView {
     });
 
     view! {
-        <aside class="hidden w-56 shrink-0 border-r border-border bg-bg md:block">
+        <aside class="hidden w-60 shrink-0 bg-bg md:block">
             <Show when=move || is_hydrated.get()>
                 <nav class="sticky top-14 px-3 py-4">
                     <a href="/" class="sidebar-item"
