@@ -8,7 +8,7 @@ use axum::{
 use axum_extra::extract::cookie::CookieJar;
 use application::services::TokenService;
 use infrastructure::services::JwtService;
-use interface::app::CurrentUser;
+use web::app::CurrentUser;
 
 pub async fn get_current_user(
     mut req: Request,

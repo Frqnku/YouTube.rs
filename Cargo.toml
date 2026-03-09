@@ -3,8 +3,8 @@ members = [
     "src/domain",
     "src/application",
     "src/infrastructure",
-    "src/interface",
-    "src/server",
+    "src/interface/web",
+    "src/interface/server",
 ]
 resolver = "3"
 
@@ -74,7 +74,7 @@ lto = true
 name = "youtube"
 
 bin-package = "server"
-lib-package = "interface"
+lib-package = "web"
 
 site-root = "target/site"
 site-pkg-dir = "pkg"

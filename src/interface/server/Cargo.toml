@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-interface = { path = "../interface", default-features = false, features = ["server"] }
-infrastructure = { path = "../infrastructure" }
-application = { path = "../application" }
-domain = { path = "../domain" }
+web = { path = "../web", default-features = false, features = ["server"] }
+infrastructure = { path = "../../infrastructure" }
+application = { path = "../../application" }
+domain = { path = "../../domain" }
 
 leptos = { workspace = true, features = ["ssr"] }
 leptos_axum.workspace = true

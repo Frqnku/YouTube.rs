@@ -1,4 +1,4 @@
-// use interface::errors::{AppError, ErrorTemplate};
+// use web::errors::{AppError, ErrorTemplate};
 // use axum::body::Body;
 // use axum::response::Response as AxumResponse;
 // use axum::{

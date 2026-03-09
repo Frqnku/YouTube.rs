@@ -13,7 +13,7 @@ use leptos_axum::{
 };
 use tower_http::services::ServeDir;
 
-use interface::{app::{App, CurrentUser}, shell::shell, state::AppState};
+use web::{app::{App, CurrentUser}, shell::shell, state::AppState};
 
 use crate::middleware::{get_current_user, require_auth};
 

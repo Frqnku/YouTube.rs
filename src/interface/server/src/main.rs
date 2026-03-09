@@ -34,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
     let app_state = configure_app_state(conf.leptos_options).await?;
 
     info!("Running database migrations...");
-    sqlx::migrate!("../../migrations").run(&app_state.pool).await?;
+    sqlx::migrate!("../../../migrations").run(&app_state.pool).await?;
     info!("Database migrations completed successfully! ✔️");
 
     let app = build_app_router(app_state).await?;

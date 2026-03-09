@@ -1,6 +1,6 @@
 use std::env;
 
-use interface::state::AppState;
+use web::state::AppState;
 use leptos::config::LeptosOptions;
 use sqlx::postgres::PgPoolOptions;
 
