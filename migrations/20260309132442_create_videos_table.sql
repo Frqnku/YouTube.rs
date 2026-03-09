@@ -12,9 +12,9 @@ CREATE TABLE videos (
     thumbnail_url TEXT NOT NULL,
     video_url TEXT NOT NULL,
 
-    view_count BIGINT DEFAULT 0,
-    like_count BIGINT DEFAULT 0,
-    dislike_count BIGINT DEFAULT 0,
+    view_count BIGINT NOT NULL DEFAULT 0,
+    like_count BIGINT NOT NULL DEFAULT 0,
+    dislike_count BIGINT NOT NULL DEFAULT 0,
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
