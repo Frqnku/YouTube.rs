@@ -4,7 +4,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     -- First and last name with length limits
-    name VARCHAR(50) NOT NULL,
+    name VARCHAR(255) NOT NULL,
 
     -- Email with format check and unique constraint
     email VARCHAR(255) NOT NULL,

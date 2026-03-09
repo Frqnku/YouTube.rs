@@ -21,24 +21,16 @@ CREATE TABLE user_oauth_providers (
 );
 
 -- =========================
--- Indexes
+-- Indexes for performance optimization
 -- =========================
 
--- Lookup by provider_user_id for login
+-- Fast lookup by provider_user_id for login
 CREATE INDEX idx_user_oauth_providers_provider_user_id
 ON user_oauth_providers (provider_user_id);
 
 -- =========================
--- Trigger to auto-update updated_at
+-- Trigger to update updated_at on modification
 -- =========================
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at := now();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE TRIGGER trg_user_oauth_providers_updated_at
 BEFORE UPDATE ON user_oauth_providers
 FOR EACH ROW
