@@ -14,6 +14,37 @@ fn format_duration(total_seconds: i32) -> String {
     format!("{minutes}:{seconds:02}")
 }
 
+#[allow(dead_code)]
+fn format_view_count(count: i64) -> String {
+    match count {
+        0..=999 => count.to_string(),
+        1_000..=999_999 => {
+            let k = count as f64 / 1_000.0;
+            if k >= 100.0 {
+                format!("{:.0}K", k)
+            } else if k >= 10.0 {
+                format!("{:.1}K", k)
+            } else {
+                format!("{:.1}K", k)
+            }
+        }
+        1_000_000..=999_999_999 => {
+            let m = count as f64 / 1_000_000.0;
+            if m >= 100.0 {
+                format!("{:.0}M", m)
+            } else if m >= 10.0 {
+                format!("{:.1}M", m)
+            } else {
+                format!("{:.1}M", m)
+            }
+        }
+        _ => {
+            let b = count as f64 / 1_000_000_000.0;
+            format!("{:.1}B", b)
+        }
+    }
+}
+
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
 fn is_near_bottom_of_page() -> bool {
@@ -184,7 +215,8 @@ pub fn HomePage() -> impl IntoView {
                                 key=|video| video.id.clone()
                                 children=move |video| {
                                     let duration = format_duration(video.duration_seconds);
-                                    let meta = format!("{} views", video.view_count);
+                                    let view_count_formatted = format_view_count(video.view_count);
+                                    let meta = format!("{} views", view_count_formatted);
                                     view! {
                                         <article class="group">
                                             <a href="/watch" class="block">
