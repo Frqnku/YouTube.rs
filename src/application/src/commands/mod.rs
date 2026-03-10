@@ -1,2 +1,2 @@
-pub mod user_auth;
-pub use user_auth::*;
+pub mod auth;
+pub use auth::*;
