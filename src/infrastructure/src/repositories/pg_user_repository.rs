@@ -1,4 +1,4 @@
-use domain::user::{UserOAuthRepository, UserRepository, entity::User, value_objects::{Email, OAuthProvider}};
+use domain::{_shared::value_objects::Url, user::{UserOAuthRepository, UserRepository, entity::User, value_objects::{Email, OAuthProvider}}};
 use sqlx::types::Uuid;
 
 pub struct PgUserRepository {
@@ -22,11 +22,16 @@ struct UserRecord {
 
 impl UserRecord {
     fn into_user(self) -> anyhow::Result<User> {
+        let profile_picture = self
+            .profile_picture
+            .map(Url::try_from)
+            .transpose()?;
+
         Ok(User::new(
             self.id,
             self.name,
             Email::try_from(self.email)?,
-            self.profile_picture,
+            profile_picture,
         ))
     }
 }
@@ -76,9 +81,9 @@ impl UserRepository for PgUserRepository {
             "INSERT INTO users (name, email, profile_picture)
             VALUES ($1, $2, $3)
             RETURNING id, name, email, profile_picture",
-            user.name,
+            user.name.as_str(),
             user.email.as_str(),
-            user.profile_picture.as_deref(),
+            user.profile_picture.as_ref().map(Url::as_str),
         )
         .fetch_one(&self.pool)
         .await?;
