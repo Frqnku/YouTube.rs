@@ -170,7 +170,7 @@ pub fn HomePage() -> impl IntoView {
             </div>
 
             // Videos grid section
-            <section class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" data-section="video-grid">
+            <section class="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3" data-section="video-grid">
                 <Suspense
                     fallback=move || {
                         view! {
