@@ -22,7 +22,7 @@ pub async fn get_current_user(
                 req.extensions_mut().insert(
                     CurrentUser {
                         name: current_user.name,
-                        profile_picture: current_user.profile_picture,
+                        profile_picture: current_user.profile_picture.map(|url| url.to_string()),
                     }
                 );
         }

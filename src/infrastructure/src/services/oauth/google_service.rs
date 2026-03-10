@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
 use application::{dtos::OAuthUserDto, services::OAuthService};
+use domain::_shared::value_objects::Url;
 use domain::user::value_objects::{Email, OAuthProvider};
 use oauth2::{AuthUrl, AuthorizationCode, ClientId, ClientSecret, RedirectUrl, TokenResponse, TokenUrl, basic::BasicClient};
 use serde::Deserialize;
@@ -83,7 +84,7 @@ impl OAuthService for GoogleOAuthService {
             profile.sub,
             Email::try_from(profile.email)?,
             profile.name,
-            Some(profile.picture)
+            Some(Url::try_from(profile.picture)?)
         ))
     }
 }

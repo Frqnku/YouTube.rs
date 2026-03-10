@@ -1,4 +1,5 @@
 use application::{dtos::CurrentUserDto, services::TokenService};
+use domain::_shared::value_objects::Url;
 use uuid::Uuid;
 
 pub struct JwtService {
@@ -12,8 +13,13 @@ impl JwtService {
 }
 
 impl TokenService for JwtService {
-    fn generate_token(&self, user_id: &str, user_name: &str, user_avatar: Option<String>) -> anyhow::Result<String> {
-        let claims = serde_json::json!({ "sub": user_id, "name": user_name, "avatar": user_avatar, "exp": (chrono::Utc::now() + chrono::Duration::hours(48)).timestamp() });
+    fn generate_token(&self, user_id: &str, user_name: &str, user_avatar: Option<Url>) -> anyhow::Result<String> {
+        let claims = serde_json::json!({
+            "sub": user_id,
+            "name": user_name,
+            "avatar": user_avatar.as_ref().map(Url::as_str),
+            "exp": (chrono::Utc::now() + chrono::Duration::hours(48)).timestamp()
+        });
         let token = jsonwebtoken::encode(
             &jsonwebtoken::Header::default(),
             &claims,
@@ -47,7 +53,8 @@ impl TokenService for JwtService {
                 .to_string(),
             decoded.claims["avatar"]
                 .as_str()
-                .map(|s| s.to_string()),
+                .map(Url::try_from)
+                .transpose()?,
         ))
     }
 }

@@ -1,3 +1,5 @@
+use domain::_shared::value_objects::Url;
+
 use crate::{
     dtos::CurrentUserDto,
     services::TokenService,
@@ -14,7 +16,7 @@ impl MockTokenService {
 }
 
 impl TokenService for MockTokenService {
-    fn generate_token(&self, user_id: &str, _: &str, _: Option<String>) -> anyhow::Result<String> {
+    fn generate_token(&self, user_id: &str, _: &str, _: Option<Url>) -> anyhow::Result<String> {
         let _secret = &self.secret;
         Ok(user_id.to_string()) // In a real implementation, you would generate a JWT token here
     }

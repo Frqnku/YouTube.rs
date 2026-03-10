@@ -1,4 +1,4 @@
-use domain::user::value_objects::{Email, OAuthProvider};
+use domain::{_shared::value_objects::Url, user::value_objects::{Email, OAuthProvider}};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
@@ -10,11 +10,11 @@ pub struct CurrentUserDto {
     pub id: Uuid,
     #[validate(custom(function = "non_empty_string"))]
     pub name: String,
-    pub profile_picture: Option<String>,
+    pub profile_picture: Option<Url>,
 }
 
 impl CurrentUserDto {
-    pub fn new(id: Uuid, name: String, profile_picture: Option<String>) -> Self {
+    pub fn new(id: Uuid, name: String, profile_picture: Option<Url>) -> Self {
         Self { id, name, profile_picture }
     }
 }
@@ -28,7 +28,7 @@ pub struct OAuthUserDto {
     pub email: Email,
     #[validate(custom(function = "non_empty_string"))]
     pub name: String,
-    pub picture: Option<String>,
+    pub picture: Option<Url>,
 }
 
 impl OAuthUserDto {
@@ -37,7 +37,7 @@ impl OAuthUserDto {
         provider_user_id: String,
         email: Email,
         name: String,
-        picture: Option<String>,
+        picture: Option<Url>,
     ) -> Self {
         Self { provider, provider_user_id, email, name, picture }
     }
