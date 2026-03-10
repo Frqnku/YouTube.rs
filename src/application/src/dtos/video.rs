@@ -15,19 +15,45 @@ pub struct VideoCard {
 	pub uploaded_at: String,
 }
 
+impl VideoCard {
+	pub fn new(
+		id: Uuid,
+		user: String,
+		user_picture: Option<String>,
+		title: String,
+		thumbnail_url: String,
+		duration_seconds: i32,
+		view_count: i64,
+		like_count: i64,
+		uploaded_at: String,
+	) -> Self {
+		Self {
+			id,
+			user,
+			user_picture,
+			title,
+			thumbnail_url,
+			duration_seconds,
+			view_count,
+			like_count,
+			uploaded_at,
+		}
+	}
+}
+
 impl From<Video> for VideoCard {
 	fn from(video: Video) -> Self {
-		Self {
-			id: video.id,
-			user: video.author.name,
-			user_picture: video.author.profile_picture.map(|url| url.to_string()),
-			title: video.title,
-			thumbnail_url: video.thumbnail_url.to_string(),
-			duration_seconds: video.duration_seconds,
-			view_count: video.view_count,
-			like_count: video.like_count,
-			uploaded_at: video.created_at.to_rfc3339(),
-		}
+		Self::new(
+			video.id,
+			video.author.name,
+			video.author.profile_picture.map(|url| url.to_string()),
+			video.title,
+			video.thumbnail_url.to_string(),
+			video.duration_seconds,
+			video.view_count,
+			video.like_count,
+			video.created_at.to_rfc3339(),
+		)
 	}
 }
 
@@ -38,12 +64,26 @@ pub struct VideoCardPage {
 	pub has_more: bool,
 }
 
+impl VideoCardPage {
+	pub fn new(
+		items: Vec<VideoCard>,
+		next_cursor: Option<String>,
+		has_more: bool,
+	) -> Self {
+		Self {
+			items,
+			next_cursor,
+			has_more,
+		}
+	}
+}
+
 impl From<VideoPage> for VideoCardPage {
 	fn from(page: VideoPage) -> Self {
-		Self {
-			items: page.items.into_iter().map(VideoCard::from).collect(),
-			next_cursor: page.next_cursor,
-			has_more: page.has_more,
-		}
+		Self::new(
+			page.items.into_iter().map(VideoCard::from).collect(),
+			page.next_cursor,
+			page.has_more,
+		)
 	}
 }

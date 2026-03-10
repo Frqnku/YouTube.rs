@@ -40,23 +40,26 @@ impl VideoRecord {
         )
         .ok_or_else(|| anyhow!("Invalid created_at timestamp from database"))?;
 
-        Ok(Video {
-            id: self.id,
-            author: VideoAuthor::new(
+        let mut video = Video::new(
+            self.id,
+            VideoAuthor::new(
                 self.user_id,
                 self.username,
-                self.user_picture.map(Url::try_from).transpose()?
+                self.user_picture.map(Url::try_from).transpose()?,
             ),
-            title: self.title,
-            description: self.description,
-            video_url: Url::try_from(self.video_url)?,
-            thumbnail_url: Url::try_from(self.thumbnail_url)?,
-            duration_seconds: self.duration_seconds,
-            view_count: self.view_count,
-            like_count: self.like_count,
-            dislike_count: self.dislike_count,
-            created_at,
-        })
+            self.title,
+            self.description,
+            Url::try_from(self.video_url)?,
+            Url::try_from(self.thumbnail_url)?,
+            self.duration_seconds,
+            self.view_count,
+            self.like_count,
+            self.dislike_count,
+        );
+
+        video.created_at = created_at;
+
+        Ok(video)
     }
 }
 
@@ -137,11 +140,11 @@ where
         .map(VideoRecord::into_video)
         .collect::<anyhow::Result<Vec<_>>>()?;
 
-    Ok(VideoPage {
+    Ok(VideoPage::new(
         items,
         next_cursor,
         has_more,
-    })
+    ))
 }
 
 #[async_trait::async_trait]

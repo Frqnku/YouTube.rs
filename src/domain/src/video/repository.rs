@@ -28,10 +28,10 @@ impl PageRequest {
 
 impl Default for PageRequest {
     fn default() -> Self {
-        Self {
-            limit: DEFAULT_PAGE_LIMIT,
-            cursor: None,
-        }
+        Self::new(
+            DEFAULT_PAGE_LIMIT,
+            None,
+        )
     }
 }
 
@@ -40,6 +40,20 @@ pub struct VideoPage {
     pub items: Vec<Video>,
     pub next_cursor: Option<String>,
     pub has_more: bool,
+}
+
+impl VideoPage {
+    pub fn new(
+        items: Vec<Video>,
+        next_cursor: Option<String>,
+        has_more: bool,
+    ) -> Self {
+        Self {
+            items,
+            next_cursor,
+            has_more,
+        }
+    }
 }
 
 #[async_trait::async_trait]
