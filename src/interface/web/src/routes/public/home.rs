@@ -45,6 +45,29 @@ fn HomeFilters(
     }
 }
 
+#[component]
+fn ResponsiveVideoCardSkeletons() -> impl IntoView {
+    view! {
+        <For
+            each=move || 0..6
+            key=|index| *index
+            children=move |index| {
+                let visibility_class = match index {
+                    0 | 1 => "block",
+                    2 | 3 => "hidden lg:block",
+                    _ => "hidden 2xl:block",
+                };
+
+                view! {
+                    <div class=visibility_class>
+                        <VideoCardSkeleton />
+                    </div>
+                }
+            }
+        />
+    }
+}
+
 
 #[component]
 pub fn HomePage() -> impl IntoView {
@@ -143,16 +166,7 @@ pub fn HomePage() -> impl IntoView {
             <section class="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3" data-section="video-grid">
                 <Suspense
                     fallback=move || {
-                        view! {
-                            <For
-                                each=move || 0..8
-                                key=|index| *index
-                                children=move |_| {
-                                    view! { <VideoCardSkeleton /> }
-                                }
-                            />
-                        }
-                            .into_any()
+                        view! { <ResponsiveVideoCardSkeletons /> }.into_any()
                     }
                 >
                     {move || {
@@ -182,18 +196,13 @@ pub fn HomePage() -> impl IntoView {
             </section>
 
             <Show when=move || load_more.pending().get()>
+                <ResponsiveVideoCardSkeletons />
                 <Loader />
             </Show>
 
             <Show when=move || load_more_error.get()>
                 <div class="pb-5 text-center text-sm text-text-secondary">
                     "Couldn't load more videos. Keep scrolling to retry."
-                </div>
-            </Show>
-
-            <Show when=move || !has_more.get() && !videos.get().is_empty()>
-                <div class="pb-5 text-center text-sm text-text-muted">
-                    "You've reached the end."
                 </div>
             </Show>
         </div>
