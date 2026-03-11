@@ -28,9 +28,12 @@ where
         Ok(page.into())
     }
 
-    pub async fn by_user_id(&self, user_id: uuid::Uuid, limit: u32, cursor: Option<String>) -> anyhow::Result<VideoCardPage> {
+    pub async fn by_user_id(&self, user_id: String, limit: u32, cursor: Option<String>) -> anyhow::Result<VideoCardPage> {
+        let id = uuid::Uuid::parse_str(&user_id)
+            .map_err(|_| DomainError::VideoNotFound)?;
+
         let page = self.video_repository
-            .list_by_user_id(user_id, PageRequest::new(limit, cursor))
+            .list_by_user_id(id, PageRequest::new(limit, cursor))
             .await?;
 
         Ok(page.into())

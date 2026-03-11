@@ -1,6 +1,6 @@
 use leptos::prelude::*;
 use crate::api::_dtos::video::VideoCardDto;
-use crate::api::video::get_newest_videos;
+use crate::api::video::{get_newest_videos, get_trending_videos};
 #[cfg(target_arch = "wasm32")]
 use crate::components::_helpers::is_near_bottom_of_page;
 use crate::components::ui::Loader;
@@ -8,16 +8,39 @@ use crate::components::video::{VideoCard, VideoCardSkeleton};
 
 const HOME_PAGE_SIZE: u32 = 12;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum HomeFeed {
+    Trending,
+    New,
+}
+
 #[component]
-fn HomeFilters() -> impl IntoView {
+fn HomeFilters(
+    current_feed: RwSignal<HomeFeed>,
+) -> impl IntoView {
     view! {
-        <div class="mb-5 flex flex-wrap items-center gap-2" data-section="home-filters">
-            <button class="btn-secondary bg-text text-bg">"All"</button>
-            <button class="btn-secondary">"Rust"</button>
-            <button class="btn-secondary">"Leptos"</button>
-            <button class="btn-secondary">"Programming"</button>
-            <button class="btn-secondary">"Architecture"</button>
-            <button class="btn-secondary">"New"</button>
+        <div
+            class="sticky top-14 z-30 -mx-4 mb-5 bg-bg/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-bg/80 md:-mx-6 md:px-6"
+            data-section="home-filters"
+        >
+            <div class="flex flex-wrap items-center gap-2">
+                <button
+                    class="btn-secondary"
+                    class:bg-text=move || current_feed.get() == HomeFeed::Trending
+                    class:text-bg=move || current_feed.get() == HomeFeed::Trending
+                    on:click=move |_| current_feed.set(HomeFeed::Trending)
+                >
+                    "Trending"
+                </button>
+                <button
+                    class="btn-secondary"
+                    class:bg-text=move || current_feed.get() == HomeFeed::New
+                    class:text-bg=move || current_feed.get() == HomeFeed::New
+                    on:click=move |_| current_feed.set(HomeFeed::New)
+                >
+                    "New"
+                </button>
+            </div>
         </div>
     }
 }
@@ -25,6 +48,7 @@ fn HomeFilters() -> impl IntoView {
 
 #[component]
 pub fn HomePage() -> impl IntoView {
+    let current_feed = RwSignal::new(HomeFeed::Trending);
     let videos = RwSignal::new(Vec::<VideoCardDto>::new());
     let next_cursor = RwSignal::new(None::<String>);
     let has_more = RwSignal::new(false);
@@ -32,13 +56,24 @@ pub fn HomePage() -> impl IntoView {
     let load_more_error = RwSignal::new(false);
 
     let newest_videos = Resource::new(
-        move || (),
-        move |_| async move { get_newest_videos(Some(HOME_PAGE_SIZE), None).await },
+        move || current_feed.get(),
+        move |feed| async move {
+            match feed {
+                HomeFeed::Trending => get_trending_videos(Some(HOME_PAGE_SIZE), None).await,
+                HomeFeed::New => get_newest_videos(Some(HOME_PAGE_SIZE), None).await,
+            }
+        },
     );
 
-    let load_more = Action::new(move |cursor: &String| {
+    let load_more = Action::new(move |(feed, cursor): &(HomeFeed, String)| {
+        let feed = *feed;
         let cursor = cursor.clone();
-        async move { get_newest_videos(Some(HOME_PAGE_SIZE), Some(cursor)).await }
+        async move {
+            match feed {
+                HomeFeed::Trending => get_trending_videos(Some(HOME_PAGE_SIZE), Some(cursor)).await,
+                HomeFeed::New => get_newest_videos(Some(HOME_PAGE_SIZE), Some(cursor)).await,
+            }
+        }
     });
 
     Effect::new(move |_| {
@@ -93,7 +128,7 @@ pub fn HomePage() -> impl IntoView {
 
             if let Some(cursor) = next_cursor.get_untracked() {
                 load_more_error.set(false);
-                load_more.dispatch(cursor);
+                load_more.dispatch((current_feed.get_untracked(), cursor));
             }
         });
 
@@ -102,8 +137,8 @@ pub fn HomePage() -> impl IntoView {
     }
 
     view! {
-        <div class="min-h-[calc(100dvh-3.5rem)] bg-bg px-4 py-5 md:px-6">
-            <HomeFilters />
+        <div class="min-h-[calc(100dvh-3.5rem)] bg-bg px-4 pb-5 md:px-6">
+            <HomeFilters current_feed=current_feed />
 
             <section class="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3" data-section="video-grid">
                 <Suspense
