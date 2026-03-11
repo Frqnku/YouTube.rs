@@ -83,7 +83,7 @@ fn LocationsSubmenu(
     view! {
         {move || {
             match locations_resource.get() {
-                _ => view! {
+                None => view! {
                     <Loader />
                 }
                 .into_any(),
