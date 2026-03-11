@@ -5,8 +5,9 @@ use leptos_router::components::{Route, Router, Routes};
 use serde::{Deserialize, Serialize};
 
 use crate::components::layout::{header::Header, Sidebar};
+use crate::components::ui::NotFound;
 use crate::routes::protected::{HistoryPage, LikedVideosPage};
-use crate::routes::public::{HomePage, SigninPage, WatchPage};
+use crate::routes::public::{HomePage, ResultsPage, SigninPage, WatchPage};
 use crate::api::user::auth::get_current_user;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -132,6 +133,7 @@ pub fn App() -> impl IntoView {
                 <main class="flex-1">
                     <Routes fallback=|| PageNotFound.into_view()>
                         <Route path=StaticSegment("") view=HomePage />
+                        <Route path=StaticSegment("results") view=ResultsPage />
                         <Route path=StaticSegment("signin") view=SigninPage />
                         <Route path=StaticSegment("history") view=HistoryPage />
                         <Route path=StaticSegment("liked-videos") view=LikedVideosPage />
@@ -146,12 +148,6 @@ pub fn App() -> impl IntoView {
 #[component]
 fn PageNotFound() -> impl IntoView {
     view! {
-        <div class="flex min-h-dvh flex-col items-center justify-center bg-bg px-4">
-            <h1 class="text-4xl font-bold text-text">"404"</h1>
-            <p class="mt-4 text-text-secondary">"Page not found"</p>
-            <a href="/" class="mt-6 text-primary hover:underline">
-                "Go back home"
-            </a>
-        </div>
+        <NotFound message="Page not found".to_string() />
     }
 }

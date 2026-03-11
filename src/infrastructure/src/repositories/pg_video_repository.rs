@@ -247,7 +247,7 @@ impl VideoRepository for PgVideoRepository {
         let records = if let Some(cursor) = page.cursor.as_deref() {
             let (created_at, id) = parse_newest_cursor(cursor)?;
             let sql = video_query_sql(
-                "WHERE v.title ILIKE $1 AND (v.created_at, v.id) < ($2, $3)
+                "WHERE (v.title ILIKE $1 OR u.name ILIKE $1) AND (v.created_at, v.id) < ($2, $3)
                  ORDER BY v.created_at DESC, v.id DESC
                  LIMIT $4",
             );
@@ -260,7 +260,7 @@ impl VideoRepository for PgVideoRepository {
             .await?
         } else {
             let sql = video_query_sql(
-                "WHERE v.title ILIKE $1
+                "WHERE (v.title ILIKE $1 OR u.name ILIKE $1)
                  ORDER BY v.created_at DESC, v.id DESC
                  LIMIT $2",
             );

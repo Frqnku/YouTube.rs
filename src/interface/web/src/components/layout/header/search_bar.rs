@@ -4,6 +4,8 @@ use crate::components::ui::icons::{Icon, IconKind};
 
 #[component]
 pub fn HeaderSearchBar() -> impl IntoView {
+    let search_input_ref = NodeRef::<leptos::html::Input>::new();
+
     view! {
         <div class="flex min-w-0 flex-[0_1_640px] flex-row justify-end items-center px-4">
             <form
@@ -11,13 +13,23 @@ pub fn HeaderSearchBar() -> impl IntoView {
                 method="get"
                 role="search"
                 class="relative hidden h-10 flex-1 items-center px-1 text-text md:ml-4 md:flex"
+                on:submit=move |event: leptos::ev::SubmitEvent| {
+                    let value = search_input_ref
+                        .get()
+                        .map(|input| input.value())
+                        .unwrap_or_default();
+
+                    if value.trim().is_empty() {
+                        event.prevent_default();
+                    }
+                }
             >
                 <div class="flex h-10 w-full items-center rounded-l-full border border-border border-r-0 bg-bg py-0 pl-4 pr-1 shadow-inner shadow-black/5 transition focus-within:border-text-tertiary md:ml-8">
                     <input
+                        node_ref=search_input_ref
                         type="text"
-                        name="search_query"
+                        name="search"
                         autocomplete="off"
-                        autocorrect="off"
                         spellcheck="false"
                         role="combobox"
                         aria-autocomplete="list"
