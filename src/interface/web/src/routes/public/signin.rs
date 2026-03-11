@@ -61,7 +61,7 @@ pub fn SigninPage() -> impl IntoView {
                         let _ = window.location().set_href(&redirect_to);
                     }
                 }
-                Some(Err(e)) => {
+                Some(Err(_)) => {
                     oauth_state.set(OAuthState::Error);
                     set_state_cookie.set(None);
                     set_token.set(None);
