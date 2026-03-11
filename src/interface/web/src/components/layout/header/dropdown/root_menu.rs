@@ -2,7 +2,7 @@ use leptos::prelude::*;
 
 use crate::{
     components::{
-        ui::{icons::IconKind, Divider},
+        ui::{icons::IconKind, LineDivider},
         layout::header::{
             buttons::{menu_items::{BranchMenuItem, LogoutButton, MenuLink}, SigninFromSettingsButton},
             dropdown::ActiveSubmenu,
@@ -47,9 +47,9 @@ pub fn RootDropdownMenu(
                     user_name=user_name
                     user_profile_picture=user_profile_picture
                 />
-                <Divider />
+                <LineDivider />
                 <LogoutButton on_close=on_close />
-                <Divider />
+                <LineDivider />
             }
                 .into_any()
         } else {
@@ -61,16 +61,16 @@ pub fn RootDropdownMenu(
 
         {if is_authenticated {
             view! {
-                <Divider />
+                <LineDivider />
                 <MenuLink label="Settings" icon=IconKind::Settings href="/settings" new_tab=false on_select=on_close />
-                <Divider />
+                <LineDivider />
             }
                 .into_any()
         } else {
             view! {
-                <Divider />
+                <LineDivider />
                 <SigninFromSettingsButton />
-                <Divider />
+                <LineDivider />
             }
                 .into_any()
         }}
