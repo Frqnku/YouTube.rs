@@ -157,7 +157,7 @@ pub fn ResultsPage() -> impl IntoView {
 						match search_results.get() {
 							None => view! {}.into_any().into_view(),
 							Some(Err(_)) => view! {
-								<article class="col-span-full rounded-xl border border-border bg-bg-secondary p-4 text-sm text-text-secondary">
+								<article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
 									"Unable to load search results right now. Please try again later."
 								</article>
 							}

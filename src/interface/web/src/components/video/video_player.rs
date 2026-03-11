@@ -11,7 +11,7 @@ pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
 
     view! {
         <div class="space-y-4">
-            <div class="overflow-hidden rounded-xl border border-border bg-bg-secondary">
+            <div class="overflow-hidden rounded-xl bg-bg-secondary">
                 <div class="aspect-video w-full bg-black">
                     <video class="h-full w-full" controls preload="metadata" playsinline>
                         <source src=video.video_url type="video/mp4" />
@@ -45,7 +45,7 @@ pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-border bg-bg-secondary p-4 text-sm leading-relaxed text-text-secondary">
+                <div class="rounded-xl bg-bg-tertiary p-4 text-sm leading-relaxed text-text-secondary">
                     <p class="font-medium text-text">{format!("{} - {}", view_count, uploaded_ago)}</p>
                     <p class="mt-2 whitespace-pre-line">{video.description}</p>
                 </div>

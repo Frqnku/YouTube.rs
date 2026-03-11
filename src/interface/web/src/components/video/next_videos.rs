@@ -8,7 +8,7 @@ pub fn NextVideos() -> impl IntoView {
                 "Next videos"
             </h2>
             <div class="space-y-2">
-                <a class="flex gap-3 rounded-xl border border-border bg-bg-secondary p-2 transition hover:bg-bg-tertiary" href="#">
+                <a class="flex gap-3 rounded-xl bg-bg-secondary p-2 transition hover:bg-bg-tertiary" href="#">
                     <div class="aspect-video w-40 shrink-0 rounded-lg bg-bg-tertiary" />
                     <div class="min-w-0">
                         <p class="line-clamp-2 text-sm font-medium text-text">"Build a YouTube Clone with Leptos"</p>
@@ -16,7 +16,7 @@ pub fn NextVideos() -> impl IntoView {
                         <p class="text-xs text-text-muted">"24K views - 6 hours ago"</p>
                     </div>
                 </a>
-                <a class="flex gap-3 rounded-xl border border-border bg-bg-secondary p-2 transition hover:bg-bg-tertiary" href="#">
+                <a class="flex gap-3 rounded-xl bg-bg-secondary p-2 transition hover:bg-bg-tertiary" href="#">
                     <div class="aspect-video w-40 shrink-0 rounded-lg bg-bg-tertiary" />
                     <div class="min-w-0">
                         <p class="line-clamp-2 text-sm font-medium text-text">"Leptos Router Deep Dive"</p>

@@ -172,7 +172,7 @@ pub fn HomePage() -> impl IntoView {
                     {move || {
                         if initial_error.get() {
                             return view! {
-                                <article class="col-span-full rounded-xl border border-border bg-bg-secondary p-4 text-sm text-text-secondary">
+                                <article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
                                     "Unable to load videos right now. Please try again later."
                                 </article>
                             }

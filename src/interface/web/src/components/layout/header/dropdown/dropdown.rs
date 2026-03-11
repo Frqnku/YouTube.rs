@@ -89,9 +89,9 @@ pub fn HeaderDropdown(
         <div
             class=move || {
                 if is_authenticated {
-                    "absolute right-10 top-0 z-50 w-2xs overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-lg"
+                    "absolute right-10 top-0 z-50 w-2xs overflow-hidden rounded-xl bg-bg-secondary shadow-lg"
                 } else {
-                    "absolute right-0 top-10 z-50 mt-2 w-2xs overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-lg"
+                    "absolute right-0 top-10 z-50 mt-2 w-2xs overflow-hidden rounded-xl bg-bg-secondary shadow-lg"
                 }
             }
         >

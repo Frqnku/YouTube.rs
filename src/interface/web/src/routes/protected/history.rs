@@ -11,7 +11,7 @@ pub fn HistoryPage() -> impl IntoView {
                 {(1..=6)
                     .map(|idx| {
                         view! {
-                            <article class="flex flex-col gap-3 rounded-xl border border-border bg-bg-secondary p-3 sm:flex-row">
+                            <article class="flex flex-col gap-3 rounded-xl bg-bg-secondary p-3 sm:flex-row">
                                 <div class="relative aspect-video w-full shrink-0 overflow-hidden rounded-lg bg-bg-tertiary sm:w-72">
                                     <span class="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs text-white">
                                         "12:3" {idx}
