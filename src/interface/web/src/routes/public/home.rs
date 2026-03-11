@@ -20,7 +20,7 @@ fn HomeFilters(
 ) -> impl IntoView {
     view! {
         <div
-            class="sticky top-14 z-30 -mx-4 mb-5 bg-bg/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-bg/80 md:-mx-6 md:px-6"
+            class="sticky top-14 z-30 -mx-4 mb-5 bg-bg/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6"
             data-section="home-filters"
         >
             <div class="flex flex-wrap items-center gap-2">
