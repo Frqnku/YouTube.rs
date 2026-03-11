@@ -1,8 +1,9 @@
 use leptos::prelude::*;
 
 use crate::app::{ThemeContext, ThemeMode};
+use crate::components::ui::Loader;
 use crate::components::ui::icons::{Icon, IconKind};
-use crate::components::ui::layout::header::{buttons::menu_items::BackMenuItem, dropdown::LocationOption};
+use crate::components::layout::header::{buttons::menu_items::BackMenuItem, dropdown::LocationOption};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ActiveSubmenu {
@@ -82,10 +83,8 @@ fn LocationsSubmenu(
     view! {
         {move || {
             match locations_resource.get() {
-                None => view! {
-                    <div class="flex items-center justify-center px-4 py-4">
-                        <span class="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-text"></span>
-                    </div>
+                _ => view! {
+                    <Loader />
                 }
                 .into_any(),
                 Some(Err(error_message)) => view! {

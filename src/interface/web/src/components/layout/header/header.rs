@@ -1,6 +1,6 @@
 use leptos::prelude::*;
 
-use crate::components::ui::layout::header::{HeaderLeft, HeaderRight, HeaderSearchBar};
+use crate::components::layout::header::{HeaderLeft, HeaderRight, HeaderSearchBar};
 
 #[component]
 pub fn Header() -> impl IntoView {

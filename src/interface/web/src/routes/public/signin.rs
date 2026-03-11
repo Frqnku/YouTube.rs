@@ -2,7 +2,7 @@ use leptos::{prelude::*, server::codee::string::FromToStringCodec};
 use leptos_router::hooks::use_query_map;
 use leptos_use::use_cookie;
 
-use crate::api::user::auth::Oauth;
+use crate::{api::user::auth::Oauth, components::ui::Loader};
 
 #[derive(Clone, Copy)]
 enum OAuthState {
@@ -21,7 +21,6 @@ pub fn SigninPage() -> impl IntoView {
 
     let oauth_action = ServerAction::<Oauth>::new();
     let oauth_state = RwSignal::new(OAuthState::Pending);
-    let error_message = RwSignal::new(String::new());
     let has_attempted = RwSignal::new(false);
 
     // Process OAuth callback once when code/state are present
@@ -64,7 +63,6 @@ pub fn SigninPage() -> impl IntoView {
                 }
                 Some(Err(e)) => {
                     oauth_state.set(OAuthState::Error);
-                    error_message.set(e.message.clone());
                     set_state_cookie.set(None);
                     set_token.set(None);
                 }
@@ -77,12 +75,7 @@ pub fn SigninPage() -> impl IntoView {
         <div class="flex min-h-dvh flex-col items-center justify-center bg-bg px-4">
             {move || {
                 match oauth_state.get() {
-                    OAuthState::Pending | OAuthState::Success => view! {
-                        <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center">
-                            <div class="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary"></div>
-                        </div>
-                    }
-                    .into_any(),
+                    OAuthState::Pending | OAuthState::Success => view! { <Loader /> }.into_any(),
                     OAuthState::Error => view! {
                         <p class="text-text-secondary">"An error occurred during authentication, try again."</p>
                     }

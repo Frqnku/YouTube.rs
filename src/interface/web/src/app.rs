@@ -4,7 +4,7 @@ use leptos_router::StaticSegment;
 use leptos_router::components::{Route, Router, Routes};
 use serde::{Deserialize, Serialize};
 
-use crate::components::ui::layout::{header::Header, Sidebar};
+use crate::components::layout::{header::Header, Sidebar};
 use crate::routes::protected::{HistoryPage, LikedVideosPage};
 use crate::routes::public::{HomePage, SigninPage, WatchPage};
 use crate::api::user::auth::get_current_user;

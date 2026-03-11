@@ -4,8 +4,8 @@ use leptos_use::on_click_outside;
 
 use crate::{
     app::CurrentUserContext,
-    components::ui::{
-        icons::{Icon, IconKind},
+    components::{
+        ui::icons::{Icon, IconKind},
         layout::header::{
             buttons::SigninButton,
             dropdown::{ActiveSubmenu, HeaderDropdown},

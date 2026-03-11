@@ -5,7 +5,7 @@ use reqwest::Client;
 #[cfg(target_arch = "wasm32")]
 use serde::Deserialize;
 
-use crate::components::ui::layout::header::dropdown::{RootDropdownMenu, SubmenuContainer, ActiveSubmenu};
+use crate::components::layout::header::dropdown::{RootDropdownMenu, SubmenuContainer, ActiveSubmenu};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LocationOption {
