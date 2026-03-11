@@ -1,5 +1,5 @@
-use crate::dtos::VideoCardPage;
-use domain::video::{PageRequest, VideoRepository};
+use crate::dtos::{VideoPlayer, VideoCardPage};
+use domain::{_shared::DomainError, video::{PageRequest, VideoRepository}};
 
 pub struct ListVideos<
     'a,
@@ -42,5 +42,25 @@ where
             .await?;
 
         Ok(page.into())
+    }
+}
+
+pub struct GetVideoById<
+    'a,
+    V: VideoRepository
+> {
+    pub video_repository: &'a V,
+}
+
+impl<'a, V> GetVideoById<'a, V>
+where
+    V: VideoRepository,
+{
+    pub async fn execute(&self, id: String) -> anyhow::Result<Option<VideoPlayer>> {
+        let id = uuid::Uuid::parse_str(&id)
+            .map_err(|_| DomainError::VideoNotFound)?;
+        let video = self.video_repository.find_by_id(id).await;
+
+        Ok(video.map(Into::into))
     }
 }

@@ -87,3 +87,62 @@ impl From<VideoPage> for VideoCardPage {
 		)
 	}
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VideoPlayer {
+	pub id: Uuid,
+	pub user: String,
+	pub user_picture: Option<String>,
+	pub title: String,
+	pub description: String,
+	pub video_url: String,
+	pub view_count: i64,
+	pub like_count: i64,
+	pub dislike_count: i64,
+	pub uploaded_at: String,
+}
+
+impl VideoPlayer {
+	pub fn new(
+		id: Uuid,
+		user: String,
+		user_picture: Option<String>,
+		title: String,
+		description: String,
+		video_url: String,
+		view_count: i64,
+		like_count: i64,
+		dislike_count: i64,
+		uploaded_at: String,
+	) -> Self {
+		Self {
+			id,
+			user,
+			user_picture,
+			title,
+			description,
+			video_url,
+			view_count,
+			like_count,
+			dislike_count,
+			uploaded_at,
+		}
+	}
+}
+
+impl From<Video> for VideoPlayer {
+	fn from(video: Video) -> Self {
+		Self::new(
+			video.id,
+			video.author.name,
+			video.author.profile_picture.map(|url| url.to_string()),
+			video.title,
+			video.description,
+			video.video_url.to_string(),
+			video.view_count,
+			video.like_count,
+			video.dislike_count,
+			video.created_at.to_rfc3339(),
+		)
+	}
+}

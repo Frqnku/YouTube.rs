@@ -40,6 +40,7 @@ impl From<DomainError> for AppServerError {
             DomainError::InvalidCredentials => AppServerError::new("invalid_credentials", err.to_string()),
             DomainError::InvalidToken => AppServerError::new("invalid_token", err.to_string()),
             DomainError::Unauthorized => AppServerError::new("unauthorized", err.to_string()),
+            DomainError::VideoNotFound => AppServerError::new("video_not_found", err.to_string()),
             DomainError::BadRequest(_) => AppServerError::new("bad_request", err.to_string()),
             DomainError::DatabaseError(_) => AppServerError::new("database_error", err.to_string()),
             DomainError::Unexpected(_) => AppServerError::new("unexpected_error", err.to_string()),

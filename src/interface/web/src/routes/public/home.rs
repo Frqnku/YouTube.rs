@@ -217,9 +217,10 @@ pub fn HomePage() -> impl IntoView {
                                     let duration = format_duration(video.duration_seconds);
                                     let view_count_formatted = format_view_count(video.view_count);
                                     let meta = format!("{} views", view_count_formatted);
+                                    let watch_url = format!("/watch?v={}", video.id);
                                     view! {
                                         <article class="group">
-                                            <a href="/watch" class="block">
+                                            <a href=watch_url class="block">
                                                 <div class="relative aspect-video overflow-hidden rounded-xl bg-bg-secondary">
                                                     <img
                                                         src=video.thumbnail_url

@@ -10,6 +10,9 @@ pub enum DomainError {
     #[error("Unauthorized")]
     Unauthorized,
 
+    #[error("This video isn't available")]
+    VideoNotFound,
+
     #[error("Bad request: {0}")]
     BadRequest(String),
     #[error("Database error: {0}")]
