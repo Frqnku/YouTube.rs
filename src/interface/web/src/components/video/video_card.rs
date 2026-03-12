@@ -22,7 +22,7 @@ pub fn VideoCardSkeleton() -> impl IntoView {
 
 #[component]
 pub fn VideoCard(video: VideoCardDto) -> impl IntoView {
-    let duration = format_duration(video.duration_milliseconds);
+    let duration = format_duration(video.duration_seconds);
     let uploaded_ago = format_relative_time(&video.uploaded_at);
     let watch_url = format!("/watch?v={}", video.id);
     let view_count = format!("{} views", format_count(video.view_count));

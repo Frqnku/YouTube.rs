@@ -7,7 +7,7 @@ CREATE TABLE videos (
     title VARCHAR(200) NOT NULL,
     description VARCHAR(280) NOT NULL,
 
-    duration_milliseconds INT NOT NULL,
+    duration_seconds INT NOT NULL,
 
     thumbnail_url TEXT NOT NULL,
     preview_url TEXT NOT NULL,

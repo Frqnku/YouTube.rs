@@ -3,12 +3,17 @@ use chrono::{DateTime, Utc};
 #[cfg(target_arch = "wasm32")]
 const LOAD_MORE_THRESHOLD_PX: f64 = 1.0;
 
-pub fn format_duration(total_milliseconds: i32) -> String {
-	let safe_milliseconds = total_milliseconds.max(0);
-	let total_seconds = safe_milliseconds / 1_000;
-	let minutes = total_seconds / 60;
-	let seconds = total_seconds % 60;
-	format!("{minutes}:{seconds:02}")
+pub fn format_duration(total_seconds: i32) -> String {
+	let safe_seconds = total_seconds.max(0);
+	let hours = safe_seconds / 3_600;
+	let minutes = (safe_seconds % 3_600) / 60;
+	let seconds = safe_seconds % 60;
+
+	if hours > 0 {
+		format!("{hours}:{minutes:02}:{seconds:02}")
+	} else {
+		format!("{minutes}:{seconds:02}")
+	}
 }
 
 pub fn format_count(count: i64) -> String {

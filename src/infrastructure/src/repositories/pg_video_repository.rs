@@ -26,7 +26,7 @@ struct VideoRecord {
     video_url: String,
     thumbnail_url: String,
     preview_url: String,
-    duration_milliseconds: i32,
+    duration_seconds: i32,
     view_count: i64,
     like_count: i64,
     dislike_count: i64,
@@ -53,7 +53,7 @@ impl VideoRecord {
             Url::try_from(self.video_url.clone())?,
             Url::try_from(self.thumbnail_url)?,
             Url::try_from(self.preview_url)?, // Using video_url as preview_url for now
-            self.duration_milliseconds,
+            self.duration_seconds,
             self.view_count,
             self.like_count,
             self.dislike_count,
@@ -75,7 +75,7 @@ const VIDEO_SELECT_WITH_USER: &str = "SELECT
     v.video_url,
     v.thumbnail_url,
     v.preview_url,
-    v.duration_milliseconds,
+    v.duration_seconds,
     v.view_count,
     v.like_count,
     v.dislike_count,
@@ -279,7 +279,7 @@ impl VideoRepository for PgVideoRepository {
 
     async fn save(&self, video: &Video) -> anyhow::Result<Video> {
         let record = sqlx::query_as::<_, VideoRecord>(
-            "INSERT INTO videos (id, user_id, title, description, video_url, thumbnail_url, preview_url, duration_milliseconds, view_count, like_count, dislike_count)
+            "INSERT INTO videos (id, user_id, title, description, video_url, thumbnail_url, preview_url, duration_seconds, view_count, like_count, dislike_count)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
              RETURNING
                 id,
@@ -291,7 +291,7 @@ impl VideoRepository for PgVideoRepository {
                 video_url,
                 thumbnail_url,
                 preview_url,
-                duration_milliseconds,
+                duration_seconds,
                 view_count,
                 like_count,
                 dislike_count,
@@ -304,7 +304,7 @@ impl VideoRepository for PgVideoRepository {
         .bind(video.video_url.to_string())
         .bind(video.thumbnail_url.to_string())
         .bind(video.preview_url.to_string())
-        .bind(video.duration_milliseconds)
+        .bind(video.duration_seconds)
         .bind(video.view_count)
         .bind(video.like_count)
         .bind(video.dislike_count)
