@@ -21,6 +21,7 @@ pub async fn get_current_user(
         if let Ok(current_user) = token_provider.verify_token(cookie.value()) {
                 req.extensions_mut().insert(
                     CurrentUser {
+                        id: current_user.id.to_string(),
                         name: current_user.name,
                         profile_picture: current_user.profile_picture.map(|url| url.to_string()),
                     }

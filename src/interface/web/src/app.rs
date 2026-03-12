@@ -79,6 +79,7 @@ fn apply_theme(mode: ThemeMode) {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CurrentUser {
+    pub id: String,
     pub name: String,
     pub profile_picture: Option<String>,
 }
