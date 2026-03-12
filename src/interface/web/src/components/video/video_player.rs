@@ -12,7 +12,10 @@ use crate::{
         },
     },
     app::CurrentUserContext,
-    components::_helpers::{format_count, format_relative_time},
+    components::{
+        _helpers::{format_count, format_relative_time},
+        ui::icons::{Icon, IconKind},
+    },
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -111,50 +114,52 @@ fn SigninPromptModal(
 
 #[component]
 fn LikeButton(
-    label: Signal<String>,
-    is_active: Signal<bool>,
+    count_label: Signal<String>,
+    selected: Signal<bool>,
     disabled: Signal<bool>,
     on_click: Callback<()>,
 ) -> impl IntoView {
     view! {
         <button
             type="button"
-            class=move || {
-                if is_active.get() {
-                    "btn-secondary bg-primary text-white hover:bg-primary-hover ring-2 ring-primary"
-                } else {
-                    "btn-secondary"
-                }
-            }
+            class="flex items-center gap-1.5 px-4 py-2 text-sm text-text transition hover:bg-border"
             disabled=move || disabled.get()
             on:click=move |_| on_click.run(())
         >
-            {move || label.get()}
+            {move || {
+                if selected.get() {
+                    view! { <Icon kind=IconKind::ThumbsUpSelected /> }.into_any()
+                } else {
+                    view! { <Icon kind=IconKind::ThumbsUp /> }.into_any()
+                }
+            }}
+            <span>{move || count_label.get()}</span>
         </button>
     }
 }
 
 #[component]
 fn DislikeButton(
-    label: Signal<String>,
-    is_active: Signal<bool>,
+    count_label: Signal<String>,
+    selected: Signal<bool>,
     disabled: Signal<bool>,
     on_click: Callback<()>,
 ) -> impl IntoView {
     view! {
         <button
             type="button"
-            class=move || {
-                if is_active.get() {
-                    "btn-secondary bg-primary text-white hover:bg-primary-hover ring-2 ring-primary"
-                } else {
-                    "btn-secondary"
-                }
-            }
+            class="flex items-center gap-1.5 px-4 py-2 text-sm text-text transition hover:bg-border"
             disabled=move || disabled.get()
             on:click=move |_| on_click.run(())
         >
-            {move || label.get()}
+            {move || {
+                if selected.get() {
+                    view! { <Icon kind=IconKind::ThumbsDownSelected /> }.into_any()
+                } else {
+                    view! { <Icon kind=IconKind::ThumbsDown /> }.into_any()
+                }
+            }}
+            <span>{move || count_label.get()}</span>
         </button>
     }
 }
@@ -183,8 +188,8 @@ pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
     let is_liked = Signal::derive(move || reaction_state.get() == ReactionState::Liked);
     let is_disliked = Signal::derive(move || reaction_state.get() == ReactionState::Disliked);
 
-    let like_label = Signal::derive(move || format!("Like {}", format_count(like_count.get())));
-    let dislike_label = Signal::derive(move || format!("Dislike {}", format_count(dislike_count.get())));
+    let like_count_label = Signal::derive(move || format_count(like_count.get()));
+    let dislike_count_label = Signal::derive(move || format_count(dislike_count.get()));
 
     let reaction_status_resource = Resource::new(
         move || (is_authenticated.get(), video_id_for_status.clone()),
@@ -307,18 +312,21 @@ pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
 
                     <div class="flex flex-wrap gap-2">
                         <button class="btn-primary">"Subscribe"</button>
-                        <LikeButton
-                            label=like_label
-                            is_active=is_liked
-                            disabled=reaction_pending
-                            on_click=on_like_click
-                        />
-                        <DislikeButton
-                            label=dislike_label
-                            is_active=is_disliked
-                            disabled=reaction_pending
-                            on_click=on_dislike_click
-                        />
+                        <div class="inline-flex items-center overflow-hidden rounded-full bg-bg-tertiary">
+                            <LikeButton
+                                count_label=like_count_label
+                                selected=is_liked
+                                disabled=reaction_pending
+                                on_click=on_like_click
+                            />
+                            <span class="h-5 w-px bg-border bg-bg-tertiary" aria-hidden="true"></span>
+                            <DislikeButton
+                                count_label=dislike_count_label
+                                selected=is_disliked
+                                disabled=reaction_pending
+                                on_click=on_dislike_click
+                            />
+                        </div>
                         <button class="btn-secondary">"Share"</button>
                     </div>
                 </div>
