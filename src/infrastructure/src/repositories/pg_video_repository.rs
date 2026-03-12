@@ -25,7 +25,8 @@ struct VideoRecord {
     description: String,
     video_url: String,
     thumbnail_url: String,
-    duration_seconds: i32,
+    preview_url: String,
+    duration_milliseconds: i64,
     view_count: i64,
     like_count: i64,
     dislike_count: i64,
@@ -49,9 +50,10 @@ impl VideoRecord {
             ),
             self.title,
             self.description,
-            Url::try_from(self.video_url)?,
+            Url::try_from(self.video_url.clone())?,
             Url::try_from(self.thumbnail_url)?,
-            self.duration_seconds,
+            Url::try_from(self.preview_url)?, // Using video_url as preview_url for now
+            self.duration_milliseconds,
             self.view_count,
             self.like_count,
             self.dislike_count,
@@ -72,7 +74,8 @@ const VIDEO_SELECT_WITH_USER: &str = "SELECT
     v.description,
     v.video_url,
     v.thumbnail_url,
-    v.duration_seconds,
+    v.preview_url,
+    v.duration_milliseconds,
     v.view_count,
     v.like_count,
     v.dislike_count,
@@ -276,8 +279,8 @@ impl VideoRepository for PgVideoRepository {
 
     async fn save(&self, video: &Video) -> anyhow::Result<Video> {
         let record = sqlx::query_as::<_, VideoRecord>(
-            "INSERT INTO videos (id, user_id, title, description, video_url, thumbnail_url, duration_seconds, view_count, like_count, dislike_count)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            "INSERT INTO videos (id, user_id, title, description, video_url, thumbnail_url, preview_url, duration_milliseconds, view_count, like_count, dislike_count)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
              RETURNING
                 id,
                 user_id,
@@ -287,7 +290,8 @@ impl VideoRepository for PgVideoRepository {
                 description,
                 video_url,
                 thumbnail_url,
-                duration_seconds,
+                preview_url,
+                duration_milliseconds,
                 view_count,
                 like_count,
                 dislike_count,
@@ -299,7 +303,8 @@ impl VideoRepository for PgVideoRepository {
         .bind(&video.description)
         .bind(video.video_url.to_string())
         .bind(video.thumbnail_url.to_string())
-        .bind(video.duration_seconds)
+        .bind(video.preview_url.to_string())
+        .bind(video.duration_milliseconds)
         .bind(video.view_count)
         .bind(video.like_count)
         .bind(video.dislike_count)

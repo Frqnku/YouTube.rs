@@ -22,7 +22,7 @@ pub fn VideoCardSkeleton() -> impl IntoView {
 
 #[component]
 pub fn VideoCard(video: VideoCardDto) -> impl IntoView {
-    let duration = format_duration(video.duration_seconds);
+    let duration = format_duration(video.duration_milliseconds);
     let uploaded_ago = format_relative_time(&video.uploaded_at);
     let watch_url = format!("/watch?v={}", video.id);
     let view_count = format!("{} views", format_count(video.view_count));
@@ -34,7 +34,12 @@ pub fn VideoCard(video: VideoCardDto) -> impl IntoView {
                     <img
                         src=video.thumbnail_url
                         alt=video.title.clone()
-                        class="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                        class="h-full w-full object-cover transition group-hover:hidden"
+                    />
+                    <img
+                        src=video.preview_url
+                        alt=video.title.clone()
+                        class="h-full w-full object-cover transition group-hover:block group-hover:scale-[1.02]"
                     />
                     <span class="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs font-medium text-white">
                         {duration}
