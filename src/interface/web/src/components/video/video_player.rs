@@ -1,15 +1,283 @@
 use leptos::prelude::*;
 
-use crate::{api::_dtos::video::VideoPlayer, components::_helpers::{format_relative_time, format_count}};
+use crate::{
+    api::{
+        _dtos::video::VideoPlayer,
+        video::{
+            delete_video_dislike,
+            delete_video_like,
+            get_video_reaction,
+            post_video_dislike,
+            post_video_like,
+        },
+    },
+    app::CurrentUserContext,
+    components::_helpers::{format_count, format_relative_time},
+};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ReactionState {
+    None,
+    Liked,
+    Disliked,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct ReactionTransition {
+    from: ReactionState,
+    to: ReactionState,
+}
+
+fn next_like_transition(from: ReactionState) -> ReactionTransition {
+    let to = if from == ReactionState::Liked {
+        ReactionState::None
+    } else {
+        ReactionState::Liked
+    };
+
+    ReactionTransition { from, to }
+}
+
+fn next_dislike_transition(from: ReactionState) -> ReactionTransition {
+    let to = if from == ReactionState::Disliked {
+        ReactionState::None
+    } else {
+        ReactionState::Disliked
+    };
+
+    ReactionTransition { from, to }
+}
+
+fn update_reaction_counts(
+    like_count: RwSignal<i64>,
+    dislike_count: RwSignal<i64>,
+    transition: ReactionTransition,
+) {
+    match (transition.from, transition.to) {
+        (ReactionState::None, ReactionState::Liked) => {
+            like_count.update(|count| *count += 1);
+        }
+        (ReactionState::None, ReactionState::Disliked) => {
+            dislike_count.update(|count| *count += 1);
+        }
+        (ReactionState::Liked, ReactionState::None) => {
+            like_count.update(|count| *count = (*count - 1).max(0));
+        }
+        (ReactionState::Disliked, ReactionState::None) => {
+            dislike_count.update(|count| *count = (*count - 1).max(0));
+        }
+        (ReactionState::Liked, ReactionState::Disliked) => {
+            like_count.update(|count| *count = (*count - 1).max(0));
+            dislike_count.update(|count| *count += 1);
+        }
+        (ReactionState::Disliked, ReactionState::Liked) => {
+            dislike_count.update(|count| *count = (*count - 1).max(0));
+            like_count.update(|count| *count += 1);
+        }
+        _ => {}
+    }
+}
+
+#[component]
+fn SigninPromptModal(
+    open: RwSignal<bool>,
+) -> impl IntoView {
+    view! {
+        <Show when=move || open.get()>
+            <div
+                class="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-4 md:items-center"
+                on:click=move |_| open.set(false)
+            >
+                <div
+                    class="w-full max-w-sm rounded-xl bg-bg-secondary p-4 text-text shadow-xl"
+                    on:click=move |event| event.stop_propagation()
+                >
+                    <p class="text-sm text-text-secondary">"Sign in to like or dislike this video."</p>
+                    <div class="mt-4 flex justify-end gap-2">
+                        <button
+                            type="button"
+                            class="btn-secondary"
+                            on:click=move |_| open.set(false)
+                        >
+                            "Later"
+                        </button>
+                        <a href="/signin" class="btn-primary">"Sign in"</a>
+                    </div>
+                </div>
+            </div>
+        </Show>
+    }
+}
+
+#[component]
+fn LikeButton(
+    label: Signal<String>,
+    is_active: Signal<bool>,
+    disabled: Signal<bool>,
+    on_click: Callback<()>,
+) -> impl IntoView {
+    view! {
+        <button
+            type="button"
+            class=move || {
+                if is_active.get() {
+                    "btn-secondary bg-primary text-white hover:bg-primary-hover ring-2 ring-primary"
+                } else {
+                    "btn-secondary"
+                }
+            }
+            disabled=move || disabled.get()
+            on:click=move |_| on_click.run(())
+        >
+            {move || label.get()}
+        </button>
+    }
+}
+
+#[component]
+fn DislikeButton(
+    label: Signal<String>,
+    is_active: Signal<bool>,
+    disabled: Signal<bool>,
+    on_click: Callback<()>,
+) -> impl IntoView {
+    view! {
+        <button
+            type="button"
+            class=move || {
+                if is_active.get() {
+                    "btn-secondary bg-primary text-white hover:bg-primary-hover ring-2 ring-primary"
+                } else {
+                    "btn-secondary"
+                }
+            }
+            disabled=move || disabled.get()
+            on:click=move |_| on_click.run(())
+        >
+            {move || label.get()}
+        </button>
+    }
+}
 
 #[component]
 pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
     let view_count = format!("{} views", format_count(video.view_count));
     let uploaded_ago = format_relative_time(&video.uploaded_at);
-    let like_count = format!("Like {}", format_count(video.like_count));
-    let dislike_count = format!("Dislike {}", format_count(video.dislike_count));
+    let video_id_for_status = video.id.clone();
+    let video_id_for_like = video.id.clone();
+    let video_id_for_dislike = video.id.clone();
+
+    let current_user_ctx = use_context::<CurrentUserContext>();
+    let is_authenticated = Signal::derive(move || {
+        current_user_ctx
+            .as_ref()
+            .and_then(|ctx| ctx.current_user.get())
+            .is_some()
+    });
+
+    let show_signin_prompt = RwSignal::new(false);
+    let reaction_state = RwSignal::new(ReactionState::None);
+    let like_count = RwSignal::new(video.like_count);
+    let dislike_count = RwSignal::new(video.dislike_count);
+
+    let is_liked = Signal::derive(move || reaction_state.get() == ReactionState::Liked);
+    let is_disliked = Signal::derive(move || reaction_state.get() == ReactionState::Disliked);
+
+    let like_label = Signal::derive(move || format!("Like {}", format_count(like_count.get())));
+    let dislike_label = Signal::derive(move || format!("Dislike {}", format_count(dislike_count.get())));
+
+    let reaction_status_resource = Resource::new(
+        move || (is_authenticated.get(), video_id_for_status.clone()),
+        move |(authed, video_id)| async move {
+            if !authed {
+                return Ok((false, false));
+            }
+
+            get_video_reaction(video_id).await
+        },
+    );
+
+    Effect::new(move |_| {
+        let Some(result) = reaction_status_resource.get() else {
+            return;
+        };
+
+        match result {
+            Ok((true, false)) => reaction_state.set(ReactionState::Liked),
+            Ok((false, true)) => reaction_state.set(ReactionState::Disliked),
+            Ok(_) => reaction_state.set(ReactionState::None),
+            Err(_) => {}
+        }
+    });
+
+    let like_action = Action::new(move |transition: &ReactionTransition| {
+        let transition = *transition;
+        let video_id = video_id_for_like.clone();
+        async move {
+            if transition.to == ReactionState::Liked {
+                post_video_like(video_id).await
+            } else {
+                delete_video_like(video_id).await
+            }
+        }
+    });
+
+    let dislike_action = Action::new(move |transition: &ReactionTransition| {
+        let transition = *transition;
+        let video_id = video_id_for_dislike.clone();
+        async move {
+            if transition.to == ReactionState::Disliked {
+                post_video_dislike(video_id).await
+            } else {
+                delete_video_dislike(video_id).await
+            }
+        }
+    });
+
+    let reaction_pending = Signal::derive(move || {
+        like_action.pending().get() || dislike_action.pending().get()
+    });
+
+    let on_like_click = {
+        let is_authenticated = is_authenticated;
+        Callback::new(move |_| {
+            if !is_authenticated.get_untracked() {
+                show_signin_prompt.set(true);
+                return;
+            }
+
+            if reaction_pending.get_untracked() {
+                return;
+            }
+
+            let transition = next_like_transition(reaction_state.get_untracked());
+            reaction_state.set(transition.to);
+            update_reaction_counts(like_count, dislike_count, transition);
+            like_action.dispatch(transition);
+        })
+    };
+
+    let on_dislike_click = {
+        let is_authenticated = is_authenticated;
+        Callback::new(move |_| {
+            if !is_authenticated.get_untracked() {
+                show_signin_prompt.set(true);
+                return;
+            }
+
+            if reaction_pending.get_untracked() {
+                return;
+            }
+
+            let transition = next_dislike_transition(reaction_state.get_untracked());
+            reaction_state.set(transition.to);
+            update_reaction_counts(like_count, dislike_count, transition);
+            dislike_action.dispatch(transition);
+        })
+    };
 
     view! {
+        <>
         <div class="space-y-4">
             <div class="overflow-hidden rounded-xl bg-bg-secondary">
                 <div class="aspect-video w-full bg-black">
@@ -39,8 +307,18 @@ pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
 
                     <div class="flex flex-wrap gap-2">
                         <button class="btn-primary">"Subscribe"</button>
-                        <button class="btn-secondary">{like_count}</button>
-                        <button class="btn-secondary">{dislike_count}</button>
+                        <LikeButton
+                            label=like_label
+                            is_active=is_liked
+                            disabled=reaction_pending
+                            on_click=on_like_click
+                        />
+                        <DislikeButton
+                            label=dislike_label
+                            is_active=is_disliked
+                            disabled=reaction_pending
+                            on_click=on_dislike_click
+                        />
                         <button class="btn-secondary">"Share"</button>
                     </div>
                 </div>
@@ -51,5 +329,7 @@ pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
                 </div>
             </div>
         </div>
+        <SigninPromptModal open=show_signin_prompt />
+        </>
     }
 }

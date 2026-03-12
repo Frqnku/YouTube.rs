@@ -65,3 +65,12 @@ pub trait VideoRepository {
     async fn search_by_title(&self, query: &str, page: PageRequest) -> anyhow::Result<VideoPage>;
     async fn save(&self, video: &Video) -> anyhow::Result<Video>;
 }
+
+#[async_trait::async_trait]
+pub trait VideoReactionRepository {
+    async fn find_like_status(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<(bool, bool)>;
+    async fn add_like(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<()>;
+    async fn remove_like(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<()>;
+    async fn add_dislike(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<()>;
+    async fn remove_dislike(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<()>;
+}
