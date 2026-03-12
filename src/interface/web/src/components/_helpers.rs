@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 #[cfg(target_arch = "wasm32")]
 const LOAD_MORE_THRESHOLD_PX: f64 = 1.0;
 
-pub fn format_duration(total_milliseconds: i64) -> String {
+pub fn format_duration(total_milliseconds: i32) -> String {
 	let safe_milliseconds = total_milliseconds.max(0);
 	let total_seconds = safe_milliseconds / 1_000;
 	let minutes = total_seconds / 60;

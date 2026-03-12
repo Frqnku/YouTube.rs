@@ -26,7 +26,7 @@ struct VideoRecord {
     video_url: String,
     thumbnail_url: String,
     preview_url: String,
-    duration_milliseconds: i64,
+    duration_milliseconds: i32,
     view_count: i64,
     like_count: i64,
     dislike_count: i64,
