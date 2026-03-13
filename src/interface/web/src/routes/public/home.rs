@@ -25,7 +25,7 @@ fn HomeFilters(
         >
             <div class="flex flex-wrap items-center gap-2">
                 <button
-                    class="btn-secondary"
+                    class="btn-tertiary"
                     class:bg-text=move || current_feed.get() == HomeFeed::Trending
                     class:text-bg=move || current_feed.get() == HomeFeed::Trending
                     on:click=move |_| current_feed.set(HomeFeed::Trending)
@@ -33,7 +33,7 @@ fn HomeFilters(
                     "Trending"
                 </button>
                 <button
-                    class="btn-secondary"
+                    class="btn-tertiary"
                     class:bg-text=move || current_feed.get() == HomeFeed::New
                     class:text-bg=move || current_feed.get() == HomeFeed::New
                     on:click=move |_| current_feed.set(HomeFeed::New)
