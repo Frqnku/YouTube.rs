@@ -16,7 +16,29 @@ pub fn format_duration(total_seconds: i32) -> String {
 	}
 }
 
-pub fn format_count(count: i64) -> String {
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum CountFormat {
+	Short,
+	Long,
+}
+
+pub fn format_count(count: i64, format: CountFormat) -> String {
+	if format == CountFormat::Long {
+		let s = count.to_string();
+		let mut result = String::new();
+		let mut counter = 0;
+
+		for c in s.chars().rev() {
+			if counter != 0 && counter % 3 == 0 {
+				result.push(',');
+			}
+			result.push(c);
+			counter += 1;
+		}
+
+		return result.chars().rev().collect();
+	}
+
 	match count {
 		0..=999 => count.to_string(),
 		1_000..=999_999 => {

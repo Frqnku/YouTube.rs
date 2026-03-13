@@ -1,6 +1,6 @@
 use leptos::prelude::*;
 
-use crate::{api::_dtos::video::VideoCardDto, components::{_helpers::{format_count, format_duration, format_relative_time}, ui::DotDivider}};
+use crate::{api::_dtos::video::VideoCardDto, components::{_helpers::{CountFormat, format_count, format_duration, format_relative_time}, ui::DotDivider}};
 
 #[component]
 pub fn VideoCardSkeleton() -> impl IntoView {
@@ -25,7 +25,7 @@ pub fn VideoCard(video: VideoCardDto) -> impl IntoView {
     let duration = format_duration(video.duration_seconds);
     let uploaded_ago = format_relative_time(&video.uploaded_at);
     let watch_url = format!("/watch?v={}", video.id);
-    let view_count = format!("{} views", format_count(video.view_count));
+    let view_count = format!("{} views", format_count(video.view_count, CountFormat::Short));
 
     view! {
         <article class="group">

@@ -14,7 +14,7 @@ use crate::{
     },
     app::CurrentUserContext,
     components::{
-        _helpers::{format_count, format_relative_time},
+        _helpers::{CountFormat, format_count, format_relative_time},
         ui::icons::{Icon, IconKind},
     },
 };
@@ -167,7 +167,7 @@ fn DislikeButton(
 
 #[component]
 pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
-    let view_count = format!("{} views", format_count(video.view_count));
+    let view_count = format!("{} views", format_count(video.view_count, CountFormat::Long));
     let uploaded_ago = format_relative_time(&video.uploaded_at);
     let video_id_for_status = video.id.clone();
     let video_id_for_like = video.id.clone();
@@ -190,8 +190,8 @@ pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
     let is_liked = Signal::derive(move || reaction_state.get() == ReactionState::Liked);
     let is_disliked = Signal::derive(move || reaction_state.get() == ReactionState::Disliked);
 
-    let like_count_label = Signal::derive(move || format_count(like_count.get()));
-    let dislike_count_label = Signal::derive(move || format_count(dislike_count.get()));
+    let like_count_label = Signal::derive(move || format_count(like_count.get(), CountFormat::Short));
+    let dislike_count_label = Signal::derive(move || format_count(dislike_count.get(), CountFormat::Short));
 
     let reaction_status_resource = Resource::new(
         move || (is_authenticated.get(), video_id_for_status.clone()),
@@ -297,7 +297,7 @@ pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
         <div class="space-y-4">
             <div class="overflow-hidden rounded-xl bg-bg-secondary">
                 <div class="aspect-video w-full bg-black">
-                    <video class="h-full w-full" controls preload="metadata" playsinline>
+                    <video class="h-full w-full" controls preload="metadata" playsinline autoplay>
                         <source src=video.video_url type="video/mp4" />
                     </video>
                 </div>
