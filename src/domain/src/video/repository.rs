@@ -2,7 +2,7 @@ use uuid::Uuid;
 
 use crate::video::entity::Video;
 
-pub const DEFAULT_PAGE_LIMIT: u32 = 12;
+pub const DEFAULT_PAGE_LIMIT: u32 = 6;
 pub const MAX_PAGE_LIMIT: u32 = 50;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -64,6 +64,11 @@ pub trait VideoRepository {
     async fn list_by_user_id(&self, user_id: Uuid, page: PageRequest) -> anyhow::Result<VideoPage>;
     async fn search_by_title(&self, query: &str, page: PageRequest) -> anyhow::Result<VideoPage>;
     async fn save(&self, video: &Video) -> anyhow::Result<Video>;
+}
+
+#[async_trait::async_trait]
+pub trait VideoHistoryRepository {
+    async fn list_history_by_user_id(&self, user_id: Uuid, page: PageRequest) -> anyhow::Result<VideoPage>;
 }
 
 #[async_trait::async_trait]

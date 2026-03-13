@@ -1,34 +1,86 @@
 use leptos::prelude::*;
+use crate::api::video::get_history_videos;
+use crate::components::ui::Loader;
+use crate::components::videos::VideoCard;
+use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
+
+const HISTORY_PAGE_SIZE: u32 = 12;
 
 #[component]
 pub fn HistoryPage() -> impl IntoView {
+    let (
+        videos,
+        _next_cursor,
+        _has_more,
+        initial_error,
+        load_more_error,
+        load_more,
+    ) = use_paginated_feed(
+        Signal::derive(|| ()),
+        |(), cursor| async move {
+            get_history_videos(Some(HISTORY_PAGE_SIZE), cursor)
+                .await
+                .map_err(|_| ())
+        },
+    );
+
     view! {
-        <div class="min-h-[calc(100dvh-3.5rem)] bg-bg px-4 py-6 md:px-8">
+        <div class="min-h-[calc(100dvh-3.5rem)] bg-bg px-4 py-5 md:px-6">
             <h1 class="text-2xl font-semibold text-text">"History"</h1>
             <p class="mt-1 text-sm text-text-secondary">"Recently watched videos"</p>
 
-            <div class="mt-6 space-y-4">
-                {(1..=6)
-                    .map(|idx| {
-                        view! {
-                            <article class="flex flex-col gap-3 rounded-xl bg-bg-secondary p-3 sm:flex-row">
-                                <div class="relative aspect-video w-full shrink-0 overflow-hidden rounded-lg bg-bg-tertiary sm:w-72">
-                                    <span class="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs text-white">
-                                        "12:3" {idx}
-                                    </span>
-                                </div>
-                                <div class="min-w-0">
-                                    <h2 class="text-base font-medium text-text">"Rust Session #" {idx}</h2>
-                                    <p class="mt-1 text-sm text-text-secondary">"Rust Dev Channel"</p>
-                                    <p class="mt-2 line-clamp-2 text-sm text-text-muted">
-                                        "Hands-on tutorial on structuring a YouTube-inspired fullstack app with Leptos, Axum, and SQLx."
-                                    </p>
-                                </div>
-                            </article>
+            <section class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3" data-section="history-grid">
+                <Suspense
+                    fallback=move || {
+                        view! { <ResponsiveVideoCardSkeletons /> }.into_any()
+                    }
+                >
+                    {move || {
+                        if initial_error.get() {
+                            return view! {
+                                <article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
+                                    "Unable to load your history right now. Please try again later."
+                                </article>
+                            }
+                                .into_any()
+                                .into_view();
                         }
-                    })
-                    .collect_view()}
-            </div>
+
+                        if videos.get().is_empty() {
+                            return view! {
+                                <article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
+                                    "No history yet. Start watching videos and they will appear here."
+                                </article>
+                            }
+                                .into_any()
+                                .into_view();
+                        }
+
+                        view! {
+                            <For
+                                each=move || videos.get()
+                                key=|video| video.id.clone()
+                                children=move |video| {
+                                    view! { <VideoCard video=video /> }
+                                }
+                            />
+                        }
+                            .into_any()
+                            .into_view()
+                    }}
+                </Suspense>
+            </section>
+
+            <Show when=move || load_more.pending().get()>
+                <ResponsiveVideoCardSkeletons />
+                <Loader />
+            </Show>
+
+            <Show when=move || load_more_error.get()>
+                <div class="pb-5 text-center text-sm text-text-secondary">
+                    "Couldn't load more history videos. Keep scrolling to retry."
+                </div>
+            </Show>
         </div>
     }
 }

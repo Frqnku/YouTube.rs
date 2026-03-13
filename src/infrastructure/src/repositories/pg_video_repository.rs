@@ -1,7 +1,7 @@
 use anyhow::{Context, anyhow};
 use domain::_shared::value_objects::Url;
 use domain::video::entity::{Video, VideoAuthor};
-use domain::video::{PageRequest, VideoPage, VideoReactionRepository, VideoRepository, VideoViewRepository};
+use domain::video::{PageRequest, VideoHistoryRepository, VideoPage, VideoRepository};
 use sqlx::types::Uuid;
 use sqlx::types::time::OffsetDateTime;
 
@@ -316,328 +316,37 @@ impl VideoRepository for PgVideoRepository {
 }
 
 #[async_trait::async_trait]
-impl VideoReactionRepository for PgVideoRepository {
-    async fn find_like_status(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<(bool, bool)> {
-        let reaction = sqlx::query_scalar::<_, bool>(
-            "SELECT is_liked
-             FROM video_likes
-             WHERE user_id = $1 AND video_id = $2",
-        )
-        .bind(user_id)
-        .bind(video_id)
-        .fetch_optional(&self.pool)
-        .await?;
-
-        let status = match reaction {
-            Some(true) => (true, false),
-            Some(false) => (false, true),
-            None => (false, false),
+impl VideoHistoryRepository for PgVideoRepository {
+    async fn list_history_by_user_id(&self, user_id: Uuid, page: PageRequest) -> anyhow::Result<VideoPage> {
+        let records = if let Some(cursor) = page.cursor.as_deref() {
+            let (created_at, id) = parse_newest_cursor(cursor)?;
+            let sql = video_query_sql(
+                "JOIN video_views vv ON vv.video_id = v.id
+                 WHERE vv.user_id = $1 AND (vv.updated_at, v.id) < ($2, $3)
+                 ORDER BY vv.updated_at DESC, v.id DESC
+                 LIMIT $4",
+            );
+            sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(user_id)
+            .bind(created_at)
+            .bind(id)
+            .bind(limit_plus_one(&page))
+            .fetch_all(&self.pool)
+            .await?
+        } else {
+            let sql = video_query_sql(
+                "JOIN video_views vv ON vv.video_id = v.id
+                 WHERE vv.user_id = $1
+                 ORDER BY vv.updated_at DESC, v.id DESC
+                 LIMIT $2",
+            );
+            sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(user_id)
+            .bind(limit_plus_one(&page))
+            .fetch_all(&self.pool)
+            .await?
         };
 
-        Ok(status)
-    }
-
-    async fn add_like(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<()> {
-        let mut tx = self.pool.begin().await?;
-
-        let existing = sqlx::query_scalar::<_, bool>(
-            "SELECT is_liked
-             FROM video_likes
-             WHERE user_id = $1 AND video_id = $2
-             FOR UPDATE",
-        )
-        .bind(user_id)
-        .bind(video_id)
-        .fetch_optional(&mut *tx)
-        .await?;
-
-        match existing {
-            Some(true) => {}
-            Some(false) => {
-                sqlx::query(
-                    "UPDATE video_likes
-                     SET is_liked = TRUE
-                     WHERE user_id = $1 AND video_id = $2",
-                )
-                .bind(user_id)
-                .bind(video_id)
-                .execute(&mut *tx)
-                .await?;
-
-                sqlx::query(
-                    "UPDATE videos
-                     SET like_count = like_count + 1,
-                         dislike_count = GREATEST(dislike_count - 1, 0)
-                     WHERE id = $1",
-                )
-                .bind(video_id)
-                .execute(&mut *tx)
-                .await?;
-            }
-            None => {
-                sqlx::query(
-                    "INSERT INTO video_likes (video_id, user_id, is_liked)
-                     VALUES ($1, $2, TRUE)",
-                )
-                .bind(video_id)
-                .bind(user_id)
-                .execute(&mut *tx)
-                .await?;
-
-                sqlx::query(
-                    "UPDATE videos
-                     SET like_count = like_count + 1
-                     WHERE id = $1",
-                )
-                .bind(video_id)
-                .execute(&mut *tx)
-                .await?;
-            }
-        }
-
-        tx.commit().await?;
-        Ok(())
-    }
-
-    async fn remove_like(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<()> {
-        let mut tx = self.pool.begin().await?;
-
-        let removed = sqlx::query_scalar::<_, bool>(
-            "DELETE FROM video_likes
-             WHERE user_id = $1 AND video_id = $2 AND is_liked = TRUE
-             RETURNING TRUE",
-        )
-        .bind(user_id)
-        .bind(video_id)
-        .fetch_optional(&mut *tx)
-        .await?
-        .is_some();
-
-        if removed {
-            sqlx::query(
-                "UPDATE videos
-                 SET like_count = GREATEST(like_count - 1, 0)
-                 WHERE id = $1",
-            )
-            .bind(video_id)
-            .execute(&mut *tx)
-            .await?;
-        }
-
-        tx.commit().await?;
-        Ok(())
-    }
-
-    async fn add_dislike(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<()> {
-        let mut tx = self.pool.begin().await?;
-
-        let existing = sqlx::query_scalar::<_, bool>(
-            "SELECT is_liked
-             FROM video_likes
-             WHERE user_id = $1 AND video_id = $2
-             FOR UPDATE",
-        )
-        .bind(user_id)
-        .bind(video_id)
-        .fetch_optional(&mut *tx)
-        .await?;
-
-        match existing {
-            Some(false) => {}
-            Some(true) => {
-                sqlx::query(
-                    "UPDATE video_likes
-                     SET is_liked = FALSE
-                     WHERE user_id = $1 AND video_id = $2",
-                )
-                .bind(user_id)
-                .bind(video_id)
-                .execute(&mut *tx)
-                .await?;
-
-                sqlx::query(
-                    "UPDATE videos
-                     SET dislike_count = dislike_count + 1,
-                         like_count = GREATEST(like_count - 1, 0)
-                     WHERE id = $1",
-                )
-                .bind(video_id)
-                .execute(&mut *tx)
-                .await?;
-            }
-            None => {
-                sqlx::query(
-                    "INSERT INTO video_likes (video_id, user_id, is_liked)
-                     VALUES ($1, $2, FALSE)",
-                )
-                .bind(video_id)
-                .bind(user_id)
-                .execute(&mut *tx)
-                .await?;
-
-                sqlx::query(
-                    "UPDATE videos
-                     SET dislike_count = dislike_count + 1
-                     WHERE id = $1",
-                )
-                .bind(video_id)
-                .execute(&mut *tx)
-                .await?;
-            }
-        }
-
-        tx.commit().await?;
-        Ok(())
-    }
-
-    async fn remove_dislike(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<()> {
-        let mut tx = self.pool.begin().await?;
-
-        let removed = sqlx::query_scalar::<_, bool>(
-            "DELETE FROM video_likes
-             WHERE user_id = $1 AND video_id = $2 AND is_liked = FALSE
-             RETURNING TRUE",
-        )
-        .bind(user_id)
-        .bind(video_id)
-        .fetch_optional(&mut *tx)
-        .await?
-        .is_some();
-
-        if removed {
-            sqlx::query(
-                "UPDATE videos
-                 SET dislike_count = GREATEST(dislike_count - 1, 0)
-                 WHERE id = $1",
-            )
-            .bind(video_id)
-            .execute(&mut *tx)
-            .await?;
-        }
-
-        tx.commit().await?;
-        Ok(())
-    }
-}
-
-#[async_trait::async_trait]
-impl VideoViewRepository for PgVideoRepository {
-    async fn register_view(
-        &self,
-        video_id: Uuid,
-        user_id: Option<Uuid>,
-        ip_address: Option<String>,
-        recount_after_seconds: i64,
-    ) -> anyhow::Result<()> {
-        let mut tx = self.pool.begin().await?;
-        let should_increment: bool;
-
-        if let Some(ip_address) = ip_address.clone() {
-            let existing = sqlx::query_as::<_, (i64, bool)>(
-                "SELECT
-                    id,
-                    (updated_at < NOW() - make_interval(secs => $3)) AS should_count
-                 FROM video_views
-                 WHERE video_id = $1 AND ip_address = $2::inet
-                 ORDER BY updated_at DESC
-                 LIMIT 1
-                 FOR UPDATE",
-            )
-            .bind(video_id)
-            .bind(&ip_address)
-            .bind(recount_after_seconds)
-            .fetch_optional(&mut *tx)
-            .await?;
-
-            if let Some((view_id, can_recount)) = existing {
-                sqlx::query(
-                    "UPDATE video_views
-                     SET
-                        user_id = COALESCE(user_id, $2),
-                        ip_address = $3::inet,
-                        updated_at = NOW()
-                     WHERE id = $1",
-                )
-                .bind(view_id)
-                .bind(user_id)
-                .bind(&ip_address)
-                .execute(&mut *tx)
-                .await?;
-
-                should_increment = can_recount;
-            } else {
-                sqlx::query(
-                    "INSERT INTO video_views (video_id, user_id, ip_address)
-                     VALUES ($1, $2, $3::inet)",
-                )
-                .bind(video_id)
-                .bind(user_id)
-                .bind(&ip_address)
-                .execute(&mut *tx)
-                .await?;
-
-                should_increment = true;
-            }
-        } else if let Some(user_id) = user_id {
-            let existing = sqlx::query_as::<_, (i64, bool)>(
-                "SELECT
-                    id,
-                    (updated_at < NOW() - make_interval(secs => $3)) AS should_count
-                 FROM video_views
-                 WHERE video_id = $1 AND user_id = $2
-                 ORDER BY updated_at DESC
-                 LIMIT 1
-                 FOR UPDATE",
-            )
-            .bind(video_id)
-            .bind(user_id)
-            .bind(recount_after_seconds)
-            .fetch_optional(&mut *tx)
-            .await?;
-
-            if let Some((view_id, can_recount)) = existing {
-                sqlx::query(
-                    "UPDATE video_views
-                     SET updated_at = NOW()
-                     WHERE id = $1",
-                )
-                .bind(view_id)
-                .execute(&mut *tx)
-                .await?;
-
-                should_increment = can_recount;
-            } else {
-                sqlx::query(
-                    "INSERT INTO video_views (video_id, user_id) VALUES ($1, $2)",
-                )
-                .bind(video_id)
-                .bind(user_id)
-                .execute(&mut *tx)
-                .await?;
-
-                should_increment = true;
-            }
-        } else {
-            sqlx::query(
-                "INSERT INTO video_views (video_id) VALUES ($1)",
-            )
-            .bind(video_id)
-            .execute(&mut *tx)
-            .await?;
-
-            should_increment = true;
-        }
-
-        if should_increment {
-            sqlx::query(
-                "UPDATE videos SET view_count = view_count + 1 WHERE id = $1",
-            )
-            .bind(video_id)
-            .execute(&mut *tx)
-            .await?;
-        }
-
-        tx.commit().await?;
-        Ok(())
+        into_page(records, &page, newest_cursor)
     }
 }

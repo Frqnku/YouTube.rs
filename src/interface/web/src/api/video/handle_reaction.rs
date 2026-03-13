@@ -11,7 +11,7 @@ use application::commands::{
 #[cfg(feature = "ssr")]
 use domain::_shared::DomainError;
 #[cfg(feature = "ssr")]
-use infrastructure::repositories::PgVideoRepository;
+use infrastructure::repositories::PgVideoReactionRepository;
 
 use crate::api::_errors::AppServerError;
 #[cfg(feature = "ssr")]
@@ -25,7 +25,7 @@ pub async fn get_video_reaction(video_id: String) -> Result<(bool, bool), AppSer
 	let current_user = use_context::<CurrentUser>()
 		.ok_or_else(|| AppServerError::from(DomainError::Unauthorized))?;
 
-	let repository = PgVideoRepository::new(&pool);
+	let repository = PgVideoReactionRepository::new(&pool);
 	let query = GetVideoReactionStatusUseCase {
 		reaction_repository: &repository,
 	};
@@ -46,7 +46,7 @@ pub async fn post_video_like(video_id: String) -> Result<(), AppServerError> {
 	let current_user = use_context::<CurrentUser>()
 		.ok_or_else(|| AppServerError::from(DomainError::Unauthorized))?;
 
-	let repository = PgVideoRepository::new(&pool);
+	let repository = PgVideoReactionRepository::new(&pool);
 	let command = AddVideoLike {
 		reaction_repository: &repository,
 	};
@@ -67,7 +67,7 @@ pub async fn delete_video_like(video_id: String) -> Result<(), AppServerError> {
 	let current_user = use_context::<CurrentUser>()
 		.ok_or_else(|| AppServerError::from(DomainError::Unauthorized))?;
 
-	let repository = PgVideoRepository::new(&pool);
+	let repository = PgVideoReactionRepository::new(&pool);
 	let command = RemoveVideoLike {
 		reaction_repository: &repository,
 	};
@@ -88,7 +88,7 @@ pub async fn post_video_dislike(video_id: String) -> Result<(), AppServerError> 
 	let current_user = use_context::<CurrentUser>()
 		.ok_or_else(|| AppServerError::from(DomainError::Unauthorized))?;
 
-	let repository = PgVideoRepository::new(&pool);
+	let repository = PgVideoReactionRepository::new(&pool);
 	let command = AddVideoDislike {
 		reaction_repository: &repository,
 	};
@@ -109,7 +109,7 @@ pub async fn delete_video_dislike(video_id: String) -> Result<(), AppServerError
 	let current_user = use_context::<CurrentUser>()
 		.ok_or_else(|| AppServerError::from(DomainError::Unauthorized))?;
 
-	let repository = PgVideoRepository::new(&pool);
+	let repository = PgVideoReactionRepository::new(&pool);
 	let command = RemoveVideoDislike {
 		reaction_repository: &repository,
 	};

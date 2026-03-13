@@ -3,7 +3,7 @@ use leptos::prelude::*;
 #[cfg(feature = "ssr")]
 use application::commands::RegisterVideoView;
 #[cfg(feature = "ssr")]
-use infrastructure::repositories::PgVideoRepository;
+use infrastructure::repositories::PgVideoViewRepository;
 
 use crate::api::_errors::AppServerError;
 #[cfg(feature = "ssr")]
@@ -17,7 +17,7 @@ pub async fn post_video_view(video_id: String) -> Result<(), AppServerError> {
 	let current_user = use_context::<CurrentUser>();
 	let client_meta = use_context::<ClientRequestMeta>();
 
-	let repository = PgVideoRepository::new(&pool);
+	let repository = PgVideoViewRepository::new(&pool);
 	let command = RegisterVideoView {
 		view_repository: &repository,
 	};
