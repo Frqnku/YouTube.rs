@@ -9,7 +9,7 @@ use application::{commands::AuthenticateWithOAuth, dtos::OAuthUserDto, services:
 #[cfg(feature = "ssr")]
 use infrastructure::{repositories::PgUserRepository, services::{JwtService, GoogleOAuthService}};
 
-use crate::app::CurrentUser;
+use crate::app::{ClientRequestMeta, CurrentUser};
 use crate::api::{_errors::{AppServerError, OptionExt, ValidateExt}, _helpers::{Cookie, CookieOptions}};
 
 #[server]
@@ -159,6 +159,11 @@ pub async fn generate_oauth_url(
 #[server]
 pub async fn get_current_user() -> Result<Option<CurrentUser>, AppServerError> {
     Ok(use_context::<CurrentUser>())
+}
+
+#[server]
+pub async fn get_current_client_meta() -> Result<Option<ClientRequestMeta>, AppServerError> {
+    Ok(use_context::<ClientRequestMeta>())
 }
 
 #[server]

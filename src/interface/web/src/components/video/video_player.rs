@@ -9,6 +9,7 @@ use crate::{
             get_video_reaction,
             post_video_dislike,
             post_video_like,
+            post_video_view,
         },
     },
     app::CurrentUserContext,
@@ -171,6 +172,7 @@ pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
     let video_id_for_status = video.id.clone();
     let video_id_for_like = video.id.clone();
     let video_id_for_dislike = video.id.clone();
+    let video_id_for_view = video.id.clone();
 
     let current_user_ctx = use_context::<CurrentUserContext>();
     let is_authenticated = Signal::derive(move || {
@@ -241,6 +243,15 @@ pub fn WatchVideoPlayer(video: VideoPlayer) -> impl IntoView {
 
     let reaction_pending = Signal::derive(move || {
         like_action.pending().get() || dislike_action.pending().get()
+    });
+
+    let view_action = Action::new(|video_id: &String| {
+        let video_id = video_id.clone();
+        async move { post_video_view(video_id).await }
+    });
+
+    Effect::new(move |_| {
+        view_action.dispatch(video_id_for_view.clone());
     });
 
     let on_like_click = {

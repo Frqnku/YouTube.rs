@@ -74,3 +74,14 @@ pub trait VideoReactionRepository {
     async fn add_dislike(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<()>;
     async fn remove_dislike(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<()>;
 }
+
+#[async_trait::async_trait]
+pub trait VideoViewRepository {
+    async fn register_view(
+        &self,
+        video_id: Uuid,
+        user_id: Option<Uuid>,
+        ip_address: Option<String>,
+        recount_after_seconds: i64,
+    ) -> anyhow::Result<()>;
+}

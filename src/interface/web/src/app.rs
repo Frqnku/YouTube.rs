@@ -8,7 +8,7 @@ use crate::components::layout::{header::Header, Sidebar};
 use crate::components::ui::NotFound;
 use crate::routes::protected::{HistoryPage, LikedVideosPage};
 use crate::routes::public::{HomePage, ResultsPage, SigninPage, WatchPage};
-use crate::api::user::auth::get_current_user;
+use crate::api::user::auth::{get_current_client_meta, get_current_user};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ThemeMode {
@@ -89,9 +89,24 @@ pub struct CurrentUserContext {
     pub current_user: RwSignal<Option<CurrentUser>>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ClientRequestMeta {
+    pub ip_address: Option<String>,
+}
+
+#[derive(Clone, Copy)]
+pub struct ClientRequestMetaContext {
+    pub client_meta: RwSignal<Option<ClientRequestMeta>>,
+}
+
 #[component]
 pub fn App() -> impl IntoView {
     provide_meta_context();
+
+    let current_client_signal = RwSignal::new(use_context::<ClientRequestMeta>());
+    provide_context(ClientRequestMetaContext {
+        client_meta: current_client_signal,
+    });
 
     let current_user_signal = RwSignal::new(use_context::<CurrentUser>());
     provide_context(CurrentUserContext {
@@ -107,6 +122,11 @@ pub fn App() -> impl IntoView {
         set_mode: set_theme_mode,
     });
 
+    let current_client_resource = Resource::new(
+        move || (),
+        move |_| async move { get_current_client_meta().await.ok().flatten() },
+    );
+
     let current_user_resource = Resource::new(
         move || (),
         move |_| async move { get_current_user().await.ok().flatten() },
@@ -115,6 +135,9 @@ pub fn App() -> impl IntoView {
     Effect::new(move |_| {
         if let Some(current_user) = current_user_resource.get() {
             current_user_signal.set(current_user);
+        }
+        if let Some(current_client) = current_client_resource.get() {
+            current_client_signal.set(current_client);
         }
     });
 

@@ -13,9 +13,9 @@ use leptos_axum::{
 };
 use tower_http::services::ServeDir;
 
-use web::{app::{App, CurrentUser}, shell::shell, state::AppState};
+use web::{app::{App, ClientRequestMeta, CurrentUser}, shell::shell, state::AppState};
 
-use crate::middleware::{get_current_user, require_auth};
+use crate::middleware::{get_current_ip, get_current_user, require_auth};
 
 /* ========================================================== */
 /*                         🦀 MAIN 🦀                        */
@@ -37,6 +37,7 @@ pub async fn build_app_router(
         .leptos_routes_with_handler(routes, get(leptos_routes_handler))
         .layer(middleware::from_fn(require_auth))
         .layer(middleware::from_fn(get_current_user))
+        .layer(middleware::from_fn(get_current_ip))
         .with_state(app_state))
 }
 
@@ -47,11 +48,16 @@ pub async fn build_app_router(
 #[axum_macros::debug_handler]
 pub async fn server_fn_handler(
     State(state): State<AppState>,
-    request: Request<AxumBody>,
+    req: Request<AxumBody>,
 ) -> impl IntoResponse {
-    let user = request
+    let user = req
         .extensions()
         .get::<CurrentUser>()
+        .cloned();
+
+    let client_meta = req
+        .extensions()
+        .get::<ClientRequestMeta>()
         .cloned();
 
     handle_server_fns_with_context(
@@ -61,8 +67,11 @@ pub async fn server_fn_handler(
             if let Some(user) = user.clone() {
                 provide_context(user);
             }
+            if let Some(client_meta) = client_meta.clone() {
+                provide_context(client_meta);
+            }
         },
-        request,
+        req,
     )
     .await
 }
@@ -79,12 +88,20 @@ pub async fn leptos_routes_handler(
         .get::<CurrentUser>()
         .cloned();
 
+    let client_meta = req
+        .extensions()
+        .get::<ClientRequestMeta>()
+        .cloned();
+
     let handler = render_app_to_stream_with_context(
         move || {
             provide_context(app_state.pool.clone());
             provide_context(app_state.jwt_secret.clone());
             if let Some(user) = user.clone() {
                 provide_context(user);
+            }
+            if let Some(client_meta) = client_meta.clone() {
+                provide_context(client_meta);
             }
         },
         move || shell(leptos_options.clone()),

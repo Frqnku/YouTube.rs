@@ -40,6 +40,11 @@ async fn main() -> anyhow::Result<()> {
     let app = build_app_router(app_state).await?;
     info!("listening on http://{}", &addr);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .await
+    .unwrap();
     Ok(())
 }
