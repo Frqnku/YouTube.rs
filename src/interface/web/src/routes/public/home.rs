@@ -1,10 +1,8 @@
 use leptos::prelude::*;
-use crate::api::_dtos::video::VideoCardDto;
 use crate::api::video::{get_newest_videos, get_trending_videos};
-#[cfg(target_arch = "wasm32")]
-use crate::components::_helpers::is_near_bottom_of_page;
 use crate::components::ui::Loader;
-use crate::components::video::{VideoCard, VideoCardSkeleton};
+use crate::components::videos::VideoCard;
+use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
 
 const HOME_PAGE_SIZE: u32 = 12;
 
@@ -46,118 +44,24 @@ fn HomeFilters(
 }
 
 #[component]
-fn ResponsiveVideoCardSkeletons() -> impl IntoView {
-    view! {
-        <For
-            each=move || 0..6
-            key=|index| *index
-            children=move |index| {
-                let visibility_class = match index {
-                    0 | 1 => "block",
-                    2 | 3 => "hidden lg:block",
-                    _ => "hidden 2xl:block",
-                };
-
-                view! {
-                    <div class=visibility_class>
-                        <VideoCardSkeleton />
-                    </div>
-                }
-            }
-        />
-    }
-}
-
-
-#[component]
 pub fn HomePage() -> impl IntoView {
     let current_feed = RwSignal::new(HomeFeed::Trending);
-    let videos = RwSignal::new(Vec::<VideoCardDto>::new());
-    let next_cursor = RwSignal::new(None::<String>);
-    let has_more = RwSignal::new(false);
-    let initial_error = RwSignal::new(false);
-    let load_more_error = RwSignal::new(false);
-
-    let newest_videos = Resource::new(
-        move || current_feed.get(),
-        move |feed| async move {
+    let (
+        videos,
+        _next_cursor,
+        _has_more,
+        initial_error,
+        load_more_error,
+        load_more,
+    ) = use_paginated_feed(
+        Signal::derive(move || current_feed.get()),
+        |feed, cursor| async move {
             match feed {
-                HomeFeed::Trending => get_trending_videos(Some(HOME_PAGE_SIZE), None).await,
-                HomeFeed::New => get_newest_videos(Some(HOME_PAGE_SIZE), None).await,
+                HomeFeed::Trending => get_trending_videos(Some(HOME_PAGE_SIZE), cursor).await.map_err(|_| ()),
+                HomeFeed::New => get_newest_videos(Some(HOME_PAGE_SIZE), cursor).await.map_err(|_| ()),
             }
         },
     );
-
-    let load_more = Action::new(move |(feed, cursor): &(HomeFeed, String)| {
-        let feed = *feed;
-        let cursor = cursor.clone();
-        async move {
-            match feed {
-                HomeFeed::Trending => get_trending_videos(Some(HOME_PAGE_SIZE), Some(cursor)).await,
-                HomeFeed::New => get_newest_videos(Some(HOME_PAGE_SIZE), Some(cursor)).await,
-            }
-        }
-    });
-
-    Effect::new(move |_| {
-        let Some(result) = newest_videos.get() else {
-            return;
-        };
-
-        match result {
-            Ok(page) => {
-                initial_error.set(false);
-                videos.set(page.items);
-                next_cursor.set(page.next_cursor);
-                has_more.set(page.has_more);
-            }
-            Err(_) => {
-                initial_error.set(true);
-                videos.set(Vec::new());
-                next_cursor.set(None);
-                has_more.set(false);
-            }
-        }
-    });
-
-    Effect::new(move |_| {
-        let Some(result) = load_more.value().get() else {
-            return;
-        };
-
-        match result {
-            Ok(page) => {
-                load_more_error.set(false);
-                videos.update(|items| items.extend(page.items));
-                next_cursor.set(page.next_cursor);
-                has_more.set(page.has_more);
-            }
-            Err(_) => {
-                load_more_error.set(true);
-            }
-        }
-    });
-
-    #[cfg(target_arch = "wasm32")]
-    {
-        let window_scroll_listener = window_event_listener(leptos::ev::scroll, move |_| {
-            if !is_near_bottom_of_page() {
-                return;
-            }
-
-            if !has_more.get_untracked() || load_more.pending().get_untracked() {
-                return;
-            }
-
-            if let Some(cursor) = next_cursor.get_untracked() {
-                load_more_error.set(false);
-                load_more.dispatch((current_feed.get_untracked(), cursor));
-            }
-        });
-
-        // Keep the listener alive for the component lifetime.
-        StoredValue::new(window_scroll_listener);
-    }
 
     view! {
         <div class="min-h-[calc(100dvh-3.5rem)] bg-bg px-4 pb-5 md:px-6">

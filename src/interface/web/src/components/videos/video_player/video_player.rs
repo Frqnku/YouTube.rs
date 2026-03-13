@@ -8,7 +8,7 @@ use crate::{
     app::CurrentUserContext,
     components::{
         _helpers::{CountFormat, format_count, format_relative_time},
-        video::ReactionButtons,
+        videos::video_player::ReactionButtons,
     },
 };
 

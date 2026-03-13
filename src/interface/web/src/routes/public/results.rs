@@ -1,37 +1,15 @@
 use leptos::prelude::*;
 use leptos_router::hooks::use_query_map;
 
-use crate::api::_dtos::video::VideoCardDto;
+use crate::api::_dtos::video::VideoCardPage;
 use crate::api::video::get_videos_by_search;
-#[cfg(target_arch = "wasm32")]
-use crate::components::_helpers::is_near_bottom_of_page;
 use crate::components::ui::{Loader, NotFound};
-use crate::components::video::{VideoCard, VideoCardSkeleton};
+use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
+use crate::components::videos::VideoCard;
 
 const RESULT_PAGE_SIZE: u32 = 12;
 
-#[component]
-fn ResponsiveVideoCardSkeletons() -> impl IntoView {
-	view! {
-		<For
-			each=move || 0..6
-			key=|index| *index
-			children=move |index| {
-				let visibility_class = match index {
-					0 | 1 => "block",
-					2 | 3 => "hidden lg:block",
-					_ => "hidden 2xl:block",
-				};
 
-				view! {
-					<div class=visibility_class>
-						<VideoCardSkeleton />
-					</div>
-				}
-			}
-		/>
-	}
-}
 
 #[component]
 pub fn ResultsPage() -> impl IntoView {
@@ -45,87 +23,21 @@ pub fn ResultsPage() -> impl IntoView {
 		})
 	});
 
-	let videos = RwSignal::new(Vec::<VideoCardDto>::new());
-	let next_cursor = RwSignal::new(None::<String>);
-	let has_more = RwSignal::new(false);
-	let load_more_error = RwSignal::new(false);
-
-	let search_results = Resource::new(
-		move || search_query.get(),
-		move |query| async move {
-			match query {
-				Some(query) => get_videos_by_search(query, Some(RESULT_PAGE_SIZE), None).await,
-				None => Ok(crate::api::_dtos::video::VideoCardPage::new(Vec::new(), None, false)),
-			}
-		},
-	);
-
-	let load_more = Action::new(move |(query, cursor): &(String, String)| {
-		let query = query.clone();
-		let cursor = cursor.clone();
-		async move { get_videos_by_search(query, Some(RESULT_PAGE_SIZE), Some(cursor)).await }
-	});
-
-	Effect::new(move |_| {
-		let Some(result) = search_results.get() else {
-			return;
-		};
-
-		match result {
-			Ok(page) => {
-				videos.set(page.items);
-				next_cursor.set(page.next_cursor);
-				has_more.set(page.has_more);
-			}
-			Err(_) => {
-				videos.set(Vec::new());
-				next_cursor.set(None);
-				has_more.set(false);
-			}
+	let (
+		videos,
+		_next_cursor,
+		_has_more,
+		initial_error,
+		load_more_error,
+		load_more,
+	) = use_paginated_feed(search_query, |query, cursor| async move {
+		match query {
+			Some(query) => get_videos_by_search(query, Some(RESULT_PAGE_SIZE), cursor)
+				.await
+				.map_err(|_| ()),
+			None => Ok(VideoCardPage::new(Vec::new(), None, false)),
 		}
 	});
-
-	Effect::new(move |_| {
-		let Some(result) = load_more.value().get() else {
-			return;
-		};
-
-		match result {
-			Ok(page) => {
-				load_more_error.set(false);
-				videos.update(|items| items.extend(page.items));
-				next_cursor.set(page.next_cursor);
-				has_more.set(page.has_more);
-			}
-			Err(_) => {
-				load_more_error.set(true);
-			}
-		}
-	});
-
-	#[cfg(target_arch = "wasm32")]
-	{
-		let window_scroll_listener = window_event_listener(leptos::ev::scroll, move |_| {
-			if !is_near_bottom_of_page() {
-				return;
-			}
-
-			if !has_more.get_untracked() || load_more.pending().get_untracked() {
-				return;
-			}
-
-			let Some(query) = search_query.get_untracked() else {
-				return;
-			};
-
-			if let Some(cursor) = next_cursor.get_untracked() {
-				load_more_error.set(false);
-				load_more.dispatch((query, cursor));
-			}
-		});
-
-		StoredValue::new(window_scroll_listener);
-	}
 
 	view! {
 		<div class="min-h-[calc(100dvh-3.5rem)] bg-bg px-4 py-5 md:px-6">
@@ -140,12 +52,12 @@ pub fn ResultsPage() -> impl IntoView {
 
 			<section
 				class=move || {
-						if videos.get().is_empty() {
-							"grid grid-cols-1 gap-6"
-						} else {
-							"grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3"
-						}
+					if videos.get().is_empty() {
+						"grid grid-cols-1 gap-6"
+					} else {
+						"grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3"
 					}
+				}
 				data-section="result-grid"
 			>
 				<Suspense
@@ -154,23 +66,22 @@ pub fn ResultsPage() -> impl IntoView {
 					}
 				>
 					{move || {
-						match search_results.get() {
-							None => view! {}.into_any().into_view(),
-							Some(Err(_)) => view! {
+						if initial_error.get() {
+							return view! {
 								<article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
 									"Unable to load search results right now. Please try again later."
 								</article>
 							}
-							.into_any()
-							.into_view(),
-							Some(Ok(page))
-								if page.items.is_empty() || search_query.get().is_none() =>
-							{
-								view! { <NotFound message="No results found".to_string() /> }
-									.into_any()
-									.into_view()
-							}
-							Some(Ok(_)) => view! {
+								.into_any()
+								.into_view();
+						}
+
+						if videos.get().is_empty() || search_query.get().is_none() {
+							view! { <NotFound message="No results found".to_string() /> }
+								.into_any()
+								.into_view()
+						} else {
+							view! {
 								<For
 									each=move || videos.get()
 									key=|video| video.id.clone()
@@ -179,8 +90,8 @@ pub fn ResultsPage() -> impl IntoView {
 									}
 								/>
 							}
-							.into_any()
-							.into_view(),
+								.into_any()
+								.into_view()
 						}
 					}}
 				</Suspense>

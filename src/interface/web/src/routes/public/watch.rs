@@ -5,7 +5,7 @@ use crate::api::_errors::AppServerError;
 use crate::api::_dtos::video::VideoPlayer;
 use crate::api::video::get_video::get_video;
 use crate::components::ui::{Loader, NotFound};
-use crate::components::video::{NextVideos, WatchVideoPlayer};
+use crate::components::videos::{NextVideos, video_player::WatchVideoPlayer};
 
 #[component]
 fn WatchPageLayout(video: VideoPlayer) -> impl IntoView {
