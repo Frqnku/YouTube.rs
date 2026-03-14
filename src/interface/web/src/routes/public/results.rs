@@ -7,7 +7,7 @@ use crate::components::ui::{Loader, NotFound};
 use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
 use crate::components::videos::VideoCard;
 
-const RESULT_PAGE_SIZE: u32 = 12;
+const RESULT_PAGE_SIZE: u32 = 6;
 
 
 

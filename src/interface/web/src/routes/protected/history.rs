@@ -4,7 +4,7 @@ use crate::components::ui::Loader;
 use crate::components::videos::VideoCard;
 use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
 
-const HISTORY_PAGE_SIZE: u32 = 12;
+const HISTORY_PAGE_SIZE: u32 = 6;
 
 #[component]
 pub fn HistoryPage() -> impl IntoView {
