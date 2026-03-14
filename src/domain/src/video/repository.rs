@@ -72,6 +72,11 @@ pub trait VideoHistoryRepository {
 }
 
 #[async_trait::async_trait]
+pub trait LikedVideoRepository {
+    async fn list_liked_videos_by_user_id(&self, user_id: Uuid, page: PageRequest) -> anyhow::Result<VideoPage>;
+}
+
+#[async_trait::async_trait]
 pub trait VideoReactionRepository {
     async fn find_like_status(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<(bool, bool)>;
     async fn add_like(&self, user_id: Uuid, video_id: Uuid) -> anyhow::Result<()>;

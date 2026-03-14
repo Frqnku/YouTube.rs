@@ -1,37 +1,86 @@
 use leptos::prelude::*;
+use crate::api::video::get_liked_videos;
+use crate::components::ui::Loader;
+use crate::components::videos::VideoCard;
+use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
+
+const LIKED_PAGE_SIZE: u32 = 6;
 
 #[component]
 pub fn LikedVideosPage() -> impl IntoView {
-    view! {
-        <div class="min-h-[calc(100dvh-3.5rem)] bg-bg px-4 py-6 md:px-8">
-            <div class="mb-6 flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-semibold text-text">"Liked Videos"</h1>
-                    <p class="mt-1 text-sm text-text-secondary">"All the videos you liked"</p>
-                </div>
-                <button class="btn-primary">"Play all"</button>
-            </div>
+    let (
+        videos,
+        _next_cursor,
+        _has_more,
+        initial_error,
+        load_more_error,
+        load_more,
+    ) = use_paginated_feed(
+        Signal::derive(|| ()),
+        |(), cursor| async move {
+            get_liked_videos(Some(LIKED_PAGE_SIZE), cursor)
+                .await
+                .map_err(|_| ())
+        },
+    );
 
-            <section class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {(1..=9)
-                    .map(|idx| {
-                        view! {
-                            <article class="yt-card p-3">
-                                <div class="relative aspect-video overflow-hidden rounded-lg bg-bg-tertiary">
-                                    <span class="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs text-white">
-                                        "08:4" {idx % 10}
-                                    </span>
-                                </div>
-                                <h2 class="mt-3 line-clamp-2 text-sm font-medium text-text">
-                                    "Roadmap to build a YouTube clone in Rust (part " {idx} ")"
-                                </h2>
-                                <p class="mt-1 text-sm text-text-secondary">"YouTube Clone Lab"</p>
-                                <p class="text-sm text-text-muted">"Added " {idx} " day(s) ago"</p>
-                            </article>
+    view! {
+        <div class="min-h-[calc(100dvh-3.5rem)] bg-bg px-4 py-5 md:px-6">
+            <h1 class="text-2xl font-semibold text-text">"Liked videos"</h1>
+            <p class="mt-1 text-sm text-text-secondary">"Videos you've liked"</p>
+
+            <section class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3" data-section="history-grid">
+                <Suspense
+                    fallback=move || {
+                        view! { <ResponsiveVideoCardSkeletons /> }.into_any()
+                    }
+                >
+                    {move || {
+                        if initial_error.get() {
+                            return view! {
+                                <article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
+                                    "Unable to load your liked videos right now. Please try again later."
+                                </article>
+                            }
+                                .into_any()
+                                .into_view();
                         }
-                    })
-                    .collect_view()}
+
+                        if videos.get().is_empty() {
+                            return view! {
+                                <article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
+                                    "No liked videos yet. Start liking videos and they will appear here."
+                                </article>
+                            }
+                                .into_any()
+                                .into_view();
+                        }
+
+                        view! {
+                            <For
+                                each=move || videos.get()
+                                key=|video| video.id.clone()
+                                children=move |video| {
+                                    view! { <VideoCard video=video /> }
+                                }
+                            />
+                        }
+                            .into_any()
+                            .into_view()
+                    }}
+                </Suspense>
             </section>
+
+            <Show when=move || load_more.pending().get()>
+                <ResponsiveVideoCardSkeletons />
+                <Loader />
+            </Show>
+
+            <Show when=move || load_more_error.get()>
+                <div class="pb-5 text-center text-sm text-text-secondary">
+                    "Couldn't load more liked videos. Keep scrolling to retry."
+                </div>
+            </Show>
         </div>
     }
 }

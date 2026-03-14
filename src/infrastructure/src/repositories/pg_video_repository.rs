@@ -1,7 +1,7 @@
 use anyhow::{Context, anyhow};
 use domain::_shared::value_objects::Url;
 use domain::video::entity::{Video, VideoAuthor};
-use domain::video::{PageRequest, VideoHistoryRepository, VideoPage, VideoRepository};
+use domain::video::{PageRequest, VideoHistoryRepository, LikedVideoRepository, VideoPage, VideoRepository};
 use sqlx::types::Uuid;
 use sqlx::types::time::OffsetDateTime;
 
@@ -338,6 +338,42 @@ impl VideoHistoryRepository for PgVideoRepository {
                 "JOIN video_views vv ON vv.video_id = v.id
                  WHERE vv.user_id = $1
                  ORDER BY vv.updated_at DESC, v.id DESC
+                 LIMIT $2",
+            );
+            sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(user_id)
+            .bind(limit_plus_one(&page))
+            .fetch_all(&self.pool)
+            .await?
+        };
+
+        into_page(records, &page, newest_cursor)
+    }
+}
+
+#[async_trait::async_trait]
+impl LikedVideoRepository for PgVideoRepository {
+    async fn list_liked_videos_by_user_id(&self, user_id: Uuid, page: PageRequest) -> anyhow::Result<VideoPage> {
+        let records = if let Some(cursor) = page.cursor.as_deref() {
+            let (updated_at, id) = parse_newest_cursor(cursor)?;
+            let sql = video_query_sql(
+                "JOIN video_reactions vr ON vr.video_id = v.id
+                 WHERE vr.user_id = $1 AND (vr.updated_at, v.id) < ($2, $3) AND vr.is_liked = true
+                 ORDER BY vr.updated_at DESC, v.id DESC
+                 LIMIT $4",
+            );
+            sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(user_id)
+            .bind(updated_at)
+            .bind(id)
+            .bind(limit_plus_one(&page))
+            .fetch_all(&self.pool)
+            .await?
+        } else {
+            let sql = video_query_sql(
+                "JOIN video_reactions vr ON vr.video_id = v.id
+                 WHERE vr.user_id = $1 AND vr.is_liked = true
+                 ORDER BY vr.updated_at DESC, v.id DESC
                  LIMIT $2",
             );
             sqlx::query_as::<_, VideoRecord>(&sql)
