@@ -9,7 +9,9 @@ CREATE TABLE video_views (
 
     watched_seconds INT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    CONSTRAINT uq_video_views_video_id_user_id UNIQUE (video_id, user_id)
 );
 
 -- =========================
@@ -23,6 +25,10 @@ ON video_views (video_id);
 -- Fast lookup for a user's watch history
 CREATE INDEX idx_video_views_user_id_created_at
 ON video_views (user_id, created_at DESC);
+
+-- Fast lookup for deduplication by video + ip
+CREATE INDEX idx_video_views_video_id_ip_updated_at
+ON video_views (video_id, ip_address, updated_at DESC);
 
 -- Fast lookup for recent video analytics
 CREATE INDEX idx_video_views_video_id_created_at
