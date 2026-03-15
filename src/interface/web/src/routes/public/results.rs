@@ -95,12 +95,11 @@ pub fn ResultsPage() -> impl IntoView {
 						}
 					}}
 				</Suspense>
+				<Show when=move || load_more.pending().get()>
+					<ResponsiveVideoCardSkeletons />
+				</Show>
 			</section>
 
-			<Show when=move || load_more.pending().get()>
-				<ResponsiveVideoCardSkeletons />
-				<Loader />
-			</Show>
 
 			<Show when=move || load_more_error.get()>
 				<div class="pb-5 text-center text-sm text-text-secondary">
