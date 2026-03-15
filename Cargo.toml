@@ -20,7 +20,7 @@ axum-extra = { version = "0.9", features = ["cookie", "cookie-private"] }
 axum-macros = "0.4"
 bytes = "1"
 config = "0.14"
-chrono = "0.4.43"
+chrono = { version = "0.4.43", features = ["serde"] }
 dotenvy = "0.15"
 http = "1"
 regex = "1"

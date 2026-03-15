@@ -150,3 +150,100 @@ impl From<Video> for VideoPlayer {
 		)
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use domain::_shared::value_objects::Url;
+	use domain::video::entity::VideoAuthor;
+
+	fn sample_video(title: &str) -> Video {
+		let mut video = Video::new(
+			Uuid::new_v4(),
+			VideoAuthor::new(
+				Uuid::new_v4(),
+				"Alice".to_string(),
+				Some(Url::try_from("https://example.com/avatar.jpg").unwrap()),
+			),
+			title.to_string(),
+			"A description".to_string(),
+			Url::try_from("https://example.com/video.mp4").unwrap(),
+			Url::try_from("https://example.com/thumb.jpg").unwrap(),
+			Url::try_from("https://example.com/preview.mp4").unwrap(),
+			123,
+			777,
+			42,
+			3,
+		);
+		video.created_at = chrono::DateTime::parse_from_rfc3339("2026-03-01T10:20:30Z")
+			.unwrap()
+			.with_timezone(&chrono::Utc);
+		video
+	}
+
+	#[test]
+	fn test_video_card_new() {
+		let id = Uuid::new_v4();
+		let card = VideoCard::new(
+			id,
+			"Alice".to_string(),
+			Some("https://example.com/avatar.jpg".to_string()),
+			"Title".to_string(),
+			"https://example.com/thumb.jpg".to_string(),
+			"https://example.com/preview.mp4".to_string(),
+			123,
+			1000,
+			111,
+			"2026-03-01T10:20:30Z".to_string(),
+		);
+
+		assert_eq!(card.id, id);
+		assert_eq!(card.user, "Alice");
+		assert_eq!(card.title, "Title");
+		assert_eq!(card.view_count, 1000);
+	}
+
+	#[test]
+	fn test_video_card_from_video() {
+		let video = sample_video("Rust Video");
+		let expected_uploaded_at = video.created_at.to_rfc3339();
+
+		let card = VideoCard::from(video);
+
+		assert_eq!(card.user, "Alice");
+		assert_eq!(card.title, "Rust Video");
+		assert_eq!(card.thumbnail_url, "https://example.com/thumb.jpg");
+		assert_eq!(card.preview_url, "https://example.com/preview.mp4");
+		assert_eq!(card.uploaded_at, expected_uploaded_at);
+	}
+
+	#[test]
+	fn test_video_card_page_from_video_page() {
+		let video_a = sample_video("A");
+		let video_b = sample_video("B");
+		let page = VideoPage::new(vec![video_a, video_b], Some("next-cursor".to_string()), true);
+
+		let card_page = VideoCardPage::from(page);
+
+		assert_eq!(card_page.items.len(), 2);
+		assert_eq!(card_page.items[0].title, "A");
+		assert_eq!(card_page.items[1].title, "B");
+		assert_eq!(card_page.next_cursor.as_deref(), Some("next-cursor"));
+		assert!(card_page.has_more);
+	}
+
+	#[test]
+	fn test_video_player_from_video() {
+		let video = sample_video("Player Title");
+		let expected_uploaded_at = video.created_at.to_rfc3339();
+
+		let player = VideoPlayer::from(video);
+
+		assert_eq!(player.user, "Alice");
+		assert_eq!(player.title, "Player Title");
+		assert_eq!(player.description, "A description");
+		assert_eq!(player.video_url, "https://example.com/video.mp4");
+		assert_eq!(player.dislike_count, 3);
+		assert_eq!(player.uploaded_at, expected_uploaded_at);
+	}
+}

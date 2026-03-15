@@ -41,3 +41,102 @@ where
 			.await
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use crate::_tests::repositories::InMemoryVideoViewRepository;
+
+	#[tokio::test]
+	async fn test_register_video_view_success() {
+		let repository = InMemoryVideoViewRepository::new();
+		let use_case = RegisterVideoView {
+			view_repository: &repository,
+		};
+
+		let video_id = Uuid::new_v4();
+		let user_id = Uuid::new_v4();
+
+		let result = use_case
+			.execute(
+				video_id.to_string(),
+				Some(user_id.to_string()),
+				Some(" 127.0.0.1 ".to_string()),
+			)
+			.await;
+
+		assert!(result.is_ok());
+
+		let views = repository.views.lock().unwrap();
+		assert_eq!(views.len(), 1);
+		assert_eq!(views[0].video_id, video_id);
+		assert_eq!(views[0].user_id, Some(user_id));
+		assert_eq!(views[0].ip_address.as_deref(), Some("127.0.0.1"));
+		assert_eq!(repository.view_count(video_id), 1);
+	}
+
+	#[tokio::test]
+	async fn test_register_video_view_invalid_video_id() {
+		let repository = InMemoryVideoViewRepository::new();
+		let use_case = RegisterVideoView {
+			view_repository: &repository,
+		};
+
+		let result = use_case
+			.execute("invalid-uuid".to_string(), None, Some("1.1.1.1".to_string()))
+			.await;
+
+		assert!(result.is_err());
+		assert!(repository.views.lock().unwrap().is_empty());
+	}
+
+	#[tokio::test]
+	async fn test_register_video_view_with_in_memory_repository_does_not_recount_recent_same_ip() {
+		let repository = InMemoryVideoViewRepository::new();
+		let use_case = RegisterVideoView {
+			view_repository: &repository,
+		};
+		let video_id = Uuid::new_v4();
+
+		use_case
+			.execute(video_id.to_string(), None, Some(" 127.0.0.1 ".to_string()))
+			.await
+			.unwrap();
+		use_case
+			.execute(video_id.to_string(), None, Some("127.0.0.1".to_string()))
+			.await
+			.unwrap();
+
+		assert_eq!(repository.view_count(video_id), 1);
+		assert_eq!(repository.views.lock().unwrap().len(), 1);
+	}
+
+	#[tokio::test]
+	async fn test_register_video_view_with_in_memory_repository_promotes_anonymous_view_to_user() {
+		let repository = InMemoryVideoViewRepository::new();
+		let use_case = RegisterVideoView {
+			view_repository: &repository,
+		};
+		let video_id = Uuid::new_v4();
+		let user_id = Uuid::new_v4();
+
+		use_case
+			.execute(video_id.to_string(), None, Some("127.0.0.1".to_string()))
+			.await
+			.unwrap();
+		use_case
+			.execute(
+				video_id.to_string(),
+				Some(user_id.to_string()),
+				Some("127.0.0.1".to_string()),
+			)
+			.await
+			.unwrap();
+
+		let views = repository.views.lock().unwrap();
+		assert_eq!(views.len(), 1);
+		assert_eq!(views[0].user_id, Some(user_id));
+		assert_eq!(views[0].ip_address.as_deref(), Some("127.0.0.1"));
+		assert_eq!(repository.view_count(video_id), 1);
+	}
+}

@@ -27,3 +27,31 @@ pub fn valid_email(email: &Email) -> Result<(), ValidationError> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_non_empty_string() {
+        assert!(non_empty_string("hello").is_ok());
+        assert!(non_empty_string("   ").is_err());
+    }
+
+    #[test]
+    fn test_valid_url() {
+        assert!(valid_url("https://example.com/video").is_ok());
+        assert!(valid_url("not-a-url").is_err());
+    }
+
+    #[test]
+    fn test_valid_email() {
+        let email = Email::try_from("user@example.com").unwrap();
+        assert!(super::valid_email(&email).is_ok());
+
+        // Email derives Deserialize and can be deserialized from raw strings
+        // without domain validation, so this checks the DTO validation guard.
+        let invalid: Email = serde_json::from_str("\"not-an-email\"").unwrap();
+        assert!(super::valid_email(&invalid).is_err());
+    }
+}
