@@ -3,7 +3,7 @@ use leptos_router::hooks::use_query_map;
 
 use crate::api::_dtos::video::VideoCardPage;
 use crate::api::video::get_videos_by_search;
-use crate::components::ui::{Loader, NotFound};
+use crate::components::ui::NotFound;
 use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
 use crate::components::videos::VideoCard;
 

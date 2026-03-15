@@ -1,6 +1,5 @@
 use leptos::prelude::*;
 use crate::api::video::get_history_videos;
-use crate::components::ui::Loader;
 use crate::components::videos::VideoCard;
 use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
 
