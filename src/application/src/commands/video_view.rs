@@ -42,6 +42,28 @@ where
 	}
 }
 
+pub struct UpdateWatchedSeconds<
+	'a,
+	R: VideoViewRepository,
+> {
+	pub view_repository: &'a R,
+}
+
+impl<'a, R> UpdateWatchedSeconds<'a, R>
+where
+	R: VideoViewRepository,
+{
+	pub async fn execute(&self, video_id: String, user_id: String, watched_seconds: u32) -> anyhow::Result<()> {
+		let video_id = parse_uuid(&video_id)?;
+		let user_id = parse_uuid(&user_id)?;
+
+		self
+			.view_repository
+			.update_watched_seconds(video_id, user_id, watched_seconds)
+			.await
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;

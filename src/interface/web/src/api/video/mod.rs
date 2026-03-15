@@ -4,5 +4,5 @@ pub mod get_video;
 pub use get_video::*;
 pub mod handle_reaction;
 pub use handle_reaction::*;
-pub mod post_view;
-pub use post_view::*;
+pub mod handle_view;
+pub use handle_view::*;

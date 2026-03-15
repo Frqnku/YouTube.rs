@@ -5,13 +5,13 @@ use crate::api::_errors::AppServerError;
 use crate::api::_dtos::video::VideoPlayer;
 use crate::api::video::get_video::get_video;
 use crate::components::ui::{Loader, NotFound};
-use crate::components::videos::{NextVideos, video_player::WatchVideoPlayer};
+use crate::components::videos::{NextVideos, video_player::WatchVideo};
 
 #[component]
 fn WatchPageLayout(video: VideoPlayer) -> impl IntoView {
     view! {
         <section class="mx-auto grid w-full max-w-7xl gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <WatchVideoPlayer video=video />
+            <WatchVideo video=video />
             <NextVideos />
         </section>
     }

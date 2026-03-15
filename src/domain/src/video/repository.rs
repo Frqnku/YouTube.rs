@@ -94,4 +94,11 @@ pub trait VideoViewRepository {
         ip_address: Option<String>,
         recount_after_seconds: i64,
     ) -> anyhow::Result<()>;
+
+    async fn update_watched_seconds(
+        &self,
+        video_id: Uuid,
+        user_id: Uuid,
+        watched_seconds: u32,
+    ) -> anyhow::Result<()>;
 }

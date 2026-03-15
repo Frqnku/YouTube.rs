@@ -196,4 +196,19 @@ impl VideoViewRepository for PgVideoViewRepository {
         tx.commit().await?;
         Ok(())
     }
+
+    async fn update_watched_seconds(&self, video_id: Uuid, user_id: Uuid, watched_seconds: u32) -> anyhow::Result<()> {
+        sqlx::query(
+            "UPDATE video_views
+             SET watched_seconds = $3, updated_at = NOW()
+             WHERE video_id = $1 AND user_id = $2",
+        )
+        .bind(video_id)
+        .bind(user_id)
+        .bind(watched_seconds as i32)
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
 }

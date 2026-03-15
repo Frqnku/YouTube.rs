@@ -142,6 +142,11 @@ impl VideoViewRepository for InMemoryVideoViewRepository {
 
 		Ok(())
 	}
+
+    async fn update_watched_seconds(&self, _video_id: Uuid, _user_id: Uuid, _watched_seconds: u32) -> anyhow::Result<()> {
+        // No-op for in-memory repository
+        Ok(())
+    }
 }
 
 #[cfg(test)]
