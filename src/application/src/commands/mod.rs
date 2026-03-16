@@ -4,3 +4,7 @@ pub mod video_reaction;
 pub use video_reaction::*;
 pub mod video_view;
 pub use video_view::*;
+pub mod comment;
+pub use comment::*;
+pub mod comment_like;
+pub use comment_like::*;

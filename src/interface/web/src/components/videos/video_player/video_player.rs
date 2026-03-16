@@ -11,6 +11,7 @@ use crate::{
     app::CurrentUserContext,
     components::{
         _helpers::{CountFormat, format_count, format_relative_time},
+        comments::CommentFeed,
         videos::video_player::ReactionButtons,
     },
 };
@@ -115,6 +116,8 @@ pub fn WatchVideo(video: VideoPlayer) -> impl IntoView {
                     <p class="font-medium text-text">{format!("{} - {}", view_count, uploaded_ago)}</p>
                     <p class="mt-2 whitespace-pre-line">{video.description}</p>
                 </div>
+
+                <CommentFeed video_id=video.id.clone() />
             </div>
         </div>
         <SigninPromptModal open=show_signin_prompt />
