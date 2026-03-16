@@ -27,6 +27,7 @@ struct VideoRecord {
     thumbnail_url: String,
     preview_url: String,
     duration_seconds: i32,
+    watched_seconds: Option<i32>,
     view_count: i64,
     like_count: i64,
     dislike_count: i64,
@@ -54,6 +55,7 @@ impl VideoRecord {
             Url::try_from(self.thumbnail_url)?,
             Url::try_from(self.preview_url)?, // Using video_url as preview_url for now
             self.duration_seconds,
+            self.watched_seconds,
             self.view_count,
             self.like_count,
             self.dislike_count,
@@ -76,12 +78,14 @@ const VIDEO_SELECT_WITH_USER: &str = "SELECT
     v.thumbnail_url,
     v.preview_url,
     v.duration_seconds,
+     viewer_vv.watched_seconds,
     v.view_count,
     v.like_count,
     v.dislike_count,
     v.created_at
  FROM videos v
- JOIN users u ON u.id = v.user_id";
+ JOIN users u ON u.id = v.user_id
+ LEFT JOIN video_views viewer_vv ON viewer_vv.video_id = v.id AND viewer_vv.user_id = $1";
 
 fn video_query_sql(suffix: &str) -> String {
     format!("{VIDEO_SELECT_WITH_USER} {suffix}")
@@ -152,9 +156,10 @@ where
 
 #[async_trait::async_trait]
 impl VideoRepository for PgVideoRepository {
-    async fn find_by_id(&self, id: Uuid) -> Option<Video> {
-        let sql = video_query_sql("WHERE v.id = $1");
+    async fn find_by_id(&self, id: Uuid, viewer_user_id: Option<Uuid>) -> Option<Video> {
+        let sql = video_query_sql("WHERE v.id = $2");
         let record = sqlx::query_as::<_, VideoRecord>(&sql)
+        .bind(viewer_user_id)
         .bind(id)
         .fetch_optional(&self.pool)
         .await
@@ -163,23 +168,25 @@ impl VideoRepository for PgVideoRepository {
         record.and_then(|rec| rec.into_video().ok())
     }
 
-    async fn list_newest(&self, page: PageRequest) -> anyhow::Result<VideoPage> {
+    async fn list_newest(&self, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
         let records = if let Some(cursor) = page.cursor.as_deref() {
             let (created_at, id) = parse_newest_cursor(cursor)?;
             let sql = video_query_sql(
-                "WHERE (v.created_at, v.id) < ($1, $2)
+                "WHERE (v.created_at, v.id) < ($2, $3)
                  ORDER BY v.created_at DESC, v.id DESC
-                 LIMIT $3",
+                 LIMIT $4",
             );
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(viewer_user_id)
             .bind(created_at)
             .bind(id)
             .bind(limit_plus_one(&page))
             .fetch_all(&self.pool)
             .await?
         } else {
-            let sql = video_query_sql("ORDER BY v.created_at DESC, v.id DESC LIMIT $1");
+            let sql = video_query_sql("ORDER BY v.created_at DESC, v.id DESC LIMIT $2");
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(viewer_user_id)
             .bind(limit_plus_one(&page))
             .fetch_all(&self.pool)
             .await?
@@ -188,23 +195,25 @@ impl VideoRepository for PgVideoRepository {
         into_page(records, &page, newest_cursor)
     }
 
-    async fn list_most_popular(&self, page: PageRequest) -> anyhow::Result<VideoPage> {
+    async fn list_most_popular(&self, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
         let records = if let Some(cursor) = page.cursor.as_deref() {
             let (view_count, id) = parse_popular_cursor(cursor)?;
             let sql = video_query_sql(
-                "WHERE (v.view_count, v.id) < ($1, $2)
+                "WHERE (v.view_count, v.id) < ($2, $3)
                  ORDER BY v.view_count DESC, v.id DESC
-                 LIMIT $3",
+                 LIMIT $4",
             );
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(viewer_user_id)
             .bind(view_count)
             .bind(id)
             .bind(limit_plus_one(&page))
             .fetch_all(&self.pool)
             .await?
         } else {
-            let sql = video_query_sql("ORDER BY v.view_count DESC, v.id DESC LIMIT $1");
+            let sql = video_query_sql("ORDER BY v.view_count DESC, v.id DESC LIMIT $2");
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(viewer_user_id)
             .bind(limit_plus_one(&page))
             .fetch_all(&self.pool)
             .await?
@@ -213,15 +222,16 @@ impl VideoRepository for PgVideoRepository {
         into_page(records, &page, popular_cursor)
     }
 
-    async fn list_by_user_id(&self, user_id: Uuid, page: PageRequest) -> anyhow::Result<VideoPage> {
+    async fn list_by_user_id(&self, user_id: Uuid, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
         let records = if let Some(cursor) = page.cursor.as_deref() {
             let (created_at, id) = parse_newest_cursor(cursor)?;
             let sql = video_query_sql(
-                "WHERE v.user_id = $1 AND (v.created_at, v.id) < ($2, $3)
+                "WHERE v.user_id = $2 AND (v.created_at, v.id) < ($3, $4)
                  ORDER BY v.created_at DESC, v.id DESC
-                 LIMIT $4",
+                 LIMIT $5",
             );
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(viewer_user_id)
             .bind(user_id)
             .bind(created_at)
             .bind(id)
@@ -230,11 +240,12 @@ impl VideoRepository for PgVideoRepository {
             .await?
         } else {
             let sql = video_query_sql(
-                "WHERE v.user_id = $1
+                "WHERE v.user_id = $2
                  ORDER BY v.created_at DESC, v.id DESC
-                 LIMIT $2",
+                 LIMIT $3",
             );
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(viewer_user_id)
             .bind(user_id)
             .bind(limit_plus_one(&page))
             .fetch_all(&self.pool)
@@ -244,17 +255,18 @@ impl VideoRepository for PgVideoRepository {
         into_page(records, &page, newest_cursor)
     }
 
-    async fn search_by_title(&self, query: &str, page: PageRequest) -> anyhow::Result<VideoPage> {
+    async fn search_by_title(&self, query: &str, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
         let like_query = format!("%{}%", query);
 
         let records = if let Some(cursor) = page.cursor.as_deref() {
             let (created_at, id) = parse_newest_cursor(cursor)?;
             let sql = video_query_sql(
-                "WHERE (v.title ILIKE $1 OR u.name ILIKE $1) AND (v.created_at, v.id) < ($2, $3)
+                "WHERE (v.title ILIKE $2 OR u.name ILIKE $2) AND (v.created_at, v.id) < ($3, $4)
                  ORDER BY v.created_at DESC, v.id DESC
-                 LIMIT $4",
+                 LIMIT $5",
             );
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(viewer_user_id)
             .bind(&like_query)
             .bind(created_at)
             .bind(id)
@@ -263,11 +275,12 @@ impl VideoRepository for PgVideoRepository {
             .await?
         } else {
             let sql = video_query_sql(
-                "WHERE (v.title ILIKE $1 OR u.name ILIKE $1)
+                "WHERE (v.title ILIKE $2 OR u.name ILIKE $2)
                  ORDER BY v.created_at DESC, v.id DESC
-                 LIMIT $2",
+                 LIMIT $3",
             );
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(viewer_user_id)
             .bind(&like_query)
             .bind(limit_plus_one(&page))
             .fetch_all(&self.pool)
@@ -292,6 +305,7 @@ impl VideoRepository for PgVideoRepository {
                 thumbnail_url,
                 preview_url,
                 duration_seconds,
+                NULL::integer AS watched_seconds,
                 view_count,
                 like_count,
                 dislike_count,
@@ -322,11 +336,12 @@ impl VideoHistoryRepository for PgVideoRepository {
             let (created_at, id) = parse_newest_cursor(cursor)?;
             let sql = video_query_sql(
                 "JOIN video_views vv ON vv.video_id = v.id
-                 WHERE vv.user_id = $1 AND (vv.updated_at, v.id) < ($2, $3)
+                 WHERE vv.user_id = $2 AND (vv.updated_at, v.id) < ($3, $4)
                  ORDER BY vv.updated_at DESC, v.id DESC
-                 LIMIT $4",
+                 LIMIT $5",
             );
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(Some(user_id))
             .bind(user_id)
             .bind(created_at)
             .bind(id)
@@ -336,11 +351,12 @@ impl VideoHistoryRepository for PgVideoRepository {
         } else {
             let sql = video_query_sql(
                 "JOIN video_views vv ON vv.video_id = v.id
-                 WHERE vv.user_id = $1
+                 WHERE vv.user_id = $2
                  ORDER BY vv.updated_at DESC, v.id DESC
-                 LIMIT $2",
+                 LIMIT $3",
             );
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(Some(user_id))
             .bind(user_id)
             .bind(limit_plus_one(&page))
             .fetch_all(&self.pool)
@@ -358,11 +374,12 @@ impl LikedVideoRepository for PgVideoRepository {
             let (updated_at, id) = parse_newest_cursor(cursor)?;
             let sql = video_query_sql(
                 "JOIN video_reactions vr ON vr.video_id = v.id
-                 WHERE vr.user_id = $1 AND (vr.updated_at, v.id) < ($2, $3) AND vr.is_liked = true
+                 WHERE vr.user_id = $2 AND (vr.updated_at, v.id) < ($3, $4) AND vr.is_liked = true
                  ORDER BY vr.updated_at DESC, v.id DESC
-                 LIMIT $4",
+                 LIMIT $5",
             );
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(Some(user_id))
             .bind(user_id)
             .bind(updated_at)
             .bind(id)
@@ -372,11 +389,12 @@ impl LikedVideoRepository for PgVideoRepository {
         } else {
             let sql = video_query_sql(
                 "JOIN video_reactions vr ON vr.video_id = v.id
-                 WHERE vr.user_id = $1 AND vr.is_liked = true
+                 WHERE vr.user_id = $2 AND vr.is_liked = true
                  ORDER BY vr.updated_at DESC, v.id DESC
-                 LIMIT $2",
+                 LIMIT $3",
             );
             sqlx::query_as::<_, VideoRecord>(&sql)
+            .bind(Some(user_id))
             .bind(user_id)
             .bind(limit_plus_one(&page))
             .fetch_all(&self.pool)

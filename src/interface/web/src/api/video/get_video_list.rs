@@ -23,11 +23,12 @@ pub async fn get_newest_videos(
 	let query = ListVideos {
 		video_repository: &repository,
 	};
+	let viewer_user_id = use_context::<CurrentUser>().map(|user| user.id);
 
 	let resolved_limit = limit.unwrap_or(DEFAULT_PAGE_LIMIT);
 
 	let page = query
-		.by_newest(resolved_limit, cursor)
+		.by_newest(resolved_limit, cursor, viewer_user_id)
 		.await
 		.map_err(AppServerError::from)?;
 
@@ -46,11 +47,12 @@ pub async fn get_trending_videos(
 	let query = ListVideos {
 		video_repository: &repository,
 	};
+	let viewer_user_id = use_context::<CurrentUser>().map(|user| user.id);
 
 	let resolved_limit = limit.unwrap_or(DEFAULT_PAGE_LIMIT);
 
 	let page = query
-		.by_most_popular(resolved_limit, cursor)
+		.by_most_popular(resolved_limit, cursor, viewer_user_id)
 		.await
 		.map_err(AppServerError::from)?;
 
@@ -70,11 +72,12 @@ pub async fn get_videos_by_search(
 	let query = ListVideos {
 		video_repository: &repository,
 	};
+	let viewer_user_id = use_context::<CurrentUser>().map(|user| user.id);
 
 	let resolved_limit = limit.unwrap_or(DEFAULT_PAGE_LIMIT);
 
 	let page = query
-		.by_title_regex(&searched, resolved_limit, cursor)
+		.by_title_regex(&searched, resolved_limit, cursor, viewer_user_id)
 		.await
 		.map_err(AppServerError::from)?;
 
@@ -94,11 +97,12 @@ pub async fn get_channel_videos(
 	let query = ListVideos {
 		video_repository: &repository,
 	};
+	let viewer_user_id = use_context::<CurrentUser>().map(|user| user.id);
 
 	let resolved_limit = limit.unwrap_or(DEFAULT_PAGE_LIMIT);
 
 	let page = query
-		.by_user_id(user_id, resolved_limit, cursor)
+		.by_user_id(user_id, resolved_limit, cursor, viewer_user_id)
 		.await
 		.map_err(AppServerError::from)?;
 

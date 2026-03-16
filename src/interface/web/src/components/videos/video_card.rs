@@ -44,6 +44,12 @@ pub fn VideoCard(video: VideoCardDto) -> impl IntoView {
                     <span class="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs font-medium text-white">
                         {duration}
                     </span>
+                    <Show when=move || video.watched_seconds.is_some()>
+                        <ProgressBar
+                            video_duration_seconds=video.duration_seconds
+                            watched_seconds=video.watched_seconds.unwrap()
+                        />
+                    </Show>
                 </div>
 
                 <div class="mt-3 flex gap-3">
@@ -60,5 +66,29 @@ pub fn VideoCard(video: VideoCardDto) -> impl IntoView {
                 </div>
             </a>
         </article>
+    }
+}
+
+#[component]
+fn ProgressBar(video_duration_seconds: i32, watched_seconds: i32) -> impl IntoView {
+    let watched_seconds = watched_seconds.clamp(0, video_duration_seconds.max(0));
+    let watched_progress = if video_duration_seconds > 0 {
+        (watched_seconds as f64 / video_duration_seconds as f64) * 100.0
+    } else {
+        0.0
+    };
+    let watched_progress_step = if watched_seconds == 0 {
+        10.0
+    } else {
+        ((watched_progress / 10.0).ceil() * 10.0).clamp(0.0, 100.0)
+    };
+
+    view! {
+        <div class="absolute z-50 inset-x-0 bottom-0 h-1 bg-neutral-500">
+            <div
+                class="h-full bg-red-600"
+                style=format!("width: {:.0}%;", watched_progress_step)
+            />
+        </div>
     }
 }

@@ -58,11 +58,11 @@ impl VideoPage {
 
 #[async_trait::async_trait]
 pub trait VideoRepository {
-    async fn find_by_id(&self, id: Uuid) -> Option<Video>;
-    async fn list_newest(&self, page: PageRequest) -> anyhow::Result<VideoPage>;
-    async fn list_most_popular(&self, page: PageRequest) -> anyhow::Result<VideoPage>;
-    async fn list_by_user_id(&self, user_id: Uuid, page: PageRequest) -> anyhow::Result<VideoPage>;
-    async fn search_by_title(&self, query: &str, page: PageRequest) -> anyhow::Result<VideoPage>;
+    async fn find_by_id(&self, id: Uuid, viewer_user_id: Option<Uuid>) -> Option<Video>;
+    async fn list_newest(&self, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage>;
+    async fn list_most_popular(&self, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage>;
+    async fn list_by_user_id(&self, user_id: Uuid, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage>;
+    async fn search_by_title(&self, query: &str, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage>;
     async fn save(&self, video: &Video) -> anyhow::Result<Video>;
 }
 

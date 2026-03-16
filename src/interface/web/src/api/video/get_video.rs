@@ -15,13 +15,14 @@ use crate::api::_errors::OptionExt;
 pub async fn get_video(id: String) -> Result<VideoPlayer, AppServerError> {
 	let pool = use_context::<sqlx::PgPool>()
 		.require_context("Missing pool")?;
+	let viewer_user_id = use_context::<crate::app::CurrentUser>().map(|user| user.id);
 
 	let repository = PgVideoRepository::new(&pool);
 	let query = GetVideoById {
 		video_repository: &repository,
 	};
 
-    let video = query.execute(id)
+    let video = query.execute(id, viewer_user_id)
         .await
 		.map_err(AppServerError::from)?
         .ok_or_else(|| AppServerError::from(DomainError::VideoNotFound))?;

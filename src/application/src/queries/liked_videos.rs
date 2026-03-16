@@ -42,6 +42,7 @@ mod tests {
             Url::try_from("https://example.com/thumb.jpg").unwrap(),
             Url::try_from("https://example.com/preview.mp4").unwrap(),
             60,
+            Some(18),
             0,
             0,
             0,

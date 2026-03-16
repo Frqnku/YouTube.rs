@@ -11,6 +11,7 @@ pub struct VideoCard {
 	pub thumbnail_url: String,
 	pub preview_url: String,
 	pub duration_seconds: i32,
+	pub watched_seconds: Option<i32>,
 	pub view_count: i64,
 	pub like_count: i64,
 	pub uploaded_at: String,
@@ -25,6 +26,7 @@ impl VideoCard {
 		thumbnail_url: String,
 		preview_url: String,
 		duration_seconds: i32,
+		watched_seconds: Option<i32>,
 		view_count: i64,
 		like_count: i64,
 		uploaded_at: String,
@@ -37,6 +39,7 @@ impl VideoCard {
 			thumbnail_url,
 			preview_url,
 			duration_seconds,
+			watched_seconds,
 			view_count,
 			like_count,
 			uploaded_at,
@@ -54,6 +57,7 @@ impl From<Video> for VideoCard {
 			video.thumbnail_url.to_string(),
 			video.preview_url.to_string(),
 			video.duration_seconds,
+			video.watched_seconds,
 			video.view_count,
 			video.like_count,
 			video.created_at.to_rfc3339(),
@@ -100,6 +104,8 @@ pub struct VideoPlayer {
 	pub title: String,
 	pub description: String,
 	pub video_url: String,
+	pub duration_seconds: i32,
+	pub watched_seconds: Option<i32>,
 	pub view_count: i64,
 	pub like_count: i64,
 	pub dislike_count: i64,
@@ -114,6 +120,8 @@ impl VideoPlayer {
 		title: String,
 		description: String,
 		video_url: String,
+		duration_seconds: i32,
+		watched_seconds: Option<i32>,
 		view_count: i64,
 		like_count: i64,
 		dislike_count: i64,
@@ -126,6 +134,8 @@ impl VideoPlayer {
 			title,
 			description,
 			video_url,
+			duration_seconds,
+			watched_seconds,
 			view_count,
 			like_count,
 			dislike_count,
@@ -143,6 +153,8 @@ impl From<Video> for VideoPlayer {
 			video.title,
 			video.description,
 			video.video_url.to_string(),
+			video.duration_seconds,
+			video.watched_seconds,
 			video.view_count,
 			video.like_count,
 			video.dislike_count,
@@ -171,6 +183,7 @@ mod tests {
 			Url::try_from("https://example.com/thumb.jpg").unwrap(),
 			Url::try_from("https://example.com/preview.mp4").unwrap(),
 			123,
+			Some(45),
 			777,
 			42,
 			3,
@@ -192,6 +205,7 @@ mod tests {
 			"https://example.com/thumb.jpg".to_string(),
 			"https://example.com/preview.mp4".to_string(),
 			123,
+			Some(45),
 			1000,
 			111,
 			"2026-03-01T10:20:30Z".to_string(),
@@ -214,6 +228,7 @@ mod tests {
 		assert_eq!(card.title, "Rust Video");
 		assert_eq!(card.thumbnail_url, "https://example.com/thumb.jpg");
 		assert_eq!(card.preview_url, "https://example.com/preview.mp4");
+		assert_eq!(card.watched_seconds, Some(45));
 		assert_eq!(card.uploaded_at, expected_uploaded_at);
 	}
 
@@ -243,6 +258,8 @@ mod tests {
 		assert_eq!(player.title, "Player Title");
 		assert_eq!(player.description, "A description");
 		assert_eq!(player.video_url, "https://example.com/video.mp4");
+		assert_eq!(player.duration_seconds, 123);
+		assert_eq!(player.watched_seconds, Some(45));
 		assert_eq!(player.dislike_count, 3);
 		assert_eq!(player.uploaded_at, expected_uploaded_at);
 	}

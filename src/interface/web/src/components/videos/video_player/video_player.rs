@@ -81,6 +81,7 @@ pub fn WatchVideo(video: VideoPlayer) -> impl IntoView {
                         video_url=video.video_url.clone()
                         is_authenticated=is_authenticated
                         video_id=video.id.clone()
+                        initial_watched_seconds=video.watched_seconds.unwrap_or_default().max(0) as u32
                     />
                 </div>
             </div>
@@ -122,8 +123,8 @@ pub fn WatchVideo(video: VideoPlayer) -> impl IntoView {
 }
 
 #[component]
-fn VideoPlayer(video_url: String, is_authenticated: Signal<bool>, video_id: String) -> impl IntoView {
-    let watched_seconds = RwSignal::new(0_u32);
+fn VideoPlayer(video_url: String, is_authenticated: Signal<bool>, video_id: String, initial_watched_seconds: u32) -> impl IntoView {
+    let watched_seconds = RwSignal::new(initial_watched_seconds);
     let is_playing = RwSignal::new(false);
     let video_id_for_interval = video_id.clone();
 
@@ -163,6 +164,32 @@ fn VideoPlayer(video_url: String, is_authenticated: Signal<bool>, video_id: Stri
         video_id.clone(),
     );
 
+    let make_persist_handler = move |action: Action<(String, u32), _>, video_id: String| {
+        let watched_seconds = watched_seconds;
+        let is_authenticated = is_authenticated;
+
+        move || {
+            if !is_authenticated.get_untracked() {
+                return;
+            }
+
+            action.dispatch((video_id.clone(), watched_seconds.get_untracked()));
+        }
+    };
+
+    let on_pause_persist = make_persist_handler(
+        update_watched_seconds_action.clone(),
+        video_id.clone(),
+    );
+    let on_ended_persist = make_persist_handler(
+        update_watched_seconds_action.clone(),
+        video_id.clone(),
+    );
+    let on_cleanup_persist = make_persist_handler(
+        update_watched_seconds_action.clone(),
+        video_id.clone(),
+    );
+
     Effect::new(move |_| {
         if !is_playing.get() {
             return;
@@ -194,6 +221,7 @@ fn VideoPlayer(video_url: String, is_authenticated: Signal<bool>, video_id: Stri
 
     on_cleanup(move || {
         is_playing.set(false);
+        on_cleanup_persist();
     });
 
     view! {
@@ -209,9 +237,11 @@ fn VideoPlayer(video_url: String, is_authenticated: Signal<bool>, video_id: Stri
             }
             on:pause=move |_| {
                 is_playing.set(false);
+                on_pause_persist();
             }
             on:ended=move |_| {
                 is_playing.set(false);
+                on_ended_persist();
             }
             on:click=move |event| {
                 on_click_update(event.unchecked_into::<web_sys::Event>());
@@ -223,6 +253,24 @@ fn VideoPlayer(video_url: String, is_authenticated: Signal<bool>, video_id: Stri
                 if let Some(target) = event.target() {
                     if let Ok(video) = target.dyn_into::<HtmlVideoElement>() {
                         watched_seconds.set(video.current_time().floor() as u32);
+                    }
+                }
+            }
+            on:loadedmetadata=move |event| {
+                if initial_watched_seconds == 0 {
+                    return;
+                }
+
+                if let Some(target) = event.target() {
+                    if let Ok(video) = target.dyn_into::<HtmlVideoElement>() {
+                        let max_seek_time = video.duration().floor().max(0.0) as u32;
+                        let resume_at = if initial_watched_seconds >= max_seek_time {
+                            0
+                        } else {
+                            initial_watched_seconds
+                        };
+                        video.set_current_time(resume_at as f64);
+                        watched_seconds.set(resume_at);
                     }
                 }
             }

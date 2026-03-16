@@ -138,7 +138,7 @@ fn build_updated_page(
 
 #[async_trait::async_trait]
 impl VideoRepository for InMemoryVideoRepository {
-	async fn find_by_id(&self, id: Uuid) -> Option<Video> {
+	async fn find_by_id(&self, id: Uuid, _viewer_user_id: Option<Uuid>) -> Option<Video> {
 		self.videos
 			.lock()
 			.unwrap()
@@ -147,7 +147,7 @@ impl VideoRepository for InMemoryVideoRepository {
 			.cloned()
 	}
 
-	async fn list_newest(&self, page: PageRequest) -> anyhow::Result<VideoPage> {
+	async fn list_newest(&self, page: PageRequest, _viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
 		let mut items = self.videos.lock().unwrap().clone();
 		items.sort_by(cmp_newest);
 
@@ -166,7 +166,7 @@ impl VideoRepository for InMemoryVideoRepository {
 		build_page(items, page, newest_cursor)
 	}
 
-	async fn list_most_popular(&self, page: PageRequest) -> anyhow::Result<VideoPage> {
+	async fn list_most_popular(&self, page: PageRequest, _viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
 		let mut items = self.videos.lock().unwrap().clone();
 		items.sort_by(cmp_popular);
 
@@ -185,7 +185,7 @@ impl VideoRepository for InMemoryVideoRepository {
 		build_page(items, page, popular_cursor)
 	}
 
-	async fn list_by_user_id(&self, user_id: Uuid, page: PageRequest) -> anyhow::Result<VideoPage> {
+	async fn list_by_user_id(&self, user_id: Uuid, page: PageRequest, _viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
 		let mut items = self
 			.videos
 			.lock()
@@ -211,7 +211,7 @@ impl VideoRepository for InMemoryVideoRepository {
 		build_page(items, page, newest_cursor)
 	}
 
-	async fn search_by_title(&self, query: &str, page: PageRequest) -> anyhow::Result<VideoPage> {
+	async fn search_by_title(&self, query: &str, page: PageRequest, _viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
 		let needle = query.to_lowercase();
 
 		let mut items = self

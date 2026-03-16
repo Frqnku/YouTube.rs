@@ -12,36 +12,56 @@ impl<'a, V> ListVideos<'a, V>
 where
     V: VideoRepository,
 {
-    pub async fn by_newest(&self, limit: u32, cursor: Option<String>) -> anyhow::Result<VideoCardPage> {
+    pub async fn by_newest(&self, limit: u32, cursor: Option<String>, viewer_user_id: Option<String>) -> anyhow::Result<VideoCardPage> {
+        let viewer_user_id = viewer_user_id
+            .as_deref()
+            .map(uuid::Uuid::parse_str)
+            .transpose()
+            .map_err(|_| DomainError::VideoNotFound)?;
         let page = self.video_repository
-            .list_newest(PageRequest::new(limit, cursor))
+            .list_newest(PageRequest::new(limit, cursor), viewer_user_id)
             .await?;
 
         Ok(page.into())
     }
 
-    pub async fn by_most_popular(&self, limit: u32, cursor: Option<String>) -> anyhow::Result<VideoCardPage> {
+    pub async fn by_most_popular(&self, limit: u32, cursor: Option<String>, viewer_user_id: Option<String>) -> anyhow::Result<VideoCardPage> {
+        let viewer_user_id = viewer_user_id
+            .as_deref()
+            .map(uuid::Uuid::parse_str)
+            .transpose()
+            .map_err(|_| DomainError::VideoNotFound)?;
         let page = self.video_repository
-            .list_most_popular(PageRequest::new(limit, cursor))
+            .list_most_popular(PageRequest::new(limit, cursor), viewer_user_id)
             .await?;
 
         Ok(page.into())
     }
 
-    pub async fn by_user_id(&self, user_id: String, limit: u32, cursor: Option<String>) -> anyhow::Result<VideoCardPage> {
+    pub async fn by_user_id(&self, user_id: String, limit: u32, cursor: Option<String>, viewer_user_id: Option<String>) -> anyhow::Result<VideoCardPage> {
         let id = uuid::Uuid::parse_str(&user_id)
+            .map_err(|_| DomainError::VideoNotFound)?;
+        let viewer_user_id = viewer_user_id
+            .as_deref()
+            .map(uuid::Uuid::parse_str)
+            .transpose()
             .map_err(|_| DomainError::VideoNotFound)?;
 
         let page = self.video_repository
-            .list_by_user_id(id, PageRequest::new(limit, cursor))
+            .list_by_user_id(id, PageRequest::new(limit, cursor), viewer_user_id)
             .await?;
 
         Ok(page.into())
     }
 
-    pub async fn by_title_regex(&self, query: &str, limit: u32, cursor: Option<String>) -> anyhow::Result<VideoCardPage> {
+    pub async fn by_title_regex(&self, query: &str, limit: u32, cursor: Option<String>, viewer_user_id: Option<String>) -> anyhow::Result<VideoCardPage> {
+        let viewer_user_id = viewer_user_id
+            .as_deref()
+            .map(uuid::Uuid::parse_str)
+            .transpose()
+            .map_err(|_| DomainError::VideoNotFound)?;
         let page = self.video_repository
-            .search_by_title(query, PageRequest::new(limit, cursor))
+            .search_by_title(query, PageRequest::new(limit, cursor), viewer_user_id)
             .await?;
 
         Ok(page.into())
@@ -59,10 +79,15 @@ impl<'a, V> GetVideoById<'a, V>
 where
     V: VideoRepository,
 {
-    pub async fn execute(&self, id: String) -> anyhow::Result<Option<VideoPlayer>> {
+    pub async fn execute(&self, id: String, viewer_user_id: Option<String>) -> anyhow::Result<Option<VideoPlayer>> {
         let id = uuid::Uuid::parse_str(&id)
             .map_err(|_| DomainError::VideoNotFound)?;
-        let video = self.video_repository.find_by_id(id).await;
+        let viewer_user_id = viewer_user_id
+            .as_deref()
+            .map(uuid::Uuid::parse_str)
+            .transpose()
+            .map_err(|_| DomainError::VideoNotFound)?;
+        let video = self.video_repository.find_by_id(id, viewer_user_id).await;
 
         Ok(video.map(Into::into))
     }
@@ -91,6 +116,7 @@ mod tests {
             Url::try_from("https://example.com/thumb.jpg").unwrap(),
             Url::try_from("https://example.com/preview.mp4").unwrap(),
             42,
+            Some(12),
             view_count,
             10,
             1,
@@ -119,7 +145,7 @@ mod tests {
         repository.save(&older).await.unwrap();
         repository.save(&newer).await.unwrap();
 
-        let page = use_case.by_newest(10, None).await.unwrap();
+        let page = use_case.by_newest(10, None, None).await.unwrap();
 
         assert_eq!(page.items.len(), 2);
         assert_eq!(page.items[0].title, "newer");
@@ -140,7 +166,7 @@ mod tests {
         repository.save(&low).await.unwrap();
         repository.save(&high).await.unwrap();
 
-        let page = use_case.by_most_popular(10, None).await.unwrap();
+        let page = use_case.by_most_popular(10, None, None).await.unwrap();
 
         assert_eq!(page.items.len(), 2);
         assert_eq!(page.items[0].title, "high");
@@ -163,7 +189,7 @@ mod tests {
         repository.save(&other).await.unwrap();
 
         let page = use_case
-            .by_user_id(wanted_author.to_string(), 10, None)
+            .by_user_id(wanted_author.to_string(), 10, None, None)
             .await
             .unwrap();
 
@@ -185,7 +211,7 @@ mod tests {
         repository.save(&rust_video).await.unwrap();
         repository.save(&js_video).await.unwrap();
 
-        let page = use_case.by_title_regex("rust", 10, None).await.unwrap();
+        let page = use_case.by_title_regex("rust", 10, None, None).await.unwrap();
 
         assert_eq!(page.items.len(), 1);
         assert_eq!(page.items[0].title, "Learn Rust");
@@ -203,7 +229,7 @@ mod tests {
         let video_id = video.id;
         repository.save(&video).await.unwrap();
 
-        let result = use_case.execute(video_id.to_string()).await.unwrap();
+        let result = use_case.execute(video_id.to_string(), None).await.unwrap();
 
         assert!(result.is_some());
         assert_eq!(result.unwrap().title, "target-video");
@@ -216,7 +242,7 @@ mod tests {
             video_repository: &repository,
         };
 
-        let result = use_case.execute("invalid".to_string()).await;
+        let result = use_case.execute("invalid".to_string(), None).await;
 
         assert!(result.is_err());
     }
