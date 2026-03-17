@@ -1,5 +1,7 @@
 pub mod auth;
 pub use auth::*;
+pub mod subscription;
+pub use subscription::*;
 pub mod video_reaction;
 pub use video_reaction::*;
 pub mod video_view;

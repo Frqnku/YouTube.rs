@@ -1,7 +1,11 @@
 use leptos::prelude::*;
 use leptos_router::hooks::use_location;
 
-use crate::components::ui::icons::{Icon, IconKind};
+use crate::{
+    api::{_dtos::subscription::ChannelDto, subscription::get_subscriptions},
+    app::{CurrentUserContext, SubscriptionsContext},
+    components::ui::{LineDivider, icons::{Icon, IconKind}},
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum SidebarItem {
@@ -26,6 +30,30 @@ pub fn Sidebar() -> impl IntoView {
     let is_hydrated = RwSignal::new(false);
 
     let location = use_location();
+
+    let current_user_ctx = use_context::<CurrentUserContext>();
+    let is_authenticated = Signal::derive(move || {
+        current_user_ctx
+            .as_ref()
+            .and_then(|ctx| ctx.current_user.get())
+            .is_some()
+    });
+
+    let subscriptions_resource = Resource::new(
+        move || {
+            let trigger = use_context::<SubscriptionsContext>()
+                .map(|ctx| ctx.refetch_trigger.get())
+                .unwrap_or(0);
+            (is_authenticated.get(), trigger)
+        },
+        move |(authed, _)| async move {
+            if !authed {
+                Ok(vec![])
+            } else {
+                get_subscriptions().await
+            }
+        },
+    );
 
     Effect::new(move |_| {
         is_hydrated.set(true);
@@ -67,6 +95,45 @@ pub fn Sidebar() -> impl IntoView {
                         </Show>
                         <span>"Liked videos"</span>
                     </a>
+
+                    <Show when=move || is_authenticated.get()>
+                        <LineDivider margin="my-3".to_string()/>
+                        <p class="my-2 px-3 font-semibold text-text-primary">"Subscriptions"</p>
+                        <Transition>
+                            {move || {
+                                let channels = subscriptions_resource
+                                    .get()
+                                    .and_then(Result::ok)
+                                    .unwrap_or_default();
+
+                                if channels.is_empty() {
+                                    view! {
+                                        <p class="px-3 text-sm text-text-secondary">"No subscriptions"</p>
+                                    }.into_any()
+                                } else {
+                                    view! {
+                                        <For
+                                            each=move || channels.clone()
+                                            key=|c| c.id.clone()
+                                            children=|channel: ChannelDto| {
+                                                let href = format!("/channel?id={}", channel.id);
+                                                view! {
+                                                    <a href=href class="sidebar-item mt-1 gap-6 text-text-primary">
+                                                        <img
+                                                            src=channel.profile_picture.unwrap_or_default()
+                                                            alt=channel.name.clone()
+                                                            class="h-6 w-6 rounded-full bg-bg-tertiary object-cover"
+                                                        />
+                                                        <span class="truncate">{channel.name}</span>
+                                                    </a>
+                                                }
+                                            }
+                                        />
+                                    }.into_any()
+                                }
+                            }}
+                        </Transition>
+                    </Show>
                 </nav>
             </Show>
         </aside>

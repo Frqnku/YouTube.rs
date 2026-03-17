@@ -121,7 +121,7 @@
 
   /* Sidebar item */
   .sidebar-item {
-    @apply flex items-center gap-4 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-tertiary hover:text-text transition;
+    @apply flex items-center gap-6 px-3 py-2 rounded-lg text-text hover:bg-bg-tertiary transition;
   }
 
   /* Active sidebar item */

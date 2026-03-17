@@ -6,13 +6,14 @@ use web_sys::HtmlVideoElement;
 use crate::{
     api::{
         _dtos::video::VideoPlayer,
+        subscription::get_subscriber_count,
         video::{post_video_view, update_watched_seconds},
     },
     app::CurrentUserContext,
     components::{
         _helpers::{CountFormat, format_count, format_relative_time},
         comments::CommentFeed,
-        videos::video_player::ReactionButtons,
+        videos::video_player::{Channel, ReactionButtons, SubscribeButton},
     },
 };
 
@@ -64,6 +65,22 @@ pub fn WatchVideo(video: VideoPlayer) -> impl IntoView {
 
     let show_signin_prompt = RwSignal::new(false);
 
+    // Subscriber count - initially 0, loaded async
+    let subscriber_count = RwSignal::new(0usize);
+    let channel_id_for_count = video.channel_id.clone();
+    
+    // Load initial subscriber count
+    let _count_resource = Resource::new(
+        move || channel_id_for_count.clone(),
+        move |channel_id| async move { get_subscriber_count(channel_id).await },
+    );
+
+    Effect::new(move |_| {
+        if let Some(Ok(count)) = _count_resource.get() {
+            subscriber_count.set(count);
+        }
+    });
+
     let view_action = Action::new(|video_id: &String| {
         let video_id = video_id.clone();
         async move { post_video_view(video_id).await }
@@ -95,18 +112,23 @@ pub fn WatchVideo(video: VideoPlayer) -> impl IntoView {
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div class="flex items-center gap-3">
                         <img
-                            src=video.user_picture.unwrap_or_default()
+                            src=video.user_picture.clone().unwrap_or_default()
                             alt=format!("{}'s profile picture", video.user)
                             class="h-10 w-10 rounded-full bg-bg-tertiary object-cover"
                         />
-                        <div>
-                            <p class="font-medium text-text">{video.user}</p>
-                            <p class="text-sm text-text-secondary">"Channel"</p>
-                        </div>
+                        <Channel
+                            channel_name=video.user.clone()
+                            subscriber_count=subscriber_count
+                        />
                     </div>
 
                     <div class="flex flex-wrap gap-2">
-                        <button class="btn-primary">"Subscribe"</button>
+                        <SubscribeButton
+                            channel_id=video.channel_id.clone()
+                            is_authenticated=is_authenticated
+                            show_signin_prompt=show_signin_prompt
+                            subscriber_count=subscriber_count
+                        />
                         <ReactionButtons video=video_for_reactions is_authenticated=is_authenticated show_signin_prompt=show_signin_prompt/>
                         <button class="btn-secondary">"Share"</button>
                     </div>

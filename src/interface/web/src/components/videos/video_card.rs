@@ -84,7 +84,7 @@ fn ProgressBar(video_duration_seconds: i32, watched_seconds: i32) -> impl IntoVi
     };
 
     view! {
-        <div class="absolute z-50 inset-x-0 bottom-0 h-1 bg-neutral-500">
+        <div class="absolute z-20 inset-x-0 bottom-0 h-1 bg-neutral-500">
             <div
                 class="h-full bg-red-600"
                 style=format!("width: {:.0}%;", watched_progress_step)

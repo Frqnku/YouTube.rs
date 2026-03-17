@@ -99,6 +99,7 @@ impl From<VideoPage> for VideoCardPage {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VideoPlayer {
 	pub id: Uuid,
+	pub channel_id: Uuid,
 	pub user: String,
 	pub user_picture: Option<String>,
 	pub title: String,
@@ -115,6 +116,7 @@ pub struct VideoPlayer {
 impl VideoPlayer {
 	pub fn new(
 		id: Uuid,
+		channel_id: Uuid,
 		user: String,
 		user_picture: Option<String>,
 		title: String,
@@ -129,6 +131,7 @@ impl VideoPlayer {
 	) -> Self {
 		Self {
 			id,
+			channel_id,
 			user,
 			user_picture,
 			title,
@@ -148,6 +151,7 @@ impl From<Video> for VideoPlayer {
 	fn from(video: Video) -> Self {
 		Self::new(
 			video.id,
+			video.author.id,
 			video.author.name,
 			video.author.profile_picture.map(|url| url.to_string()),
 			video.title,

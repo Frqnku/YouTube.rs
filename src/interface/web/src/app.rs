@@ -99,6 +99,11 @@ pub struct ClientRequestMetaContext {
     pub client_meta: RwSignal<Option<ClientRequestMeta>>,
 }
 
+#[derive(Clone, Copy)]
+pub struct SubscriptionsContext {
+    pub refetch_trigger: RwSignal<u32>,
+}
+
 #[component]
 pub fn App() -> impl IntoView {
     provide_meta_context();
@@ -111,6 +116,10 @@ pub fn App() -> impl IntoView {
     let current_user_signal = RwSignal::new(use_context::<CurrentUser>());
     provide_context(CurrentUserContext {
         current_user: current_user_signal,
+    });
+
+    provide_context(SubscriptionsContext {
+        refetch_trigger: RwSignal::new(0u32),
     });
 
     let theme_mode = RwSignal::new(initial_theme_mode());

@@ -1,5 +1,7 @@
 pub mod video;
 pub use video::*;
+pub mod subscription;
+pub use subscription::*;
 pub mod history;
 pub use history::*;
 pub mod liked_videos;

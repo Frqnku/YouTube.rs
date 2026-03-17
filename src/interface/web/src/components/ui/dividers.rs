@@ -1,9 +1,12 @@
 use leptos::prelude::*;
 
 #[component]
-pub fn LineDivider() -> impl IntoView {
+pub fn LineDivider(
+    #[prop(optional)]
+    margin: String,
+) -> impl IntoView {
     view! {
-        <div class="border-t border-border"></div>
+        <div class=move || format!("border-t border-border {}", margin)></div>
     }
 }
 
