@@ -41,7 +41,7 @@ pub fn SigninButton() -> impl IntoView {
     view! {
         <button
             type="button"
-            class="btn-secondary text-xs md:text-sm"
+            class="btn-secondary whitespace-nowrap text-xs md:text-sm"
             on:click=move |_| on_signin.run(())
         >
             Sign in
