@@ -13,7 +13,28 @@ VALUES
 	('Netflix Japan', 'netflix@example.com', 'https://yt3.googleusercontent.com/VvPFaxHYEZxWbNaqFfWcd0whAzwNZvEwnw5WYlGzsXyqdj7mxdeO5-RqDlRnlh9F8JYXkHdbXw=s160-c-k-c0x00ffffff-no-rj'),
 	('Squeezie', 'squeezie@example.com', 'https://yt3.googleusercontent.com/ytc/AIdro_mPZvx-xk6pbAYdC7G8jUZzgCNDDTg1ZfF0_Lwd8UpJT4M=s160-c-k-c0x00ffffff-no-rj'),
 	('Low Level', 'low.level@example.com', 'https://yt3.googleusercontent.com/npUuy7Y37eUqanNoISokGb5a5rk1wotnx0Yzs1kfdOzYgnlwYnV82izSKmaoYpObYewKOAacs8o=s160-c-k-c0x00ffffff-no-rj'),
-	('TED-Ed', 'ted.ed@example.com', 'https://www.giantfreakinrobot.com/wp-content/uploads/2022/08/rick-astley.jpg')
+	('TED-Ed', 'ted.ed@example.com', 'https://www.giantfreakinrobot.com/wp-content/uploads/2022/08/rick-astley.jpg'),
+	-- New comment-only users with random avatars
+	('Alex Chen', 'alex.chen@example.com', 'https://i.pravatar.cc/150?img=1'),
+	('Sarah Williams', 'sarah.w@example.com', 'https://i.pravatar.cc/150?img=2'),
+	('James Rodriguez', 'james.r@example.com', 'https://i.pravatar.cc/150?img=3'),
+	('Emma Thompson', 'emma.t@example.com', 'https://i.pravatar.cc/150?img=4'),
+	('Michael Kumar', 'michael.k@example.com', 'https://i.pravatar.cc/150?img=5'),
+	('Lisa Anderson', 'lisa.a@example.com', 'https://i.pravatar.cc/150?img=6'),
+	('David Johnson', 'david.j@example.com', 'https://i.pravatar.cc/150?img=7'),
+	('Maria Garcia', 'maria.g@example.com', 'https://i.pravatar.cc/150?img=8'),
+	('Chris Lee', 'chris.l@example.com', 'https://i.pravatar.cc/150?img=9'),
+	('Jessica Brown', 'jessica.b@example.com', 'https://i.pravatar.cc/150?img=10'),
+	('Robert Zhang', 'robert.z@example.com', 'https://i.pravatar.cc/150?img=11'),
+	('Anna Kowalski', 'anna.k@example.com', 'https://i.pravatar.cc/150?img=12'),
+	('Kevin Wong', 'kevin.w@example.com', 'https://i.pravatar.cc/150?img=13'),
+	('Sophie Martin', 'sophie.m@example.com', 'https://i.pravatar.cc/150?img=14'),
+	('Daniel Patel', 'daniel.p@example.com', 'https://i.pravatar.cc/150?img=15'),
+	('Natalie Fisher', 'natalie.f@example.com', 'https://i.pravatar.cc/150?img=16'),
+	('Tom Brady', 'tom.brady@example.com', 'https://i.pravatar.cc/150?img=17'),
+	('Rachel Green', 'rachel.green@example.com', 'https://i.pravatar.cc/150?img=18'),
+	('Marcus Davis', 'marcus.d@example.com', 'https://i.pravatar.cc/150?img=19'),
+	('Olivia Martinez', 'olivia.m@example.com', 'https://i.pravatar.cc/150?img=20')
 ON CONFLICT (email) DO UPDATE
 SET
 	name = EXCLUDED.name,
@@ -64,6 +85,151 @@ WHERE NOT EXISTS (
 	WHERE existing.user_id = u.id
 	  AND existing.title = v.title
 );
+
+-- =========================
+-- Comments mock data
+-- =========================
+
+INSERT INTO video_comments (video_id, user_id, content, like_count, created_at, updated_at)
+SELECT 
+	v.id as video_id,
+	u.id as user_id,
+	comments.content,
+	comments.like_count,
+	now() - (floor(random() * 90)::int || ' days')::interval as created_at,
+	now() as updated_at
+FROM videos v
+CROSS JOIN (
+	SELECT id FROM users 
+	WHERE email IN (
+		'rick.astley@example.com', 'mr.beast@example.com', 'pewdiepie@example.com', 
+		'squeezie@example.com', 'low.level@example.com', 'fireship@example.com',
+		'alex.chen@example.com', 'sarah.w@example.com', 'james.r@example.com',
+		'emma.t@example.com', 'michael.k@example.com', 'lisa.a@example.com',
+		'david.j@example.com', 'maria.g@example.com', 'chris.l@example.com'
+	)
+) u
+CROSS JOIN (
+	VALUES
+		('This is a classic! Never gets old 😄'::text, 342::int),
+		('Still better than modern music tbh', 218),
+		('The music video quality is insane for 1987', 157),
+		('Rick Astley is a legend, change my mind', 285),
+		('I got Rick rolled again...', 423),
+		('This song hits different in 2026', 112),
+		('Can we just appreciate the lyrics?', 89),
+		('The 80s were peak music era', 256),
+		('Absolute masterpiece', 334),
+		('Never getting tired of this', 198),
+		('Vocal performance is incredible', 267),
+		('This is timeless art', 145),
+		('This is absolutely insane 😭', 1240),
+		('MrBeast never disappoints with content', 856),
+		('I could never survive this lol', 634),
+		('$250k is not enough for this challenge', 512),
+		('The production value is unreal', 389),
+		('Who else would actually do this for money?', 267),
+		('That ending was unexpected 🔥', 445),
+		('MrBeast really said "let''s make the most insane video ever"', 198),
+		('Props to the team for executing this', 321),
+		('I''m exhausted just watching this', 156),
+		('This is the best content creator on YouTube', 287),
+		('Quality is always consistent with MrBeast', 203),
+		('This is the most expensive video ever 💸', 2156),
+		('The cinematography is cinema quality', 1834),
+		('I genuinely felt the tension', 1562),
+		('MrBeast really recreated the whole show', 1289),
+		('This deserves way more views', 856),
+		('The editing in this video is insane', 743),
+		('When MrBeast dropped this I rewatched it 5 times', 612),
+		('The production team deserves an award', 489),
+		('This is what unlimited budget looks like', 378),
+		('The winner was so happy lmao', 267),
+		('Every MrBeast video is better than the last', 334),
+		('This concept was brilliant', 245),
+		('Honestly one of his best videos', 412),
+		('Felix''s reaction was priceless 😂', 512),
+		('That scare moment was hilarious', 387),
+		('I jumped from my seat watching this', 234),
+		('Classic PewDiePie horror game session', 156),
+		('PewDiePie never fails to entertain', 289),
+		('His screams are eternal', 201),
+		('Wait, Felix built an AI? That''s actually impressive', 834),
+		('This is becoming a tech channel lol', 612),
+		('The future is here and it''s PewDiePie', 445),
+		('This actually looks legit', 289),
+		('I need Felix to explain the code', 167),
+		('Amazing how versatile Felix is', 356),
+		('This AI is actually crazy smart', 278),
+		('This wholesome content hit different 🥺', 678),
+		('The emotion in this video is real', 523),
+		('Felix''s content has evolved so much', 412),
+		('The cinematography is beautiful', 334),
+		('This made me smile the whole time', 287),
+		('Felix is such a good person', 445),
+		('This is heartwarming content', 356),
+		('Finally someone explaining Rust properly', 445),
+		('Rust is the future of system programming', 378),
+		('This comparison blew my mind', 256),
+		('Great explanation for beginners', 189),
+		('C is still relevant though', 312),
+		('Love Low Level Academy content', 234),
+		('This is actually terrifying 😬', 567),
+		('Low Level always brings the heat', 423),
+		('The security implications are wild', 301),
+		('This makes me want to learn Rust', 245),
+		('Congratulations! 🎉', 312),
+		('Happy for you man', 245),
+		('Love is in the air', 178),
+		('So wholesome 💕', 267),
+		('lmaoooo what happened here', 423),
+		('That was absolutely unhinged', 312),
+		('I lost it 💀', 234),
+		('This video is chaotic', 189),
+		('Finally understand K8s thanks to this', 678),
+		('Fireship makes everything so simple', 534),
+		('Best technical explanation ever', 401),
+		('Sharing this with my whole team', 289),
+		('Fireship is the GOAT', 445),
+		('So clear and concise', 356),
+		('Linux is life', 456),
+		('Finally an OS explanation that makes sense', 334),
+		('I''m switching to Linux after watching this', 245),
+		('Best 2 minutes of education', 378),
+		('ジョジョの実写化が来るとは！', 523),
+		('This looks INSANE!', 412),
+		('Can''t wait for March 19!', 334),
+		('The production value is incredible', 267),
+		('Steel Ball Run is my favorite part', 289),
+		('刃牙いつ見ても面白い', 289),
+		('The animation is so smooth', 201),
+		('More Baki content please!', 156),
+		('This anime is insane', 223),
+		('C''est fou ce qui lui est arrivé 😂', 712),
+		('Squeezie fait toujours du banger', 534),
+		('La fin était incroyable', 423),
+		('Contenu de qualité comme d''hab', 312),
+		('Ses vidéos sont toujours cringe 💯', 267),
+		('Qu''il est drôle ce Squeezie', 445),
+		('Le lineup est incroyable', 856),
+		('Vidéo du siècle honnêtement', 712),
+		('J''ai pas pu arrêter de regarder', 589),
+		('Le twist final était fou', 467),
+		('Squeezie know how to make entertaining content', 334),
+		('Tous les créateurs français ensemble c''est magique', 289),
+		('Absolument génial ce concept', 378)
+) AS comments(content, like_count)
+WHERE random() < 0.05
+ON CONFLICT DO NOTHING;
+
+-- Add comment likes from various users (15% chance per user-comment pair)
+INSERT INTO comment_likes (comment_id, user_id)
+SELECT c.id, u.id
+FROM video_comments c
+CROSS JOIN users u
+WHERE u.id != c.user_id
+  AND random() < 0.15
+ON CONFLICT DO NOTHING;
 
 -- =========================
 -- End of migration
