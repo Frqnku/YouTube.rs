@@ -211,6 +211,18 @@ impl VideoRepository for InMemoryVideoRepository {
 		build_page(items, page, newest_cursor)
 	}
 
+	async fn count_by_user_id(&self, user_id: Uuid) -> anyhow::Result<u64> {
+		let count = self
+			.videos
+			.lock()
+			.unwrap()
+			.iter()
+			.filter(|video| video.author.id == user_id)
+			.count();
+
+		Ok(count as u64)
+	}
+
 	async fn search_by_title(&self, query: &str, page: PageRequest, _viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
 		let needle = query.to_lowercase();
 

@@ -1,5 +1,7 @@
 pub mod video;
 pub use video::*;
+pub mod channel;
+pub use channel::*;
 pub mod subscription;
 pub use subscription::*;
 pub mod history;

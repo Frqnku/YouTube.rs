@@ -76,6 +76,8 @@ impl UserRepository for PgUserRepository {
     }
 
     async fn save(&self, user: &User) -> anyhow::Result<User> {
+        let mut tx = self.pool.begin().await?;
+
         let record = sqlx::query_as!(
             UserRecord,
             "INSERT INTO users (name, email, profile_picture)
@@ -85,8 +87,19 @@ impl UserRepository for PgUserRepository {
             user.email.as_str(),
             user.profile_picture.as_ref().map(Url::as_str),
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *tx)
         .await?;
+
+        sqlx::query!(
+            "INSERT INTO channels (user_id)
+            VALUES ($1)
+            ON CONFLICT (user_id) DO NOTHING",
+            record.id,
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
 
         let saved_user = record.into_user()?;
         Ok(saved_user)

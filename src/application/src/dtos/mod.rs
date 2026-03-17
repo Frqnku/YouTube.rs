@@ -1,5 +1,7 @@
 pub mod _utils;
 pub use _utils::*;
+pub mod channel;
+pub use channel::*;
 pub mod subscription;
 pub use subscription::*;
 pub mod user;

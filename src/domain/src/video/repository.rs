@@ -62,6 +62,7 @@ pub trait VideoRepository {
     async fn list_newest(&self, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage>;
     async fn list_most_popular(&self, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage>;
     async fn list_by_user_id(&self, user_id: Uuid, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage>;
+    async fn count_by_user_id(&self, user_id: Uuid) -> anyhow::Result<u64>;
     async fn search_by_title(&self, query: &str, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage>;
     async fn save(&self, video: &Video) -> anyhow::Result<Video>;
 }

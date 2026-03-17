@@ -1,8 +1,7 @@
 use anyhow::Context;
 use domain::{
 	_shared::value_objects::Url,
-	subscription::SubscriptionRepository,
-	user::{entity::User, value_objects::Email},
+	channel::{entity::Channel, SubscriptionRepository},
 };
 use sqlx::types::Uuid;
 
@@ -20,22 +19,30 @@ impl PgSubscriptionRepository {
 struct ChannelRecord {
 	id: Uuid,
 	name: String,
-	email: String,
 	profile_picture: Option<String>,
+	description: Option<String>,
+	subscriber_count: i64,
+	video_count: i64,
 }
 
 impl ChannelRecord {
-	fn into_user(self) -> anyhow::Result<User> {
+	fn into_channel(self) -> anyhow::Result<Channel> {
 		let profile_picture = self
 			.profile_picture
 			.map(Url::try_from)
 			.transpose()?;
+		let subscriber_count = usize::try_from(self.subscriber_count)
+			.context("Subscriber count overflow")?;
+		let video_count = usize::try_from(self.video_count)
+			.context("Video count overflow")?;
 
-		Ok(User::new(
+		Ok(Channel::new(
 			self.id,
 			self.name,
-			Email::try_from(self.email)?,
 			profile_picture,
+			self.description,
+			subscriber_count,
+			video_count,
 		))
 	}
 }
@@ -43,28 +50,67 @@ impl ChannelRecord {
 #[async_trait::async_trait]
 impl SubscriptionRepository for PgSubscriptionRepository {
 	async fn subscribe(&self, subscriber_id: Uuid, channel_id: Uuid) -> anyhow::Result<()> {
+		let mut tx = self.pool.begin().await?;
+
 		sqlx::query(
+			"INSERT INTO channels (user_id)
+			 VALUES ($1)
+			 ON CONFLICT (user_id) DO NOTHING",
+		)
+		.bind(channel_id)
+		.execute(&mut *tx)
+		.await?;
+
+		let insert_result = sqlx::query(
 			"INSERT INTO subscriptions (subscriber_id, channel_id)
 			 VALUES ($1, $2)
 			 ON CONFLICT DO NOTHING",
 		)
 		.bind(subscriber_id)
 		.bind(channel_id)
-		.execute(&self.pool)
+		.execute(&mut *tx)
 		.await?;
+
+		if insert_result.rows_affected() > 0 {
+			sqlx::query(
+				"UPDATE channels
+				 SET subscriber_count = subscriber_count + 1
+				 WHERE user_id = $1",
+			)
+			.bind(channel_id)
+			.execute(&mut *tx)
+			.await?;
+		}
+
+		tx.commit().await?;
 
 		Ok(())
 	}
 
 	async fn unsubscribe(&self, subscriber_id: Uuid, channel_id: Uuid) -> anyhow::Result<()> {
-		sqlx::query(
+		let mut tx = self.pool.begin().await?;
+
+		let delete_result = sqlx::query(
 			"DELETE FROM subscriptions
 			 WHERE subscriber_id = $1 AND channel_id = $2",
 		)
 		.bind(subscriber_id)
 		.bind(channel_id)
-		.execute(&self.pool)
+		.execute(&mut *tx)
 		.await?;
+
+		if delete_result.rows_affected() > 0 {
+			sqlx::query(
+				"UPDATE channels
+				 SET subscriber_count = GREATEST(subscriber_count - 1, 0)
+				 WHERE user_id = $1",
+			)
+			.bind(channel_id)
+			.execute(&mut *tx)
+			.await?;
+		}
+
+		tx.commit().await?;
 
 		Ok(())
 	}
@@ -85,11 +131,17 @@ impl SubscriptionRepository for PgSubscriptionRepository {
 		Ok(is_subscribed)
 	}
 
-	async fn list_subscriptions(&self, subscriber_id: Uuid) -> anyhow::Result<Vec<User>> {
+	async fn list_subscriptions(&self, subscriber_id: Uuid) -> anyhow::Result<Vec<Channel>> {
 		let records = sqlx::query_as::<_, ChannelRecord>(
-			"SELECT u.id, u.name, u.email, u.profile_picture
+			"SELECT u.id,
+			        u.name,
+			        u.profile_picture,
+			        c.description,
+			        COALESCE(c.subscriber_count, 0) AS subscriber_count,
+			        COALESCE(c.video_count, 0) AS video_count
 			 FROM subscriptions s
 			 JOIN users u ON u.id = s.channel_id
+			 LEFT JOIN channels c ON c.user_id = u.id
 			 WHERE s.subscriber_id = $1
 			 ORDER BY s.created_at DESC",
 		)
@@ -99,15 +151,15 @@ impl SubscriptionRepository for PgSubscriptionRepository {
 
 		records
 			.into_iter()
-			.map(ChannelRecord::into_user)
+			.map(ChannelRecord::into_channel)
 			.collect()
 	}
 
 	async fn count_subscribers(&self, channel_id: Uuid) -> anyhow::Result<usize> {
 		let total = sqlx::query_scalar::<_, i64>(
-			"SELECT COUNT(*)::bigint
-			 FROM subscriptions
-			 WHERE channel_id = $1",
+			"SELECT subscriber_count
+			 FROM channels
+			 WHERE user_id = $1",
 		)
 		.bind(channel_id)
 		.fetch_one(&self.pool)

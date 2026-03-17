@@ -1,4 +1,4 @@
-use domain::{_shared::value_objects::Url, user::entity::User};
+use domain::{_shared::value_objects::Url, channel::entity::Channel};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -19,8 +19,8 @@ impl ChannelDto {
 	}
 }
 
-impl From<User> for ChannelDto {
-	fn from(user: User) -> Self {
-		Self::new(user.id, user.name, user.profile_picture)
+impl From<Channel> for ChannelDto {
+	fn from(channel: Channel) -> Self {
+		Self::new(channel.id, channel.name, channel.profile_picture)
 	}
 }

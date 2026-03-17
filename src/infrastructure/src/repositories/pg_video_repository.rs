@@ -255,6 +255,17 @@ impl VideoRepository for PgVideoRepository {
         into_page(records, &page, newest_cursor)
     }
 
+    async fn count_by_user_id(&self, user_id: Uuid) -> anyhow::Result<u64> {
+        let record = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM videos WHERE user_id = $1",
+        )
+        .bind(user_id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(record as u64)
+    }
+
     async fn search_by_title(&self, query: &str, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
         let like_query = format!("%{}%", query);
 
@@ -291,6 +302,8 @@ impl VideoRepository for PgVideoRepository {
     }
 
     async fn save(&self, video: &Video) -> anyhow::Result<Video> {
+        let mut tx = self.pool.begin().await?;
+
         let record = sqlx::query_as::<_, VideoRecord>(
             "INSERT INTO videos (id, user_id, title, description, video_url, thumbnail_url, preview_url, duration_seconds, view_count, like_count, dislike_count)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -322,8 +335,28 @@ impl VideoRepository for PgVideoRepository {
         .bind(video.view_count)
         .bind(video.like_count)
         .bind(video.dislike_count)
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *tx)
         .await?;
+
+        sqlx::query(
+            "INSERT INTO channels (user_id)
+             VALUES ($1)
+             ON CONFLICT (user_id) DO NOTHING",
+        )
+        .bind(video.author.id)
+        .execute(&mut *tx)
+        .await?;
+
+        sqlx::query(
+            "UPDATE channels
+             SET video_count = video_count + 1
+             WHERE user_id = $1",
+        )
+        .bind(video.author.id)
+        .execute(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
 
         record.into_video()
     }

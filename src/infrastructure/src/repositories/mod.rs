@@ -1,5 +1,7 @@
 pub mod pg_user_repository;
 pub use pg_user_repository::*;
+pub mod pg_channel_repository;
+pub use pg_channel_repository::*;
 pub mod pg_subscription_repository;
 pub use pg_subscription_repository::*;
 pub mod pg_video_repository;

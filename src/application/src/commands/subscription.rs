@@ -1,6 +1,6 @@
 use domain::{
 	_shared::DomainError,
-	subscription::SubscriptionRepository,
+	channel::SubscriptionRepository,
 };
 use uuid::Uuid;
 

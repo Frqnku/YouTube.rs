@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::components::layout::{header::Header, Sidebar};
 use crate::components::ui::NotFound;
 use crate::routes::protected::{HistoryPage, LikedVideosPage};
-use crate::routes::public::{HomePage, ResultsPage, SigninPage, WatchPage};
+use crate::routes::public::{ChannelPage, HomePage, ResultsPage, SigninPage, WatchPage};
 use crate::api::user::auth::{get_current_client_meta, get_current_user};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -167,6 +167,7 @@ pub fn App() -> impl IntoView {
                     <Routes fallback=|| PageNotFound.into_view()>
                         <Route path=StaticSegment("") view=HomePage />
                         <Route path=StaticSegment("results") view=ResultsPage />
+                        <Route path=StaticSegment("channel") view=ChannelPage />
                         <Route path=StaticSegment("signin") view=SigninPage />
                         <Route path=StaticSegment("history") view=HistoryPage />
                         <Route path=StaticSegment("liked-videos") view=LikedVideosPage />

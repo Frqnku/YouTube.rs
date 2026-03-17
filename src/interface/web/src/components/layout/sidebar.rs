@@ -32,6 +32,7 @@ pub fn Sidebar() -> impl IntoView {
     let location = use_location();
 
     let current_user_ctx = use_context::<CurrentUserContext>();
+    let subscriptions_ctx = use_context::<SubscriptionsContext>();
     let is_authenticated = Signal::derive(move || {
         current_user_ctx
             .as_ref()
@@ -41,7 +42,7 @@ pub fn Sidebar() -> impl IntoView {
 
     let subscriptions_resource = Resource::new(
         move || {
-            let trigger = use_context::<SubscriptionsContext>()
+            let trigger = subscriptions_ctx
                 .map(|ctx| ctx.refetch_trigger.get())
                 .unwrap_or(0);
             (is_authenticated.get(), trigger)

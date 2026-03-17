@@ -1,5 +1,7 @@
 pub mod home;
 pub use home::HomePage;
+pub mod channel;
+pub use channel::ChannelPage;
 pub mod results;
 pub use results::ResultsPage;
 pub mod signin;
