@@ -38,14 +38,19 @@ where
         Ok(page.into())
     }
 
-    pub async fn random(&self, limit: u32, viewer_user_id: Option<String>) -> anyhow::Result<VideoCardPage> {
+    pub async fn random(&self, limit: u32, exclude_video_id: Option<String>, viewer_user_id: Option<String>) -> anyhow::Result<VideoCardPage> {
+        let exclude_video_id = exclude_video_id
+            .as_deref()
+            .map(uuid::Uuid::parse_str)
+            .transpose()
+            .map_err(|_| DomainError::VideoNotFound)?;
         let viewer_user_id = viewer_user_id
             .as_deref()
             .map(uuid::Uuid::parse_str)
             .transpose()
             .map_err(|_| DomainError::VideoNotFound)?;
         let page = self.video_repository
-            .list_random(PageRequest::new(limit, None), viewer_user_id)
+            .list_random(PageRequest::new(limit, None), exclude_video_id, viewer_user_id)
             .await?;
 
         Ok(page.into())
@@ -262,9 +267,31 @@ mod tests {
             repository.save(&video).await.unwrap();
         }
 
-        let page = use_case.random(6, None).await.unwrap();
+        let page = use_case.random(6, None, None).await.unwrap();
 
         assert_eq!(page.items.len(), 6);
+    }
+
+    #[tokio::test]
+    async fn test_list_random_videos_excludes_current_video() {
+        let repository = InMemoryVideoRepository::new();
+        let use_case = ListVideos {
+            video_repository: &repository,
+        };
+
+        let author_id = uuid::Uuid::new_v4();
+        let current = make_video(author_id, "Alice", "current", 10, chrono::Utc::now());
+        let other = make_video(author_id, "Alice", "other", 10, chrono::Utc::now());
+
+        repository.save(&current).await.unwrap();
+        repository.save(&other).await.unwrap();
+
+        let page = use_case
+            .random(6, Some(current.id.to_string()), None)
+            .await
+            .unwrap();
+
+        assert!(page.items.iter().all(|video| video.id != current.id));
     }
 
     #[tokio::test]

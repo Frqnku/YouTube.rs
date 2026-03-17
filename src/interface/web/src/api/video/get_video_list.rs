@@ -62,6 +62,7 @@ pub async fn get_trending_videos(
 #[server]
 pub async fn get_random_videos(
 	limit: Option<u32>,
+	exclude_video_id: Option<String>,
 ) -> Result<VideoCardPage, AppServerError> {
 	let pool = use_context::<sqlx::PgPool>()
 		.require_context("Missing pool")?;
@@ -75,7 +76,7 @@ pub async fn get_random_videos(
 	let resolved_limit = limit.unwrap_or(DEFAULT_PAGE_LIMIT);
 
 	let page = query
-		.random(resolved_limit, viewer_user_id)
+		.random(resolved_limit, exclude_video_id, viewer_user_id)
 		.await
 		.map_err(AppServerError::from)?;
 

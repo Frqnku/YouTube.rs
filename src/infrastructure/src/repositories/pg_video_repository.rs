@@ -252,10 +252,15 @@ impl VideoRepository for PgVideoRepository {
         into_page(records, &page, popular_cursor)
     }
 
-    async fn list_random(&self, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
-        let sql = video_query_sql("ORDER BY RANDOM() LIMIT $2");
+    async fn list_random(&self, page: PageRequest, exclude_video_id: Option<Uuid>, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
+        let sql = video_query_sql(
+            "WHERE ($2::uuid IS NULL OR v.id <> $2)
+             ORDER BY RANDOM()
+             LIMIT $3",
+        );
         let records = sqlx::query_as::<_, VideoRecord>(&sql)
             .bind(viewer_user_id)
+            .bind(exclude_video_id)
             .bind(i64::from(page.limit))
             .fetch_all(&self.pool)
             .await?;

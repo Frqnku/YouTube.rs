@@ -185,8 +185,13 @@ impl VideoRepository for InMemoryVideoRepository {
 		build_page(items, page, popular_cursor)
 	}
 
-	async fn list_random(&self, page: PageRequest, _viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
+	async fn list_random(&self, page: PageRequest, exclude_video_id: Option<Uuid>, _viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
 		let mut items = self.videos.lock().unwrap().clone();
+
+		if let Some(exclude_video_id) = exclude_video_id {
+			items.retain(|video| video.id != exclude_video_id);
+		}
+
 		let len = items.len();
 
 		if len == 0 {

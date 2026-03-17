@@ -7,9 +7,14 @@ use crate::components::ui::icons::{Icon, IconKind};
 
 #[component]
 pub fn NextVideos(current_video_id: String, next_video_url: RwSignal<Option<String>>) -> impl IntoView {
+    let current_video_id_for_fetch = std::sync::Arc::new(current_video_id.clone());
+
     let next_videos = Resource::new(
         || (),
-        |_| async move { get_random_videos(Some(6)).await },
+        move |_| {
+            let exclude_video_id = current_video_id_for_fetch.as_ref().clone();
+            async move { get_random_videos(Some(6), Some(exclude_video_id)).await }
+        },
     );
 
     Effect::new(move |_| {
