@@ -21,30 +21,6 @@ CREATE TABLE channels (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Bootstrap one channel row per existing user
-INSERT INTO channels (user_id)
-SELECT u.id
-FROM users u
-ON CONFLICT (user_id) DO NOTHING;
-
--- Backfill denormalized counters from existing data
-UPDATE channels c
-SET
-    subscriber_count = COALESCE(sub.total, 0),
-    video_count = COALESCE(vid.total, 0)
-FROM users u
-LEFT JOIN (
-    SELECT s.channel_id, COUNT(*)::bigint AS total
-    FROM subscriptions s
-    GROUP BY s.channel_id
-) sub ON sub.channel_id = u.id
-LEFT JOIN (
-    SELECT v.user_id, COUNT(*)::bigint AS total
-    FROM videos v
-    GROUP BY v.user_id
-) vid ON vid.user_id = u.id
-WHERE c.user_id = u.id;
-
 -- =========================
 -- Indexes for performance optimization
 -- =========================

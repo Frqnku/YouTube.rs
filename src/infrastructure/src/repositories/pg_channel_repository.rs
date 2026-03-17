@@ -52,11 +52,7 @@ impl ChannelRepository for PgChannelRepository {
 					u.name,
 					u.profile_picture,
 					c.description,
-					(
-						SELECT COUNT(*)::bigint
-						FROM subscriptions s
-						WHERE s.channel_id = u.id
-					) AS subscriber_count,
+					c.subscriber_count,
 					(
 						SELECT COUNT(*)::bigint
 						FROM videos v

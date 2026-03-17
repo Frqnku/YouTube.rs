@@ -87,6 +87,26 @@ WHERE NOT EXISTS (
 );
 
 -- =========================
+-- Channel subscriber counts mock data
+-- =========================
+
+INSERT INTO channels (user_id, subscriber_count, description)
+SELECT u.id, c.subscriber_count, c.description
+FROM users u
+JOIN (
+	VALUES
+		('rick.astley@example.com', 314595::bigint, 'Rick Astley''s official channel'),
+		('mr.beast@example.com', 385458774::bigint, 'Mr Beast''s official channel'),
+		('pewdiepie@example.com', 114587633::bigint, 'PewDiePie''s official channel'),
+		('fireship@example.com', 3650447::bigint, 'Fireship''s official channel'),
+		('netflix@example.com', 1784852::bigint, 'Netflix Japan''s official channel'),
+		('squeezie@example.com', 19201548::bigint, 'Squeezie''s official channel'),
+		('low.level@example.com', 546::bigint, 'Low Level''s official channel'),
+		('ted.ed@example.com', 21400417::bigint, 'TED-Ed''s official channel')
+) AS c(email, subscriber_count, description)
+	ON u.email = c.email;
+
+-- =========================
 -- Comments mock data
 -- =========================
 
