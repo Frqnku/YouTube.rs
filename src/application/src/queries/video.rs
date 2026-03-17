@@ -38,6 +38,19 @@ where
         Ok(page.into())
     }
 
+    pub async fn random(&self, limit: u32, viewer_user_id: Option<String>) -> anyhow::Result<VideoCardPage> {
+        let viewer_user_id = viewer_user_id
+            .as_deref()
+            .map(uuid::Uuid::parse_str)
+            .transpose()
+            .map_err(|_| DomainError::VideoNotFound)?;
+        let page = self.video_repository
+            .list_random(PageRequest::new(limit, None), viewer_user_id)
+            .await?;
+
+        Ok(page.into())
+    }
+
     pub async fn by_user_id(&self, user_id: String, limit: u32, cursor: Option<String>, viewer_user_id: Option<String>) -> anyhow::Result<VideoCardPage> {
         let id = uuid::Uuid::parse_str(&user_id)
             .map_err(|_| DomainError::VideoNotFound)?;
@@ -228,6 +241,30 @@ mod tests {
 
         assert_eq!(page.items.len(), 1);
         assert_eq!(page.items[0].title, "Learn Rust");
+    }
+
+    #[tokio::test]
+    async fn test_list_random_videos_limit() {
+        let repository = InMemoryVideoRepository::new();
+        let use_case = ListVideos {
+            video_repository: &repository,
+        };
+
+        let author_id = uuid::Uuid::new_v4();
+        for idx in 0..10 {
+            let video = make_video(
+                author_id,
+                "Alice",
+                &format!("video-{idx}"),
+                10,
+                chrono::Utc::now(),
+            );
+            repository.save(&video).await.unwrap();
+        }
+
+        let page = use_case.random(6, None).await.unwrap();
+
+        assert_eq!(page.items.len(), 6);
     }
 
     #[tokio::test]

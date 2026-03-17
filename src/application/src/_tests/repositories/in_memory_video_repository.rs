@@ -185,6 +185,26 @@ impl VideoRepository for InMemoryVideoRepository {
 		build_page(items, page, popular_cursor)
 	}
 
+	async fn list_random(&self, page: PageRequest, _viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
+		let mut items = self.videos.lock().unwrap().clone();
+		let len = items.len();
+
+		if len == 0 {
+			return Ok(VideoPage::new(Vec::new(), None, false));
+		}
+
+		let seed = chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default().unsigned_abs() as usize;
+		let rotate_by = seed % len;
+		items.rotate_left(rotate_by);
+
+		let limit = usize::try_from(page.limit).context("Invalid page limit")?;
+		if items.len() > limit {
+			items.truncate(limit);
+		}
+
+		Ok(VideoPage::new(items, None, false))
+	}
+
 	async fn list_by_user_id(&self, user_id: Uuid, page: PageRequest, _viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
 		let mut items = self
 			.videos

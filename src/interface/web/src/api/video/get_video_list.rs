@@ -60,6 +60,29 @@ pub async fn get_trending_videos(
 }
 
 #[server]
+pub async fn get_random_videos(
+	limit: Option<u32>,
+) -> Result<VideoCardPage, AppServerError> {
+	let pool = use_context::<sqlx::PgPool>()
+		.require_context("Missing pool")?;
+
+	let repository = PgVideoRepository::new(&pool);
+	let query = ListVideos {
+		video_repository: &repository,
+	};
+	let viewer_user_id = use_context::<CurrentUser>().map(|user| user.id);
+
+	let resolved_limit = limit.unwrap_or(DEFAULT_PAGE_LIMIT);
+
+	let page = query
+		.random(resolved_limit, viewer_user_id)
+		.await
+		.map_err(AppServerError::from)?;
+
+	Ok(page.into())
+}
+
+#[server]
 pub async fn get_videos_by_search(
 	searched: String,
 	limit: Option<u32>,
