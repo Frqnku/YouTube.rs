@@ -6,11 +6,28 @@ use crate::components::ui::DotDivider;
 use crate::components::ui::icons::{Icon, IconKind};
 
 #[component]
-pub fn NextVideos() -> impl IntoView {
+pub fn NextVideos(current_video_id: String, next_video_url: RwSignal<Option<String>>) -> impl IntoView {
     let next_videos = Resource::new(
         || (),
         |_| async move { get_random_videos(Some(6)).await },
     );
+
+    Effect::new(move |_| {
+        match next_videos.get() {
+            Some(Ok(page)) => {
+                let next_url = page
+                    .items
+                    .iter()
+                    .find(|video| video.id != current_video_id)
+                    .map(|video| format!("/watch?v={}", video.id));
+                next_video_url.set(next_url);
+            }
+            Some(Err(_)) => {
+                next_video_url.set(None);
+            }
+            None => {}
+        }
+    });
 
     view! {
         <aside class="space-y-3">

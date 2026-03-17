@@ -9,10 +9,12 @@ use crate::components::videos::{NextVideos, video_player::WatchVideo};
 
 #[component]
 fn WatchPageLayout(video: VideoPlayer) -> impl IntoView {
+    let next_video_url = RwSignal::new(None::<String>);
+
     view! {
         <section class="mx-auto grid w-full max-w-7xl gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <WatchVideo video=video />
-            <NextVideos />
+            <WatchVideo video=video.clone() next_video_url=next_video_url />
+            <NextVideos current_video_id=video.id.clone() next_video_url=next_video_url />
         </section>
     }
 }

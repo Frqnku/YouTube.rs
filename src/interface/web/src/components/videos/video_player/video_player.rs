@@ -2,6 +2,7 @@ use leptos::prelude::*;
 use gloo_timers::future::TimeoutFuture;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlVideoElement;
+use leptos_router::hooks::use_navigate;
 
 use crate::{
     api::{
@@ -49,7 +50,7 @@ fn SigninPromptModal(
 }
 
 #[component]
-pub fn WatchVideo(video: VideoPlayer) -> impl IntoView {
+pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) -> impl IntoView {
     let video_for_reactions = video.clone();
     let video_id_for_view_action = video.id.clone();
     let video_tags = video.tags.clone();
@@ -101,6 +102,7 @@ pub fn WatchVideo(video: VideoPlayer) -> impl IntoView {
                         is_authenticated=is_authenticated
                         video_id=video.id.clone()
                         initial_watched_seconds=video.watched_seconds.unwrap_or_default().max(0) as u32
+                        next_video_url=next_video_url
                     />
                 </div>
             </div>
@@ -166,7 +168,14 @@ pub fn WatchVideo(video: VideoPlayer) -> impl IntoView {
 }
 
 #[component]
-fn VideoPlayer(video_url: String, is_authenticated: Signal<bool>, video_id: String, initial_watched_seconds: u32) -> impl IntoView {
+fn VideoPlayer(
+    video_url: String,
+    is_authenticated: Signal<bool>,
+    video_id: String,
+    initial_watched_seconds: u32,
+    next_video_url: RwSignal<Option<String>>,
+) -> impl IntoView {
+    let navigate = use_navigate();
     let watched_seconds = RwSignal::new(initial_watched_seconds);
     let is_playing = RwSignal::new(false);
     let video_id_for_interval = video_id.clone();
@@ -270,6 +279,7 @@ fn VideoPlayer(video_url: String, is_authenticated: Signal<bool>, video_id: Stri
     view! {
         <video
             class="h-full w-full"
+            src=video_url
             controls
             preload="metadata"
             playsinline
@@ -285,6 +295,10 @@ fn VideoPlayer(video_url: String, is_authenticated: Signal<bool>, video_id: Stri
             on:ended=move |_| {
                 is_playing.set(false);
                 on_ended_persist();
+
+                if let Some(url) = next_video_url.get_untracked() {
+                    navigate(&url, Default::default());
+                }
             }
             on:click=move |event| {
                 on_click_update(event.unchecked_into::<web_sys::Event>());
@@ -317,8 +331,6 @@ fn VideoPlayer(video_url: String, is_authenticated: Signal<bool>, video_id: Stri
                     }
                 }
             }
-        >
-            <source src=video_url type="video/mp4" />
-        </video>
+        ></video>
     }
 }
