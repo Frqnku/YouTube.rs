@@ -85,6 +85,31 @@ pub async fn get_videos_by_search(
 }
 
 #[server]
+pub async fn get_videos_by_tag(
+	tag: String,
+	limit: Option<u32>,
+	cursor: Option<String>,
+) -> Result<VideoCardPage, AppServerError> {
+	let pool = use_context::<sqlx::PgPool>()
+		.require_context("Missing pool")?;
+
+	let repository = PgVideoRepository::new(&pool);
+	let query = ListVideos {
+		video_repository: &repository,
+	};
+	let viewer_user_id = use_context::<CurrentUser>().map(|user| user.id);
+
+	let resolved_limit = limit.unwrap_or(DEFAULT_PAGE_LIMIT);
+
+	let page = query
+		.by_tag(&tag, resolved_limit, cursor, viewer_user_id)
+		.await
+		.map_err(AppServerError::from)?;
+
+	Ok(page.into())
+}
+
+#[server]
 pub async fn get_channel_videos(
 	user_id: String,
 	limit: Option<u32>,

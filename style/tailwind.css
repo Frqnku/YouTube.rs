@@ -109,6 +109,11 @@
     @apply bg-bg-tertiary text-text px-4 py-2 rounded-lg text-sm hover:bg-border transition;
   }
 
+  /* Tertiary button active (selected tag) */
+  .btn-tertiary-active {
+    @apply bg-text text-bg hover:bg-text hover:text-bg;
+  }
+
   /* Input style like YouTube search */
   .input-yt {
     @apply bg-bg-secondary border border-border rounded-full px-4 py-2 text-sm text-text placeholder-text-muted;

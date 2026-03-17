@@ -1,14 +1,84 @@
 use leptos::prelude::*;
-use crate::api::video::{get_newest_videos, get_trending_videos};
+use crate::api::video::{get_newest_videos, get_trending_videos, get_videos_by_tag};
 use crate::components::videos::VideoCard;
 use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
 
 const HOME_PAGE_SIZE: u32 = 6;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Tag {
+    Music,
+    Challenge,
+    Entertainment,
+    Gaming,
+    Horror,
+    Vlog,
+    Tech,
+    Rust,
+    Cybersecurity,
+    AI,
+    Anime,
+    Netflix,
+}
+
+impl Tag {
+    fn all() -> &'static [Tag] {
+        &[
+            Tag::Music,
+            Tag::Challenge,
+            Tag::Entertainment,
+            Tag::Gaming,
+            Tag::Horror,
+            Tag::Vlog,
+            Tag::Tech,
+            Tag::Rust,
+            Tag::Cybersecurity,
+            Tag::AI,
+            Tag::Anime,
+            Tag::Netflix,
+        ]
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Tag::Music => "Music",
+            Tag::Challenge => "Challenge",
+            Tag::Entertainment => "Entertainment",
+            Tag::Gaming => "Gaming",
+            Tag::Horror => "Horror",
+            Tag::Vlog => "Vlog",
+            Tag::Tech => "Tech",
+            Tag::Rust => "Rust",
+            Tag::Cybersecurity => "Cybersecurity",
+            Tag::AI => "AI",
+            Tag::Anime => "Anime",
+            Tag::Netflix => "Netflix",
+        }
+    }
+
+    fn as_str(self) -> &'static str {
+        match self {
+            Tag::Music => "music",
+            Tag::Challenge => "challenge",
+            Tag::Entertainment => "entertainment",
+            Tag::Gaming => "gaming",
+            Tag::Horror => "horror",
+            Tag::Vlog => "vlog",
+            Tag::Tech => "tech",
+            Tag::Rust => "rust",
+            Tag::Cybersecurity => "cybersecurity",
+            Tag::AI => "ai",
+            Tag::Anime => "anime",
+            Tag::Netflix => "netflix",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum HomeFeed {
     Trending,
     New,
+    Tag(Tag),
 }
 
 #[component]
@@ -17,26 +87,35 @@ fn HomeFilters(
 ) -> impl IntoView {
     view! {
         <div
-            class="sticky top-14 z-30 -mx-4 mb-5 bg-bg/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6"
+            class="sticky top-14 z-30 mb-5 bg-bg/95 py-3 backdrop-blur"
             data-section="home-filters"
         >
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-3">
                 <button
-                    class="btn-tertiary"
-                    class:bg-text=move || current_feed.get() == HomeFeed::Trending
-                    class:text-bg=move || current_feed.get() == HomeFeed::Trending
+                    class="btn-tertiary font-semibold"
+                    class:btn-tertiary-active=move || current_feed.get() == HomeFeed::Trending
                     on:click=move |_| current_feed.set(HomeFeed::Trending)
                 >
                     "Trending"
                 </button>
                 <button
-                    class="btn-tertiary"
-                    class:bg-text=move || current_feed.get() == HomeFeed::New
-                    class:text-bg=move || current_feed.get() == HomeFeed::New
+                    class="btn-tertiary font-semibold"
+                    class:btn-tertiary-active=move || current_feed.get() == HomeFeed::New
                     on:click=move |_| current_feed.set(HomeFeed::New)
                 >
                     "New"
                 </button>
+                {Tag::all().iter().map(|&tag| {
+                    view! {
+                        <button
+                            class="btn-tertiary font-semibold"
+                            class:btn-tertiary-active=move || current_feed.get() == HomeFeed::Tag(tag)
+                            on:click=move |_| current_feed.set(HomeFeed::Tag(tag))
+                        >
+                            {tag.label()}
+                        </button>
+                    }
+                }).collect_view()}
             </div>
         </div>
     }
@@ -58,6 +137,7 @@ pub fn HomePage() -> impl IntoView {
             match feed {
                 HomeFeed::Trending => get_trending_videos(Some(HOME_PAGE_SIZE), cursor).await.map_err(|_| ()),
                 HomeFeed::New => get_newest_videos(Some(HOME_PAGE_SIZE), cursor).await.map_err(|_| ()),
+                HomeFeed::Tag(tag) => get_videos_by_tag(tag.as_str().to_string(), Some(HOME_PAGE_SIZE), cursor).await.map_err(|_| ()),
             }
         },
     );

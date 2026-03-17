@@ -66,6 +66,19 @@ where
 
         Ok(page.into())
     }
+
+    pub async fn by_tag(&self, tag_name: &str, limit: u32, cursor: Option<String>, viewer_user_id: Option<String>) -> anyhow::Result<VideoCardPage> {
+        let viewer_user_id = viewer_user_id
+            .as_deref()
+            .map(uuid::Uuid::parse_str)
+            .transpose()
+            .map_err(|_| DomainError::VideoNotFound)?;
+        let page = self.video_repository
+            .list_by_tag(tag_name, PageRequest::new(limit, cursor), viewer_user_id)
+            .await?;
+
+        Ok(page.into())
+    }
 }
 
 pub struct GetVideoById<

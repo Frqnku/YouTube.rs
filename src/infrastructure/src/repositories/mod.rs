@@ -10,5 +10,7 @@ pub mod pg_video_reaction_repository;
 pub use pg_video_reaction_repository::*;
 pub mod pg_video_view_repository;
 pub use pg_video_view_repository::*;
+pub mod pg_video_tag_repository;
+pub use pg_video_tag_repository::*;
 pub mod pg_comment_repository;
 pub use pg_comment_repository::*;

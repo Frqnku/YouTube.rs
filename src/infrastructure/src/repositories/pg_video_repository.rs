@@ -1,6 +1,6 @@
 use anyhow::{Context, anyhow};
 use domain::_shared::value_objects::Url;
-use domain::video::entity::{Video, VideoAuthor};
+use domain::video::entity::{Tag, Video, VideoAuthor};
 use domain::video::{PageRequest, VideoHistoryRepository, LikedVideoRepository, VideoPage, VideoRepository};
 use sqlx::types::Uuid;
 use sqlx::types::time::OffsetDateTime;
@@ -64,6 +64,18 @@ impl VideoRecord {
         video.created_at = created_at;
 
         Ok(video)
+    }
+}
+
+#[derive(sqlx::FromRow)]
+struct TagRecord {
+    id: i32,
+    name: String,
+}
+
+impl TagRecord {
+    fn into_tag(self) -> Tag {
+        Tag::new(self.id, self.name)
     }
 }
 
@@ -154,6 +166,21 @@ where
     ))
 }
 
+async fn load_video_tags(pool: &sqlx::PgPool, video_id: Uuid) -> anyhow::Result<Vec<Tag>> {
+    let records = sqlx::query_as::<_, TagRecord>(
+        "SELECT t.id, t.name
+         FROM video_tags vt
+         JOIN tags t ON t.id = vt.tag_id
+         WHERE vt.video_id = $1
+         ORDER BY t.name ASC",
+    )
+    .bind(video_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(records.into_iter().map(TagRecord::into_tag).collect())
+}
+
 #[async_trait::async_trait]
 impl VideoRepository for PgVideoRepository {
     async fn find_by_id(&self, id: Uuid, viewer_user_id: Option<Uuid>) -> Option<Video> {
@@ -165,7 +192,10 @@ impl VideoRepository for PgVideoRepository {
         .await
         .ok()?;
 
-        record.and_then(|rec| rec.into_video().ok())
+        let mut video = record.and_then(|rec| rec.into_video().ok())?;
+        video.tags = load_video_tags(&self.pool, video.id).await.ok()?;
+
+        Some(video)
     }
 
     async fn list_newest(&self, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
@@ -250,6 +280,45 @@ impl VideoRepository for PgVideoRepository {
             .bind(limit_plus_one(&page))
             .fetch_all(&self.pool)
             .await?
+        };
+
+        into_page(records, &page, newest_cursor)
+    }
+
+    async fn list_by_tag(&self, tag_name: &str, page: PageRequest, viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
+        let normalized = tag_name.trim().to_lowercase();
+
+        let records = if let Some(cursor) = page.cursor.as_deref() {
+            let (created_at, id) = parse_newest_cursor(cursor)?;
+            let sql = video_query_sql(
+                "JOIN video_tags vt ON vt.video_id = v.id
+                 JOIN tags t ON t.id = vt.tag_id
+                 WHERE t.name = $2 AND (v.created_at, v.id) < ($3, $4)
+                 ORDER BY v.created_at DESC, v.id DESC
+                 LIMIT $5",
+            );
+            sqlx::query_as::<_, VideoRecord>(&sql)
+                .bind(viewer_user_id)
+                .bind(&normalized)
+                .bind(created_at)
+                .bind(id)
+                .bind(limit_plus_one(&page))
+                .fetch_all(&self.pool)
+                .await?
+        } else {
+            let sql = video_query_sql(
+                "JOIN video_tags vt ON vt.video_id = v.id
+                 JOIN tags t ON t.id = vt.tag_id
+                 WHERE t.name = $2
+                 ORDER BY v.created_at DESC, v.id DESC
+                 LIMIT $3",
+            );
+            sqlx::query_as::<_, VideoRecord>(&sql)
+                .bind(viewer_user_id)
+                .bind(&normalized)
+                .bind(limit_plus_one(&page))
+                .fetch_all(&self.pool)
+                .await?
         };
 
         into_page(records, &page, newest_cursor)

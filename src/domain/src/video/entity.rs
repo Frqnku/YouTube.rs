@@ -4,6 +4,18 @@ use uuid::Uuid;
 use crate::_shared::value_objects::Url;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Tag {
+    pub id: i32,
+    pub name: String,
+}
+
+impl Tag {
+    pub fn new(id: i32, name: String) -> Self {
+        Self { id, name }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VideoAuthor {
     pub id: Uuid,
     pub name: String,
@@ -20,6 +32,7 @@ impl VideoAuthor {
 pub struct Video {
     pub id: Uuid,
     pub author: VideoAuthor,
+    pub tags: Vec<Tag>,
     pub title: String,
     pub description: String,
     pub video_url: Url,
@@ -51,6 +64,7 @@ impl Video {
         Self {
             id,
             author,
+            tags: Vec::new(),
             title,
             description,
             video_url,

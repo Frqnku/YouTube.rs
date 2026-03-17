@@ -104,7 +104,75 @@ JOIN (
 		('low.level@example.com', 546::bigint, 'Low Level''s official channel'),
 		('ted.ed@example.com', 21400417::bigint, 'TED-Ed''s official channel')
 ) AS c(email, subscriber_count, description)
-	ON u.email = c.email;
+	ON u.email = c.email
+ON CONFLICT (user_id) DO UPDATE
+SET
+	subscriber_count = EXCLUDED.subscriber_count,
+	description = EXCLUDED.description,
+	updated_at = now();
+
+-- =========================
+-- Video tags mock data
+-- =========================
+
+INSERT INTO tags (name)
+SELECT DISTINCT seed.tag_name
+FROM (
+	VALUES
+		('music'),
+		('challenge'),
+		('entertainment'),
+		('gaming'),
+		('horror'),
+		('ai'),
+		('tech'),
+		('vlog'),
+		('rust'),
+		('cybersecurity'),
+		('anime'),
+		('netflix')
+) AS seed(tag_name)
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO video_tags (video_id, tag_id)
+SELECT
+	v.id,
+	t.id
+FROM (
+	VALUES
+		('rick.astley@example.com', 'Never Gonna Give You Up', 'music'),
+		('mr.beast@example.com', 'Survive 30 Days Stranded With Your Ex, Win $250,000', 'challenge'),
+		('mr.beast@example.com', 'Survive 30 Days Stranded With Your Ex, Win $250,000', 'entertainment'),
+		('mr.beast@example.com', '$456,000 Squid Game In Real Life!', 'challenge'),
+		('mr.beast@example.com', '$456,000 Squid Game In Real Life!', 'entertainment'),
+		('pewdiepie@example.com', 'WHY DID I PLAY THIS?! ((((((So Scary!))))))', 'gaming'),
+		('pewdiepie@example.com', 'WHY DID I PLAY THIS?! ((((((So Scary!))))))', 'entertainment'),
+		('pewdiepie@example.com', 'WHY DID I PLAY THIS?! ((((((So Scary!))))))', 'horror'),
+		('pewdiepie@example.com', 'I Trained My Own AI... It beat ChatGPT', 'ai'),
+		('pewdiepie@example.com', 'I Trained My Own AI... It beat ChatGPT', 'tech'),
+		('pewdiepie@example.com', 'I brought the boy to his homeland', 'vlog'),
+		('low.level@example.com', 'The C Programming Language is Over 50 Years Old, So Today I Learned Rust', 'rust'),
+		('low.level@example.com', 'The C Programming Language is Over 50 Years Old, So Today I Learned Rust', 'tech'),
+		('low.level@example.com', 'how can HACKERS use Rust for EVIL?? (the future of malware)', 'rust'),
+		('low.level@example.com', 'how can HACKERS use Rust for EVIL?? (the future of malware)', 'cybersecurity'),
+		('low.level@example.com', 'how can HACKERS use Rust for EVIL?? (the future of malware)', 'tech'),
+		('low.level@example.com', 'my new wife', 'rust'),
+		('low.level@example.com', 'my new wife', 'tech'),
+		('low.level@example.com', 'dude wtf', 'tech'),
+		('low.level@example.com', 'dude wtf', 'cybersecurity'),
+		('fireship@example.com', 'Kubernetes Explained in 100 Seconds', 'tech'),
+		('fireship@example.com', 'Linux in 100 Seconds', 'tech'),
+		('netflix@example.com', '「スティール・ボール・ラン ジョジョの奇妙な冒険」｜予告編｜Netflix Japan', 'anime'),
+		('netflix@example.com', '「スティール・ボール・ラン ジョジョの奇妙な冒険」｜予告編｜Netflix Japan', 'netflix'),
+		('netflix@example.com', '意識は遅れてやってくる| 刃牙道 | Netflix Japan', 'anime'),
+		('netflix@example.com', '意識は遅れてやってくる| 刃牙道 | Netflix Japan', 'netflix'),
+		('squeezie@example.com', 'Ce milliardaire a tout perdu à cause d’un caprice...', 'entertainment'),
+		('squeezie@example.com', 'QUI EST LE MEURTRIER ? (ft Inoxtag, Seb, Maghla, Michou, Gotaga, GMK, Terra, Tatiana, Freddy G)', 'entertainment')
+) AS seed(uploader_email, video_title, tag_name)
+JOIN users u ON u.email = seed.uploader_email
+JOIN videos v ON v.user_id = u.id AND v.title = seed.video_title
+JOIN tags t ON t.name = seed.tag_name
+ON CONFLICT (video_id, tag_id) DO NOTHING;
 
 -- =========================
 -- Comments mock data

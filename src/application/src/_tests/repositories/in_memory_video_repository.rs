@@ -211,6 +211,32 @@ impl VideoRepository for InMemoryVideoRepository {
 		build_page(items, page, newest_cursor)
 	}
 
+	async fn list_by_tag(&self, tag_name: &str, page: PageRequest, _viewer_user_id: Option<Uuid>) -> anyhow::Result<VideoPage> {
+		let mut items = self
+			.videos
+			.lock()
+			.unwrap()
+			.iter()
+			.filter(|video| video.tags.iter().any(|tag| tag.name == tag_name))
+			.cloned()
+			.collect::<Vec<_>>();
+		items.sort_by(cmp_newest);
+
+		if let Some(cursor) = page.cursor.as_deref() {
+			let (created_at, id) = parse_newest_cursor(cursor)?;
+			items.retain(|video| {
+				video.created_at < created_at || (video.created_at == created_at && video.id < id)
+			});
+		}
+
+		let limit_plus_one = usize::try_from(page.limit.saturating_add(1)).context("Invalid page limit")?;
+		if items.len() > limit_plus_one {
+			items.truncate(limit_plus_one);
+		}
+
+		build_page(items, page, newest_cursor)
+	}
+
 	async fn count_by_user_id(&self, user_id: Uuid) -> anyhow::Result<u64> {
 		let count = self
 			.videos

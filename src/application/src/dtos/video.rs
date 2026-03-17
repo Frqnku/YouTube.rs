@@ -102,6 +102,7 @@ pub struct VideoPlayer {
 	pub channel_id: Uuid,
 	pub user: String,
 	pub user_picture: Option<String>,
+	pub tags: Vec<String>,
 	pub title: String,
 	pub description: String,
 	pub video_url: String,
@@ -119,6 +120,7 @@ impl VideoPlayer {
 		channel_id: Uuid,
 		user: String,
 		user_picture: Option<String>,
+		tags: Vec<String>,
 		title: String,
 		description: String,
 		video_url: String,
@@ -134,6 +136,7 @@ impl VideoPlayer {
 			channel_id,
 			user,
 			user_picture,
+			tags,
 			title,
 			description,
 			video_url,
@@ -154,6 +157,7 @@ impl From<Video> for VideoPlayer {
 			video.author.id,
 			video.author.name,
 			video.author.profile_picture.map(|url| url.to_string()),
+			video.tags.into_iter().map(|tag| tag.name).collect(),
 			video.title,
 			video.description,
 			video.video_url.to_string(),
@@ -265,6 +269,7 @@ mod tests {
 		assert_eq!(player.duration_seconds, 123);
 		assert_eq!(player.watched_seconds, Some(45));
 		assert_eq!(player.dislike_count, 3);
+		assert!(player.tags.is_empty());
 		assert_eq!(player.uploaded_at, expected_uploaded_at);
 	}
 }

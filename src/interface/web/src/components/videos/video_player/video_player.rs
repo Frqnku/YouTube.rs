@@ -52,6 +52,7 @@ fn SigninPromptModal(
 pub fn WatchVideo(video: VideoPlayer) -> impl IntoView {
     let video_for_reactions = video.clone();
     let video_id_for_view_action = video.id.clone();
+    let video_tags = video.tags.clone();
     let view_count = format!("{} views", format_count(video.view_count, CountFormat::Long));
     let uploaded_ago = format_relative_time(&video.uploaded_at);
 
@@ -137,6 +138,23 @@ pub fn WatchVideo(video: VideoPlayer) -> impl IntoView {
                 <div class="rounded-xl bg-bg-tertiary p-4 text-sm leading-relaxed text-text-secondary">
                     <p class="font-medium text-text">{format!("{} - {}", view_count, uploaded_ago)}</p>
                     <p class="mt-2 whitespace-pre-line">{video.description}</p>
+                    {(!video_tags.is_empty()).then(|| {
+                        view! {
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <For
+                                    each=move || video_tags.clone().into_iter()
+                                    key=|tag| tag.clone()
+                                    children=move |tag| {
+                                        view! {
+                                            <span class="rounded-full bg-bg-secondary px-3 py-1 text-xs font-medium text-text">
+                                                {format!("#{}", tag)}
+                                            </span>
+                                        }
+                                    }
+                                />
+                            </div>
+                        }
+                    })}
                 </div>
 
                 <CommentFeed video_id=video.id.clone() />
