@@ -18,7 +18,7 @@ pub fn CommentItem(
 	show_signin_prompt: RwSignal<bool>,
 	on_reply_created: Callback<CommentDto>,
 	#[prop(default = 0)] depth: u8,
-) -> impl IntoView {
+) -> AnyView {
 	let comment_id = comment.id;
 	let comment_id_for_replies = comment_id.clone();
 	let comment_id_for_like = comment_id.clone();
@@ -166,36 +166,32 @@ pub fn CommentItem(
 
 			<Show when=move || expanded_replies.get()>
 				<div class="ml-12 space-y-3">
-					{move || {
-						if load_replies_action.pending().get() {
-							return view! { <p class="text-xs text-text-muted">"Loading replies..."</p> }.into_any();
+					<Show when=move || load_replies_action.pending().get()>
+						<p class="text-xs text-text-muted">"Loading replies..."</p>
+					</Show>
+					<Show when=move || replies_error.get()>
+						<p class="text-xs text-red-500">"Unable to load replies."</p>
+					</Show>
+					<Show when=move || !load_replies_action.pending().get() && !replies_error.get() && replies.with(|r| r.is_empty())>
+						<p class="text-xs text-text-muted">"No replies yet."</p>
+					</Show>
+					<For
+						each=move || replies.get().into_iter()
+						key=|reply| reply.id.clone()
+						children=move |reply| {
+							view! {
+								<CommentItem
+									comment=reply
+									is_authenticated=is_authenticated
+									show_signin_prompt=show_signin_prompt
+									on_reply_created=on_reply_created
+									depth=depth + 1
+								/>
+							}
 						}
-						if replies_error.get() {
-							return view! { <p class="text-xs text-red-500">"Unable to load replies."</p> }.into_any();
-						}
-						if replies.get().is_empty() {
-							return view! { <p class="text-xs text-text-muted">"No replies yet."</p> }.into_any();
-						}
-						view! {
-							<For
-								each=move || replies.get().into_iter()
-								key=|reply| reply.id.clone()
-								children=move |reply| {
-									view! {
-										<CommentItem
-											comment=reply
-											is_authenticated=is_authenticated
-											show_signin_prompt=show_signin_prompt
-											on_reply_created=on_reply_created
-											depth=depth + 1
-										/>
-									}
-								}
-							/>
-						}.into_any()
-					}}
+					/>
 				</div>
 			</Show>
 		</article>
-	}
+	}.into_any()
 }

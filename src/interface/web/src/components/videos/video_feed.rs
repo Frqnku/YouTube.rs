@@ -125,8 +125,9 @@ where
             }
         });
 
-        // Keep the listener alive for the component lifetime.
-        StoredValue::new(window_scroll_listener);
+        // Explicitly drop the listener when the scope is disposed to prevent
+        // it from firing on unrelated pages after SPA navigation.
+        on_cleanup(move || drop(window_scroll_listener));
     }
 
     (

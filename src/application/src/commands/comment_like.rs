@@ -10,27 +10,6 @@ fn parse_uuid(id: &str, field_name: &str) -> anyhow::Result<Uuid> {
 		.map_err(Into::into)
 }
 
-pub struct GetCommentLikeStatus<
-	'a,
-	R: CommentLikeRepository,
-> {
-	pub comment_like_repository: &'a R,
-}
-
-impl<'a, R> GetCommentLikeStatus<'a, R>
-where
-	R: CommentLikeRepository,
-{
-	pub async fn execute(&self, comment_id: String, user_id: String) -> anyhow::Result<bool> {
-		let comment_id = parse_uuid(&comment_id, "comment id")?;
-		let user_id = parse_uuid(&user_id, "user id")?;
-
-		self.comment_like_repository
-			.is_liked_by_user(comment_id, user_id)
-			.await
-	}
-}
-
 pub struct AddCommentLike<
 	'a,
 	R: CommentLikeRepository,

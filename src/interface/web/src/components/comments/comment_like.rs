@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 
 use crate::{
-	api::comment::{delete_comment_like, get_comment_like, post_comment_like},
+	api::comment::{delete_comment_like, post_comment_like},
 	components::{
 		_helpers::{CountFormat, format_count},
 		ui::icons::{Icon, IconKind},
@@ -18,29 +18,7 @@ pub fn CommentLikeButton(
 ) -> impl IntoView {
 	let like_count = RwSignal::new(initial_like_count.max(0));
 	let is_liked = RwSignal::new(initial_liked_by_viewer.unwrap_or(false));
-	let comment_id_for_status = comment_id.clone();
 	let comment_id_for_click = comment_id.clone();
-
-	let fetch_like_status = Action::new(move |comment_id: &String| {
-		let comment_id = comment_id.clone();
-		async move { get_comment_like(comment_id).await }
-	});
-
-	Effect::new({
-		let comment_id_for_status = comment_id_for_status.clone();
-		move |_| {
-			if is_authenticated.get() {
-				fetch_like_status.dispatch(comment_id_for_status.clone());
-			}
-		}
-	});
-
-	Effect::new(move |_| {
-		let Some(Ok(liked)) = fetch_like_status.value().get() else {
-			return;
-		};
-		is_liked.set(liked);
-	});
 
 	let toggle_like = Action::new(move |payload: &(String, bool)| {
 		let (comment_id, like) = payload.clone();
