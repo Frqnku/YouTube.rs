@@ -3,9 +3,18 @@ use leptos::prelude::*;
 use crate::components::ui::icons::{Icon, IconKind};
 
 #[component]
-pub fn HeaderLeft(country_code: Signal<String>) -> impl IntoView {
+pub fn HeaderLeft(
+    country_code: Signal<String>,
+    mobile_search_open: RwSignal<bool>,
+) -> impl IntoView {
     view! {
-        <div class="flex items-center gap-3 md:gap-5">
+        <div class=move || {
+            if mobile_search_open.get() {
+                "hidden items-center gap-3 md:flex md:gap-5"
+            } else {
+                "flex items-center gap-3 md:gap-5"
+            }
+        }>
             <button class="icon-btn hidden md:inline-flex" title="Menu">
                 <Icon kind=IconKind::Menu />
             </button>

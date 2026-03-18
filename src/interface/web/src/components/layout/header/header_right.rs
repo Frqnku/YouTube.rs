@@ -16,6 +16,7 @@ use crate::{
 #[component]
 pub fn HeaderRight(
     selected_country_code: RwSignal<String>,
+    mobile_search_open: RwSignal<bool>,
 ) -> impl IntoView {
     let current_user_ctx = use_context::<CurrentUserContext>();
     let current_user = move || current_user_ctx.as_ref().and_then(|ctx| ctx.current_user.get());
@@ -39,7 +40,13 @@ pub fn HeaderRight(
     });
 
     view! {
-        <div class="flex items-center gap-2">
+        <div class=move || {
+            if mobile_search_open.get() {
+                "hidden items-center gap-2 md:flex"
+            } else {
+                "flex items-center gap-2"
+            }
+        }>
             <Show
                 when=move || is_hydrated.get()
                 fallback=move || {
