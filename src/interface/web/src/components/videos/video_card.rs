@@ -26,20 +26,36 @@ pub fn VideoCard(video: VideoCardDto) -> impl IntoView {
     let uploaded_ago = format_relative_time(&video.uploaded_at);
     let watch_url = format!("/watch?v={}", video.id);
     let view_count = format!("{} views", format_count(video.view_count, CountFormat::Short));
+    let is_previewing = RwSignal::new(false);
+
+    let thumbnail_url = video.thumbnail_url.clone();
+    let preview_url = video.preview_url.clone();
+    let title = video.title.clone();
 
     view! {
         <article class="group">
             <a href=watch_url class="block">
-                <div class="relative aspect-video overflow-hidden rounded-xl bg-bg-secondary">
+                <div
+                    class="relative aspect-video overflow-hidden rounded-xl bg-bg-secondary"
+                    on:mouseenter=move |_| is_previewing.set(true)
+                    on:mouseleave=move |_| is_previewing.set(false)
+                >
                     <img
-                        src=video.thumbnail_url
-                        alt=video.title.clone()
-                        class="h-full w-full object-cover transition group-hover:hidden"
-                    />
-                    <img
-                        src=video.preview_url
-                        alt=video.title.clone()
-                        class="h-full w-full object-cover transition group-hover:block group-hover:scale-[1.02]"
+                        src=move || {
+                            if is_previewing.get() {
+                                preview_url.clone()
+                            } else {
+                                thumbnail_url.clone()
+                            }
+                        }
+                        alt=title
+                        class=move || {
+                            if is_previewing.get() {
+                                "h-full w-full object-cover transition-transform duration-200 scale-[1.02]"
+                            } else {
+                                "h-full w-full object-cover transition-transform duration-200 scale-100"
+                            }
+                        }
                     />
                     <span class="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs font-medium text-white">
                         {duration}
