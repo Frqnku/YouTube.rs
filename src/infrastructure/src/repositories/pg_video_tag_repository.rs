@@ -35,17 +35,6 @@ fn normalize_tag_name(raw: &str) -> Option<String> {
     }
 }
 
-fn normalize_tag_names(tag_names: Vec<String>) -> Vec<String> {
-    let mut normalized = tag_names
-        .into_iter()
-        .filter_map(|name| normalize_tag_name(&name))
-        .collect::<Vec<_>>();
-
-    normalized.sort();
-    normalized.dedup();
-    normalized
-}
-
 #[async_trait::async_trait]
 impl VideoTagRepository for PgVideoTagRepository {
     async fn list_tags_by_video_id(&self, video_id: Uuid) -> anyhow::Result<Vec<Tag>> {
