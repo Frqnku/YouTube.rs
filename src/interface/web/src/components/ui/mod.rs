@@ -5,3 +5,5 @@ pub mod dividers;
 pub use dividers::*;
 pub mod not_found;
 pub use not_found::*;
+pub mod require_auth;
+pub use require_auth::*;
