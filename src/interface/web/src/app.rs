@@ -6,8 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::components::layout::{header::Header, Sidebar};
 use crate::components::ui::NotFound;
-use crate::routes::protected::{HistoryPage, LikedVideosPage};
-use crate::routes::public::{ChannelPage, HomePage, ResultsPage, SigninPage, WatchPage};
+use crate::routes::public::{ChannelPage, HomePage, ResultsPage, SigninPage, WatchPage, HistoryPage, LikedVideosPage};
 use crate::api::user::auth::{get_current_client_meta, get_current_user};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

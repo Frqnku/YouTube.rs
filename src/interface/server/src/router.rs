@@ -15,7 +15,7 @@ use tower_http::services::ServeDir;
 
 use web::{app::{App, ClientRequestMeta, CurrentUser}, shell::shell, state::AppState};
 
-use crate::middleware::{get_current_ip, get_current_user, require_auth};
+use crate::middleware::{get_current_ip, get_current_user};
 
 /* ========================================================== */
 /*                         🦀 MAIN 🦀                        */
@@ -35,7 +35,6 @@ pub async fn build_app_router(
             get(server_fn_handler).post(server_fn_handler),
         )
         .leptos_routes_with_handler(routes, get(leptos_routes_handler))
-        .layer(middleware::from_fn(require_auth))
         .layer(middleware::from_fn(get_current_user))
         .layer(middleware::from_fn(get_current_ip))
         .with_state(app_state))

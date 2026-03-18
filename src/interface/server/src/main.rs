@@ -6,8 +6,6 @@ use tracing::info;
 use tracing_log::LogTracer;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
-// pub mod fallback;
-// pub use fallback::*;
 pub mod router;
 pub use router::*;
 pub mod config;
