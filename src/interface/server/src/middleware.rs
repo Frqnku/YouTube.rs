@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use axum::{
     extract::{ConnectInfo, Request},
     middleware::Next,
-    response::{IntoResponse, Redirect, Response},
+    response::Response,
 };
 use axum_extra::extract::cookie::CookieJar;
 use application::services::TokenService;
