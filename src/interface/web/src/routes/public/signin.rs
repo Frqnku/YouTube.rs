@@ -23,22 +23,23 @@ pub fn SigninPage() -> impl IntoView {
     let oauth_state = RwSignal::new(OAuthState::Pending);
     let has_attempted = RwSignal::new(false);
 
-    // Process OAuth callback once when code/state are present
     Effect::new(move |_| {
         if !has_attempted.get() {
             let code_value = code();
             let oauth_state_value = state_from_oauth();
+            let cookie_state_value = state_from_cookie.get();
 
-            match (code_value, oauth_state_value) {
-                (Some(code), Some(oauth_state_value)) => {
+            match (code_value, oauth_state_value, cookie_state_value) {
+                (Some(code), Some(oauth_state_value), Some(cookie_state_value)) => {
                     has_attempted.set(true);
                     oauth_action.dispatch(Oauth {
                         provider: "google".to_string(),
                         code: Some(code),
                         oauth_state: Some(oauth_state_value),
-                        cookie_state: state_from_cookie.get(),
+                        cookie_state: Some(cookie_state_value),
                     });
                 }
+                (Some(_), Some(_), None) => {}
                 _ => {
                     if let Some(window) = web_sys::window() {
                         let _ = window.location().set_href("/");
@@ -48,7 +49,6 @@ pub fn SigninPage() -> impl IntoView {
         }
     });
 
-    // Update state based on OAuth result
     Effect::new(move |_| {
         if oauth_action.pending().get() {
             oauth_state.set(OAuthState::Pending);
