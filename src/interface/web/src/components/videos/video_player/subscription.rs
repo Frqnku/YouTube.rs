@@ -11,7 +11,11 @@ use crate::{
 };
 
 #[component]
-pub fn Channel(channel_name: String, subscriber_count: RwSignal<usize>) -> impl IntoView {
+pub fn Channel(
+	channel_name: String,
+	subscriber_count: RwSignal<usize>,
+	subscriber_count_loaded: Signal<bool>,
+) -> impl IntoView {
 	let subscriber_count_label = Signal::derive(move || {
 		format!(
 			"{} subscribers",
@@ -22,7 +26,19 @@ pub fn Channel(channel_name: String, subscriber_count: RwSignal<usize>) -> impl 
 	view! {
 		<div>
 			<p class="font-medium text-text">{channel_name}</p>
-			<p class="text-sm text-text-secondary">{move || subscriber_count_label.get()}</p>
+			<Show
+				when=move || subscriber_count_loaded.get()
+				fallback=move || {
+					view! {
+						<span
+							aria-hidden="true"
+							class="mt-1 block h-4 w-24 animate-pulse rounded bg-bg-tertiary"
+						></span>
+					}
+				}
+			>
+				<p class="text-sm text-text-secondary">{move || subscriber_count_label.get()}</p>
+			</Show>
 		</div>
 	}
 }

@@ -69,6 +69,7 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
 
     // Subscriber count - initially 0, loaded async
     let subscriber_count = RwSignal::new(0usize);
+    let subscriber_count_loaded = RwSignal::new(false);
     let channel_id_for_count = video.channel_id.clone();
     
     // Load initial subscriber count
@@ -78,8 +79,11 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
     );
 
     Effect::new(move |_| {
-        if let Some(Ok(count)) = _count_resource.get() {
-            subscriber_count.set(count);
+        if let Some(result) = _count_resource.get() {
+            subscriber_count_loaded.set(true);
+            if let Ok(count) = result {
+                subscriber_count.set(count);
+            }
         }
     });
 
@@ -113,7 +117,7 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
                 </h1>
 
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div class="flex items-center gap-3">
+                    <a href=format!("/channel?id={}", video.channel_id) class="flex items-center gap-3">
                         <img
                             src=video.user_picture.clone().unwrap_or_default()
                             alt=format!("{}'s profile picture", video.user)
@@ -122,8 +126,9 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
                         <Channel
                             channel_name=video.user.clone()
                             subscriber_count=subscriber_count
+                            subscriber_count_loaded=Signal::derive(move || subscriber_count_loaded.get())
                         />
-                    </div>
+                    </a>
 
                     <div class="flex flex-wrap gap-2">
                         <SubscribeButton
