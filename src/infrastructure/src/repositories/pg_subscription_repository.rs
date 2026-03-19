@@ -20,6 +20,7 @@ struct ChannelRecord {
 	id: Uuid,
 	name: String,
 	profile_picture: Option<String>,
+	banner_url: Option<String>,
 	description: Option<String>,
 	subscriber_count: i64,
 	video_count: i64,
@@ -31,6 +32,7 @@ impl ChannelRecord {
 			.profile_picture
 			.map(Url::try_from)
 			.transpose()?;
+		let banner = self.banner_url.map(Url::try_from).transpose()?;
 		let subscriber_count = usize::try_from(self.subscriber_count)
 			.context("Subscriber count overflow")?;
 		let video_count = usize::try_from(self.video_count)
@@ -40,6 +42,7 @@ impl ChannelRecord {
 			self.id,
 			self.name,
 			profile_picture,
+			banner,
 			self.description,
 			subscriber_count,
 			video_count,
@@ -136,6 +139,7 @@ impl SubscriptionRepository for PgSubscriptionRepository {
 			"SELECT u.id,
 			        u.name,
 			        u.profile_picture,
+			        c.banner_url,
 			        c.description,
 			        COALESCE(c.subscriber_count, 0) AS subscriber_count,
 			        COALESCE(c.video_count, 0) AS video_count

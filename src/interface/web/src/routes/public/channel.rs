@@ -1,5 +1,6 @@
 use leptos::prelude::*;
 use leptos_router::hooks::use_query_map;
+use std::sync::Arc;
 
 use crate::{
 	api::{
@@ -24,7 +25,6 @@ use crate::{
 };
 
 const CHANNEL_PAGE_SIZE: u32 = 12;
-const DEFAULT_BANNER_URL: &str = "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1600&q=80";
 
 #[component]
 pub fn ChannelPage() -> impl IntoView {
@@ -181,16 +181,28 @@ pub fn ChannelPage() -> impl IntoView {
 								"{} videos",
 								format_count(channel.video_count as i64, CountFormat::Short)
 							);
+							let channel_banner = Arc::new(channel.banner.map(|url| url.to_string()));
+							let has_channel_banner = channel_banner.is_some();
 
 							view! {
 								<section class="mx-auto w-full max-w-7xl">
-									<div class="overflow-hidden rounded-2xl bg-bg-secondary">
-										<img
-											src=DEFAULT_BANNER_URL
-											alt="Channel banner"
-											class="h-40 w-full object-cover md:h-56"
-										/>
-									</div>
+									<Show when=move || has_channel_banner>
+										<div class="overflow-hidden rounded-2xl bg-bg-secondary">
+											<img
+												src={
+													let channel_banner = Arc::clone(&channel_banner);
+													move || {
+														channel_banner
+															.as_ref()
+															.clone()
+															.unwrap()
+													}
+												}
+												alt="Channel banner"
+												class="h-40 w-full object-cover md:h-56"
+											/>
+										</div>
+									</Show>
 
 									<div class="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 										<div class="flex items-center gap-4">

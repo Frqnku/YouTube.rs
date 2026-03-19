@@ -87,26 +87,27 @@ WHERE NOT EXISTS (
 );
 
 -- =========================
--- Channel subscriber counts mock data
+-- Channel mock data
 -- =========================
 
-INSERT INTO channels (user_id, subscriber_count, description)
-SELECT u.id, c.subscriber_count, c.description
+INSERT INTO channels (user_id, banner_url, subscriber_count, description)
+SELECT u.id, c.banner_url, c.subscriber_count, c.description
 FROM users u
 JOIN (
 	VALUES
-		('rick.astley@example.com', 314595::bigint, 'Rick Astley''s official channel'),
-		('mr.beast@example.com', 385458774::bigint, 'Mr Beast''s official channel'),
-		('pewdiepie@example.com', 114587633::bigint, 'PewDiePie''s official channel'),
-		('fireship@example.com', 3650447::bigint, 'Fireship''s official channel'),
-		('netflix@example.com', 1784852::bigint, 'Netflix Japan''s official channel'),
-		('squeezie@example.com', 19201548::bigint, 'Squeezie''s official channel'),
-		('low.level@example.com', 546::bigint, 'Low Level''s official channel'),
-		('ted.ed@example.com', 21400417::bigint, 'TED-Ed''s official channel')
-) AS c(email, subscriber_count, description)
+		('rick.astley@example.com', NULL, 314595::bigint, 'Rick Astley''s official channel'),
+		('mr.beast@example.com', 'https://yt3.googleusercontent.com/mdQwWXA5Pf5VnEChXzYoZgeI6u9G5wqfX6RIhK-qNJ1ko41gCMlkzGqF6cbmdOQkjItHNRDF=w2120-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj', 385458774::bigint, 'Mr Beast''s official channel'),
+		('pewdiepie@example.com', 'https://yt3.googleusercontent.com/vg_f9mYBpTkhj44RPlyu4ZN_qUwpSGhQ5zwXLCwZpZUJ12EtQlMf-HwI6MtB1Nv6h8oN9W3emA=w2120-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj', 114587633::bigint, 'PewDiePie''s official channel'),
+		('fireship@example.com', 'https://yt3.googleusercontent.com/B5iaLfhJJ65Gh20ZsOaXJZ6eeKCoLzoU-rtFQcYncWSs_j5SFYi5p80kChpSnX6xO54to0q4EXo=w2120-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj', 3650447::bigint, 'Fireship''s official channel'),
+		('netflix@example.com', 'https://yt3.googleusercontent.com/OAkgxx0ixC23SCXvNiVEn7MkrCrtZBZar9SQIiroaqtFkmZrfjqrkS7ZfTMMlO5ITveea2gqVg=w2120-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj', 1784852::bigint, 'Netflix Japan''s official channel'),
+		('squeezie@example.com', 'https://yt3.googleusercontent.com/ViTDW81REb4p9Z-WTiDmfHN9BP1jeKtH_hpWdIC1ig-F7hfSaYeYoyjipE8eEfQSWENBtCZ9wg=w2120-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj', 19201548::bigint, 'La chaîne de Squeezie'),
+		('low.level@example.com', NULL, 546::bigint, 'Low Level''s official channel'),
+		('ted.ed@example.com', NULL, 21400417::bigint, 'TED-Ed''s official channel')
+) AS c(email, banner_url, subscriber_count, description)
 	ON u.email = c.email
 ON CONFLICT (user_id) DO UPDATE
 SET
+	banner_url = EXCLUDED.banner_url,
 	subscriber_count = EXCLUDED.subscriber_count,
 	description = EXCLUDED.description,
 	updated_at = now();

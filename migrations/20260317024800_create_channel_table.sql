@@ -11,6 +11,7 @@ CREATE TABLE channels (
     CONSTRAINT channels_user_id_unique UNIQUE (user_id),
 
     -- Channel information
+    banner_url TEXT,
     description TEXT,
     subscriber_count BIGINT NOT NULL DEFAULT 0,
     video_count BIGINT NOT NULL DEFAULT 0,

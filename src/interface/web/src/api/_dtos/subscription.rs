@@ -8,14 +8,21 @@ pub struct ChannelDto {
 	pub id: String,
 	pub name: String,
 	pub profile_picture: Option<String>,
+	pub banner: Option<String>,
 }
 
 impl ChannelDto {
-	pub fn new(id: String, name: String, profile_picture: Option<String>) -> Self {
+	pub fn new(
+		id: String,
+		name: String,
+		profile_picture: Option<String>,
+		banner: Option<String>,
+	) -> Self {
 		Self {
 			id,
 			name,
 			profile_picture,
+			banner,
 		}
 	}
 }
@@ -27,6 +34,7 @@ impl From<AppChannelDto> for ChannelDto {
 			channel.id.to_string(),
 			channel.name,
 			channel.profile_picture.map(|url| url.to_string()),
+			channel.banner.map(|url| url.to_string()),
 		)
 	}
 }

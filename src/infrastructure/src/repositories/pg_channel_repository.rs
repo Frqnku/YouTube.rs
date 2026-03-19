@@ -20,6 +20,7 @@ struct ChannelRecord {
 	id: Uuid,
 	name: String,
 	profile_picture: Option<String>,
+	banner_url: Option<String>,
 	description: Option<String>,
 	subscriber_count: i64,
 	video_count: i64,
@@ -28,6 +29,7 @@ struct ChannelRecord {
 impl ChannelRecord {
 	fn into_channel(self) -> anyhow::Result<Channel> {
 		let profile_picture = self.profile_picture.map(Url::try_from).transpose()?;
+		let banner = self.banner_url.map(Url::try_from).transpose()?;
 		let subscriber_count = usize::try_from(self.subscriber_count)
 			.context("Subscriber count overflow")?;
 		let video_count =
@@ -37,6 +39,7 @@ impl ChannelRecord {
 			self.id,
 			self.name,
 			profile_picture,
+			banner,
 			self.description,
 			subscriber_count,
 			video_count,
@@ -51,6 +54,7 @@ impl ChannelRepository for PgChannelRepository {
 			"SELECT u.id,
 					u.name,
 					u.profile_picture,
+					c.banner_url,
 					c.description,
 					c.subscriber_count,
 					(
