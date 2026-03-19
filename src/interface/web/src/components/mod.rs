@@ -3,3 +3,4 @@ pub mod layout;
 pub mod _helpers;
 pub mod videos;
 pub mod comments;
+pub mod channel;
