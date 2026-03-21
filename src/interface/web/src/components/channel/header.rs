@@ -130,9 +130,9 @@ pub fn ChannelHeader(
 	});
 	let subscribe_class = Signal::derive(move || {
 		if is_subscribed.get() {
-			"btn-secondary".to_string()
+			"btn-secondary self-start shrink-0".to_string()
 		} else {
-			"btn-primary".to_string()
+			"btn-primary self-start shrink-0".to_string()
 		}
 	});
 	let base_subscriber_count = channel.subscriber_count as i64;
@@ -150,35 +150,36 @@ pub fn ChannelHeader(
 	let profile_picture_url = channel.profile_picture.unwrap_or_default();
 	let banner_url = channel.banner;
 	let channel_name = channel.name;
+	let channel_description = channel.description;
 
 	view! {
 		<ChannelBanner banner_url=banner_url />
 
-		<div class="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+		<div class="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 			<div class="flex items-center gap-4">
 				<img
 					src=profile_picture_url
 					alt=profile_picture_alt
-					class="h-20 w-20 rounded-full bg-bg-secondary object-cover md:h-24 md:w-24"
+					class="h-24 w-24 rounded-full bg-bg-secondary object-cover md:h-38 md:w-38"
 				/>
-				<div>
-					<h1 class="text-xl font-semibold text-text md:text-2xl">{channel_name.clone()}</h1>
-					<p class="mt-1 text-sm text-text-secondary">
+				<div class="flex flex-col gap-2">
+					<h1 class="text-2xl font-semibold text-text md:text-2xl">{channel_name.clone()}</h1>
+					<p class="text-md text-text-secondary">
 						{move || subscriber_count_label.get()}
 						<span class="mx-1">"•"</span>
 						{video_count_label.clone()}
 					</p>
+					<p class="text-md text-text-secondary">{channel_description.clone()}</p>
+					<button
+						type="button"
+						class=move || subscribe_class.get()
+						disabled=move || subscribe_pending.get()
+						on:click=move |event| on_subscribe_click.run(event)
+					>
+						{move || subscribe_label.get()}
+					</button>
 				</div>
 			</div>
-
-			<button
-				type="button"
-				class=move || subscribe_class.get()
-				disabled=move || subscribe_pending.get()
-				on:click=move |event| on_subscribe_click.run(event)
-			>
-				{move || subscribe_label.get()}
-			</button>
 		</div>
 
 		<Show when=move || show_signin_prompt.get()>
