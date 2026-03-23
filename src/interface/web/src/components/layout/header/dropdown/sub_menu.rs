@@ -97,9 +97,10 @@ fn LocationsSubmenu(
                 .into_any(),
                 Some(Ok(locations)) => view! {
                     <div class="max-h-72 overflow-y-auto py-1">
-                        {locations
-                            .into_iter()
-                            .map(|location| {
+                        <For
+                            each=move || locations.clone()
+                            key=|location| location.iso2.clone()
+                            children=move |location| {
                                 let on_select = on_select_location;
                                 let selected_country_code = selected_country_code;
                                 let location_iso2_for_click = location.iso2.clone();
@@ -122,8 +123,8 @@ fn LocationsSubmenu(
                                         <span>{location.country}</span>
                                     </button>
                                 }
-                            })
-                            .collect_view()}
+                            }
+                        />
                     </div>
                 }
                 .into_any(),

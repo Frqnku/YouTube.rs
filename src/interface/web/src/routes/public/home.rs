@@ -105,17 +105,21 @@ fn HomeFilters(
                 >
                     "New"
                 </button>
-                {Tag::all().iter().map(|&tag| {
-                    view! {
-                        <button
-                            class="btn-tertiary font-semibold"
-                            class:btn-tertiary-active=move || current_feed.get() == HomeFeed::Tag(tag)
-                            on:click=move |_| current_feed.set(HomeFeed::Tag(tag))
-                        >
-                            {tag.label()}
-                        </button>
+                <For
+                    each=|| Tag::all().to_vec()
+                    key=|&tag| format!("{:?}", tag)
+                    children=move |tag| {
+                        view! {
+                            <button
+                                class="btn-tertiary font-semibold"
+                                class:btn-tertiary-active=move || current_feed.get() == HomeFeed::Tag(tag)
+                                on:click=move |_| current_feed.set(HomeFeed::Tag(tag))
+                            >
+                                {tag.label()}
+                            </button>
+                        }
                     }
-                }).collect_view()}
+                />
             </div>
         </div>
     }
