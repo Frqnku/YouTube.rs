@@ -48,7 +48,7 @@ pub async fn oauth(
                 client_id,
                 client_secret,
                 redirect_uri.clone(),
-            ))
+            )?)
         },
     };
 

@@ -63,7 +63,7 @@ pub fn VideoCard(video: VideoCardDto) -> impl IntoView {
                     <Show when=move || video.watched_seconds.is_some()>
                         <ProgressBar
                             video_duration_seconds=video.duration_seconds
-                            watched_seconds=video.watched_seconds.unwrap()
+                            watched_seconds=video.watched_seconds.unwrap_or(0)
                         />
                     </Show>
                 </div>

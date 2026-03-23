@@ -36,7 +36,8 @@ impl TryFrom<String> for Email {
             return Err(DomainError::BadRequest("Email too long (max 255 characters)".to_string()));
         }
 
-        let regex = Regex::new(r"(?i)^[a-z0-9]+([._+-]?[a-z0-9]+)*@([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$").unwrap();
+        let regex = Regex::new(r"(?i)^[a-z0-9]+([._+-]?[a-z0-9]+)*@([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$")
+            .map_err(|_| DomainError::BadRequest("Invalid email".to_string()))?;
         if regex.is_match(&value) {
             Ok(Email::new_unchecked(value))
         } else {

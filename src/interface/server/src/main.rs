@@ -2,6 +2,7 @@
 
 use dotenv::dotenv;
 use leptos::prelude::*;
+use anyhow::Context;
 use tracing::info;
 use tracing_log::LogTracer;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
@@ -14,7 +15,7 @@ pub mod middleware;
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {
-    LogTracer::init().expect("Failed to set logger");
+    LogTracer::init().context("Failed to set logger")?;
 
     let subscriber = FmtSubscriber::builder()
         .with_ansi(true)
@@ -23,7 +24,8 @@ async fn main() -> anyhow::Result<()> {
         .with_env_filter(EnvFilter::from_default_env())
         .finish();
 
-    tracing::subscriber::set_global_default(subscriber).expect("Could not set subscriber");
+    tracing::subscriber::set_global_default(subscriber)
+        .context("Could not set subscriber")?;
     dotenv().ok();
 
     let conf = get_configuration(None)?;
@@ -37,12 +39,14 @@ async fn main() -> anyhow::Result<()> {
 
     let app = build_app_router(app_state).await?;
     info!("listening on http://{}", &addr);
-    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(&addr)
+        .await
+        .with_context(|| format!("Failed to bind TCP listener on {addr}"))?;
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
     )
     .await
-    .unwrap();
+    .context("HTTP server exited with an error")?;
     Ok(())
 }

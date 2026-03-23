@@ -37,7 +37,9 @@ impl Cookie {
     #[cfg(feature = "ssr")]
     pub fn into_response_headers(&self, res: &ResponseOptions) -> () {
         let cookie = build_cookie(&self.name, &self.value, &self.options);
-        res.insert_header(SET_COOKIE, HeaderValue::from_str(&cookie).unwrap());
+        if let Ok(header_value) = HeaderValue::from_str(&cookie) {
+            res.insert_header(SET_COOKIE, header_value);
+        }
     }
 }
 

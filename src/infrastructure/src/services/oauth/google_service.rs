@@ -24,25 +24,25 @@ impl GoogleOAuthService {
         client_id: String,
         client_secret: String,
         redirect_uri: String,
-    ) -> Self {
+    ) -> anyhow::Result<Self> {
         let client = BasicClient::new(
             ClientId::new(client_id),
             Some(ClientSecret::new(client_secret)),
             AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())
-                .expect("Invalid auth URL"),
+                ?,
             Some(
                 TokenUrl::new("https://oauth2.googleapis.com/token".to_string())
-                    .expect("Invalid token URL"),
+                    ?,
             ),
         )
         .set_redirect_uri(
-            RedirectUrl::new(redirect_uri).expect("Invalid redirect URI"),
+            RedirectUrl::new(redirect_uri)?,
         );
 
-        Self {
+        Ok(Self {
             client,
             http: reqwest::Client::new(),
-        }
+        })
     }
 
     async fn fetch_google_profile(

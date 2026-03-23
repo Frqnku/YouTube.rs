@@ -58,7 +58,10 @@ pub async fn get_current_user(
     next: Next,
 ) -> Response {
     let jar = CookieJar::from_headers(req.headers());
-    let jwt_secret = env::var("JWT_SECRET").unwrap();
+    let jwt_secret = match env::var("JWT_SECRET") {
+        Ok(value) => value,
+        Err(_) => return next.run(req).await,
+    };
     if let Some(cookie) = jar.get("token") {
         let token_provider = JwtService::new(jwt_secret);
         if let Ok(current_user) = token_provider.verify_token(cookie.value()) {

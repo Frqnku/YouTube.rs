@@ -1,0 +1,24 @@
+# Clippy configuration focused on type safety and production robustness.
+
+disallowed-macros = [
+    { path = "sqlx::query", reason = "Use query_as! or query_scalar! for type safety" },
+    { path = "std::dbg", reason = "Avoid debug-only macros in committed code" },
+    { path = "core::todo", reason = "Do not leave unfinished execution paths" },
+    { path = "core::unimplemented", reason = "Do not leave unfinished execution paths" },
+]
+
+disallowed-methods = [
+    { path = "core::option::Option::unwrap", reason = "Handle None explicitly or convert to Result" },
+    { path = "core::result::Result::unwrap", reason = "Propagate or handle errors explicitly" },
+    { path = "core::option::Option::expect", reason = "Avoid panicking in production paths" },
+    { path = "core::result::Result::expect", reason = "Avoid panicking in production paths" },
+    { path = "core::option::Option::unwrap_unchecked", reason = "Unchecked unwrap is unsafe" },
+    { path = "core::result::Result::unwrap_unchecked", reason = "Unchecked unwrap is unsafe" },
+]
+
+# Allow ergonomic shortcuts in tests while keeping production strict.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+
+# Keep imports explicit to reduce accidental type shadowing and ambiguity.
+warn-on-all-wildcard-imports = true
