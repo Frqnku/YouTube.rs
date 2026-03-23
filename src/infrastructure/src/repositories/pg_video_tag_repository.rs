@@ -38,14 +38,15 @@ fn normalize_tag_name(raw: &str) -> Option<String> {
 #[async_trait::async_trait]
 impl VideoTagRepository for PgVideoTagRepository {
     async fn list_tags_by_video_id(&self, video_id: Uuid) -> anyhow::Result<Vec<Tag>> {
-        let records = sqlx::query_as::<_, TagRecord>(
+        let records = sqlx::query_as!(
+            TagRecord,
             "SELECT t.id, t.name
              FROM video_tags vt
              JOIN tags t ON t.id = vt.tag_id
              WHERE vt.video_id = $1
              ORDER BY t.name ASC",
+            video_id,
         )
-        .bind(video_id)
         .fetch_all(&self.pool)
         .await?;
 

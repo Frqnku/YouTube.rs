@@ -13,6 +13,7 @@ impl PgUserRepository {
     }
 }
 
+#[derive(sqlx::FromRow)]
 struct UserRecord {
     id: Uuid,
     name: String,
@@ -85,18 +86,19 @@ impl UserRepository for PgUserRepository {
             RETURNING id, name, email, profile_picture",
             user.name.as_str(),
             user.email.as_str(),
-            user.profile_picture.as_ref().map(Url::as_str),
+            user.profile_picture.as_ref().map(Url::as_str)
         )
         .fetch_one(&mut *tx)
         .await?;
 
-        sqlx::query!(
+        let _ = sqlx::query_scalar::<_, Uuid>(
             "INSERT INTO channels (user_id)
             VALUES ($1)
-            ON CONFLICT (user_id) DO NOTHING",
-            record.id,
+            ON CONFLICT (user_id) DO NOTHING
+            RETURNING user_id"
         )
-        .execute(&mut *tx)
+        .bind(record.id)
+        .fetch_optional(&mut *tx)
         .await?;
 
         tx.commit().await?;
@@ -138,14 +140,15 @@ impl UserOAuthRepository for PgUserRepository {
         provider: &OAuthProvider,
         provider_user_id: &str,
     ) -> anyhow::Result<()> {
-        sqlx::query!(
+        let _ = sqlx::query_scalar::<_, Uuid>(
             "INSERT INTO user_oauth_providers (user_id, provider, provider_user_id)
-            VALUES ($1, $2, $3)",
-            user_id,
-            provider.as_str(),
-            provider_user_id
+            VALUES ($1, $2, $3)
+            RETURNING user_id"
         )
-        .execute(&self.pool)
+        .bind(user_id)
+        .bind(provider.as_str())
+        .bind(provider_user_id)
+        .fetch_one(&self.pool)
         .await?;
 
         Ok(())

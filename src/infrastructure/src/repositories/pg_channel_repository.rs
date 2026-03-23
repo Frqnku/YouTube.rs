@@ -50,23 +50,24 @@ impl ChannelRecord {
 #[async_trait::async_trait]
 impl ChannelRepository for PgChannelRepository {
 	async fn find_channel_by_id(&self, channel_id: Uuid) -> anyhow::Result<Option<Channel>> {
-		let record = sqlx::query_as::<_, ChannelRecord>(
+		let record = sqlx::query_as!(
+			ChannelRecord,
 			"SELECT u.id,
 					u.name,
 					u.profile_picture,
 					c.banner_url,
 					c.description,
-					c.subscriber_count,
+					COALESCE(c.subscriber_count, 0) AS \"subscriber_count!\",
 					(
 						SELECT COUNT(*)::bigint
 						FROM videos v
 						WHERE v.user_id = u.id
-					) AS video_count
+					) AS \"video_count!\"
 			 FROM users u
 			 LEFT JOIN channels c ON c.user_id = u.id
 			 WHERE u.id = $1",
+			channel_id,
 		)
-		.bind(channel_id)
 		.fetch_optional(&self.pool)
 		.await?;
 

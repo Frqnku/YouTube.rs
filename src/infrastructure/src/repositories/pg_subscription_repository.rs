@@ -135,21 +135,22 @@ impl SubscriptionRepository for PgSubscriptionRepository {
 	}
 
 	async fn list_subscriptions(&self, subscriber_id: Uuid) -> anyhow::Result<Vec<Channel>> {
-		let records = sqlx::query_as::<_, ChannelRecord>(
+		let records = sqlx::query_as!(
+			ChannelRecord,
 			"SELECT u.id,
 			        u.name,
 			        u.profile_picture,
 			        c.banner_url,
 			        c.description,
-			        COALESCE(c.subscriber_count, 0) AS subscriber_count,
-			        COALESCE(c.video_count, 0) AS video_count
+			        COALESCE(c.subscriber_count, 0) AS \"subscriber_count!\",
+			        COALESCE(c.video_count, 0) AS \"video_count!\"
 			 FROM subscriptions s
 			 JOIN users u ON u.id = s.channel_id
 			 LEFT JOIN channels c ON c.user_id = u.id
 			 WHERE s.subscriber_id = $1
 			 ORDER BY s.created_at DESC",
+			subscriber_id,
 		)
-		.bind(subscriber_id)
 		.fetch_all(&self.pool)
 		.await?;
 

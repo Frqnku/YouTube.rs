@@ -167,14 +167,15 @@ where
 }
 
 async fn load_video_tags(pool: &sqlx::PgPool, video_id: Uuid) -> anyhow::Result<Vec<Tag>> {
-    let records = sqlx::query_as::<_, TagRecord>(
+    let records = sqlx::query_as!(
+        TagRecord,
         "SELECT t.id, t.name
          FROM video_tags vt
          JOIN tags t ON t.id = vt.tag_id
          WHERE vt.video_id = $1
          ORDER BY t.name ASC",
+        video_id,
     )
-    .bind(video_id)
     .fetch_all(pool)
     .await?;
 
@@ -394,14 +395,15 @@ impl VideoRepository for PgVideoRepository {
     async fn save(&self, video: &Video) -> anyhow::Result<Video> {
         let mut tx = self.pool.begin().await?;
 
-        let record = sqlx::query_as::<_, VideoRecord>(
+        let record = sqlx::query_as!(
+            VideoRecord,
             "INSERT INTO videos (id, user_id, title, description, video_url, thumbnail_url, preview_url, duration_seconds, view_count, like_count, dislike_count)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
              RETURNING
                 id,
                 user_id,
-                (SELECT name FROM users WHERE users.id = videos.user_id) AS username,
-                (SELECT profile_picture FROM users WHERE users.id = videos.user_id) AS user_picture,
+                     (SELECT name FROM users WHERE users.id = videos.user_id) AS \"username!\",
+                     (SELECT profile_picture FROM users WHERE users.id = videos.user_id) AS \"user_picture?\",
                 title,
                 description,
                 video_url,
@@ -413,18 +415,18 @@ impl VideoRepository for PgVideoRepository {
                 like_count,
                 dislike_count,
                 created_at",
+            video.id,
+            video.author.id,
+            &video.title,
+            &video.description,
+            video.video_url.to_string(),
+            video.thumbnail_url.to_string(),
+            video.preview_url.to_string(),
+            video.duration_seconds,
+            video.view_count,
+            video.like_count,
+            video.dislike_count,
         )
-        .bind(video.id)
-        .bind(video.author.id)
-        .bind(&video.title)
-        .bind(&video.description)
-        .bind(video.video_url.to_string())
-        .bind(video.thumbnail_url.to_string())
-        .bind(video.preview_url.to_string())
-        .bind(video.duration_seconds)
-        .bind(video.view_count)
-        .bind(video.like_count)
-        .bind(video.dislike_count)
         .fetch_one(&mut *tx)
         .await?;
 
