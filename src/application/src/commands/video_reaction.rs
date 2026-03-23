@@ -1,12 +1,7 @@
+use crate::_helpers::parse_uuid;
 use domain::{
-	_shared::DomainError,
 	video::VideoReactionRepository,
 };
-use uuid::Uuid;
-
-fn parse_uuid(id: &str) -> anyhow::Result<Uuid> {
-	Uuid::parse_str(id).map_err(|_| DomainError::VideoNotFound.into())
-}
 
 pub struct GetVideoReactionStatus<
 	'a,
@@ -20,8 +15,8 @@ where
 	R: VideoReactionRepository,
 {
 	pub async fn execute(&self, user_id: String, video_id: String) -> anyhow::Result<(bool, bool)> {
-		let user_id = parse_uuid(&user_id)?;
-		let video_id = parse_uuid(&video_id)?;
+		let user_id = parse_uuid(&user_id, "user id")?;
+		let video_id = parse_uuid(&video_id, "video id")?;
 
 		self.reaction_repository
 			.find_like_status(user_id, video_id)
@@ -41,8 +36,8 @@ where
 	R: VideoReactionRepository,
 {
 	pub async fn execute(&self, user_id: String, video_id: String) -> anyhow::Result<()> {
-		let user_id = parse_uuid(&user_id)?;
-		let video_id = parse_uuid(&video_id)?;
+		let user_id = parse_uuid(&user_id, "user id")?;
+		let video_id = parse_uuid(&video_id, "video id")?;
 
 		self.reaction_repository
 			.add_like(user_id, video_id)
@@ -62,8 +57,8 @@ where
 	R: VideoReactionRepository,
 {
 	pub async fn execute(&self, user_id: String, video_id: String) -> anyhow::Result<()> {
-		let user_id = parse_uuid(&user_id)?;
-		let video_id = parse_uuid(&video_id)?;
+		let user_id = parse_uuid(&user_id, "user id")?;
+		let video_id = parse_uuid(&video_id, "video id")?;
 
 		self.reaction_repository
 			.remove_like(user_id, video_id)
@@ -83,8 +78,8 @@ where
 	R: VideoReactionRepository,
 {
 	pub async fn execute(&self, user_id: String, video_id: String) -> anyhow::Result<()> {
-		let user_id = parse_uuid(&user_id)?;
-		let video_id = parse_uuid(&video_id)?;
+		let user_id = parse_uuid(&user_id, "user id")?;
+		let video_id = parse_uuid(&video_id, "video id")?;
 
 		self.reaction_repository
 			.add_dislike(user_id, video_id)
@@ -104,8 +99,8 @@ where
 	R: VideoReactionRepository,
 {
 	pub async fn execute(&self, user_id: String, video_id: String) -> anyhow::Result<()> {
-		let user_id = parse_uuid(&user_id)?;
-		let video_id = parse_uuid(&video_id)?;
+		let user_id = parse_uuid(&user_id, "user id")?;
+		let video_id = parse_uuid(&video_id, "video id")?;
 
 		self.reaction_repository
 			.remove_dislike(user_id, video_id)
@@ -117,6 +112,7 @@ where
 mod tests {
 	use super::*;
 	use crate::_tests::repositories::InMemoryVideoReactionRepository;
+	use uuid::Uuid;
 
 	#[tokio::test]
 	async fn test_get_video_reaction_status_success() {

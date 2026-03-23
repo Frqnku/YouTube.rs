@@ -1,14 +1,7 @@
+use crate::_helpers::parse_uuid;
 use domain::{
-	_shared::DomainError,
 	comment::CommentLikeRepository,
 };
-use uuid::Uuid;
-
-fn parse_uuid(id: &str, field_name: &str) -> anyhow::Result<Uuid> {
-	Uuid::parse_str(id)
-		.map_err(|_| DomainError::BadRequest(format!("Invalid {field_name}")))
-		.map_err(Into::into)
-}
 
 pub struct AddCommentLike<
 	'a,

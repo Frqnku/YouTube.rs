@@ -3,13 +3,8 @@ use domain::{
 	comment::{CommentPage, CommentPageRequest, CommentRepository, CommentSort},
 	comment::entity::Comment,
 };
-use uuid::Uuid;
 
-fn parse_uuid(id: &str, field_name: &str) -> anyhow::Result<Uuid> {
-	Uuid::parse_str(id)
-		.map_err(|_| DomainError::BadRequest(format!("Invalid {field_name}")))
-		.map_err(Into::into)
-}
+use crate::_helpers::parse_uuid;
 
 fn parse_sort(sort: Option<&str>) -> anyhow::Result<CommentSort> {
 	match sort.unwrap_or("newest") {

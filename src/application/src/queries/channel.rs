@@ -1,15 +1,8 @@
 use crate::dtos::ChannelDataDto;
+use crate::_helpers::parse_uuid;
 use domain::{
-	_shared::DomainError,
 	channel::ChannelRepository,
 };
-use uuid::Uuid;
-
-fn parse_uuid(id: &str, field_name: &str) -> anyhow::Result<Uuid> {
-	Uuid::parse_str(id)
-		.map_err(|_| DomainError::BadRequest(format!("Invalid {field_name}")))
-		.map_err(Into::into)
-}
 
 pub struct GetChannelData<
 	'a,

@@ -1,14 +1,9 @@
+use crate::_helpers::parse_uuid;
 use domain::{
-	_shared::DomainError,
 	video::VideoViewRepository,
 };
-use uuid::Uuid;
 
 const RECOUNT_AFTER_SECONDS: i64 = 5 * 60;
-
-fn parse_uuid(id: &str) -> anyhow::Result<Uuid> {
-	Uuid::parse_str(id).map_err(|_| DomainError::VideoNotFound.into())
-}
 
 pub struct RegisterVideoView<
 	'a,
@@ -27,9 +22,9 @@ where
 		user_id: Option<String>,
 		ip_address: Option<String>,
 	) -> anyhow::Result<()> {
-		let video_id = parse_uuid(&video_id)?;
+		let video_id = parse_uuid(&video_id, "video id")?;
 		let user_id = user_id
-			.map(|id| parse_uuid(&id))
+			.map(|id| parse_uuid(&id, "user id"))
 			.transpose()?;
 		let ip_address = ip_address
 			.map(|ip| ip.trim().to_string())
@@ -54,8 +49,8 @@ where
 	R: VideoViewRepository,
 {
 	pub async fn execute(&self, video_id: String, user_id: String, watched_seconds: u32) -> anyhow::Result<()> {
-		let video_id = parse_uuid(&video_id)?;
-		let user_id = parse_uuid(&user_id)?;
+		let video_id = parse_uuid(&video_id, "video id")?;
+		let user_id = parse_uuid(&user_id, "user id")?;
 
 		self
 			.view_repository
@@ -68,6 +63,7 @@ where
 mod tests {
 	use super::*;
 	use crate::_tests::repositories::InMemoryVideoViewRepository;
+	use uuid::Uuid;
 
 	#[tokio::test]
 	async fn test_register_video_view_success() {
