@@ -11,7 +11,7 @@ use crate::api::{_dtos::subscription::ChannelDto, _errors::AppServerError};
 #[cfg(feature = "ssr")]
 use crate::api::_errors::OptionExt;
 #[cfg(feature = "ssr")]
-use crate::app::CurrentUser;
+use crate::context::CurrentUser;
 
 #[server]
 pub async fn get_subscription_status(channel_id: String) -> Result<bool, AppServerError> {

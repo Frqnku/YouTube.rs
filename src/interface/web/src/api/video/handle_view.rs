@@ -7,7 +7,7 @@ use infrastructure::repositories::PgVideoViewRepository;
 
 use crate::api::_errors::AppServerError;
 #[cfg(feature = "ssr")]
-use crate::{api::_errors::OptionExt, app::{ClientRequestMeta, CurrentUser}};
+use crate::{api::_errors::OptionExt, context::{ClientRequestMeta, CurrentUser}};
 
 #[server]
 pub async fn post_video_view(video_id: String) -> Result<(), AppServerError> {

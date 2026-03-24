@@ -3,14 +3,12 @@ use leptos_router::hooks::use_location;
 use leptos_use::on_click_outside;
 
 use crate::{
-    app::CurrentUserContext,
     components::{
-        ui::icons::{Icon, IconKind},
         layout::header::{
             buttons::SigninButton,
             dropdown::{ActiveSubmenu, HeaderDropdown},
-        },
-    },
+        }, ui::icons::{Icon, IconKind}
+    }, context::CurrentUserContext,
 };
 
 #[component]

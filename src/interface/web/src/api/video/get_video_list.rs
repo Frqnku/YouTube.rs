@@ -7,7 +7,7 @@ use domain::{_shared::DomainError, video::DEFAULT_PAGE_LIMIT};
 #[cfg(feature = "ssr")]
 use infrastructure::repositories::PgVideoRepository;
 
-use crate::{api::{_dtos::video::VideoCardPage, _errors::AppServerError}, app::CurrentUser};
+use crate::{api::{_dtos::video::VideoCardPage, _errors::AppServerError}, context::CurrentUser};
 #[cfg(feature = "ssr")]
 use crate::api::_errors::OptionExt;
 

@@ -13,7 +13,7 @@ use leptos_axum::{
 };
 use tower_http::services::ServeDir;
 
-use web::{app::{App, ClientRequestMeta, CurrentUser}, shell::shell, state::AppState};
+use web::{app::App, context::{ClientRequestMeta, CurrentUser, ProvideContextExt, state::AppState}, shell::shell};
 
 use crate::middleware::{get_current_ip, get_current_user};
 
@@ -44,31 +44,58 @@ pub async fn build_app_router(
 /*             ✨ SERVER FUNCTIONS HANDLERS ✨               */
 /* ========================================================== */
 
+#[derive(Clone)]
+struct RequestContext {
+    state: AppState,
+    user: Option<CurrentUser>,
+    client_meta: Option<ClientRequestMeta>,
+}
+
+impl RequestContext {
+    fn new(state: AppState, req: &Request<AxumBody>) -> Self {
+        let user = req
+            .extensions()
+            .get::<CurrentUser>()
+            .cloned();
+
+        let client_meta = req
+            .extensions()
+            .get::<ClientRequestMeta>()
+            .cloned();
+
+        Self {
+            state,
+            user,
+            client_meta,
+        }
+    }
+}
+
+impl ProvideContextExt for RequestContext {
+    fn provide_contexts(&self) {
+        provide_context(self.state.pool.clone());
+        provide_context(self.state.jwt_secret.clone());
+
+        if let Some(user) = &self.user {
+            provide_context(user.clone());
+        }
+
+        if let Some(meta) = &self.client_meta {
+            provide_context(meta.clone());
+        }
+    }
+}
+
 #[axum_macros::debug_handler]
 pub async fn server_fn_handler(
     State(state): State<AppState>,
     req: Request<AxumBody>,
 ) -> impl IntoResponse {
-    let user = req
-        .extensions()
-        .get::<CurrentUser>()
-        .cloned();
-
-    let client_meta = req
-        .extensions()
-        .get::<ClientRequestMeta>()
-        .cloned();
+    let ctx = RequestContext::new(state, &req);
 
     handle_server_fns_with_context(
         move || {
-            provide_context(state.pool.clone());
-            provide_context(state.jwt_secret.clone());
-            if let Some(user) = user.clone() {
-                provide_context(user);
-            }
-            if let Some(client_meta) = client_meta.clone() {
-                provide_context(client_meta);
-            }
+            ctx.provide_contexts();
         },
         req,
     )
@@ -82,26 +109,11 @@ pub async fn leptos_routes_handler(
 ) -> Response {
     let leptos_options = app_state.leptos_options.clone();
 
-    let user = req
-        .extensions()
-        .get::<CurrentUser>()
-        .cloned();
-
-    let client_meta = req
-        .extensions()
-        .get::<ClientRequestMeta>()
-        .cloned();
+    let ctx = RequestContext::new(app_state, &req);
 
     let handler = render_app_to_stream_with_context(
         move || {
-            provide_context(app_state.pool.clone());
-            provide_context(app_state.jwt_secret.clone());
-            if let Some(user) = user.clone() {
-                provide_context(user);
-            }
-            if let Some(client_meta) = client_meta.clone() {
-                provide_context(client_meta);
-            }
+            ctx.provide_contexts();
         },
         move || shell(leptos_options.clone()),
     );

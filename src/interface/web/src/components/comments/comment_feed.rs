@@ -5,8 +5,7 @@ use crate::{
 		_dtos::comment::{CommentDto, CommentPageDto},
 		comment::{get_video_comment_count, get_video_comments},
 	},
-	app::CurrentUserContext,
-	components::comments::{CommentComposer, CommentItem},
+	components::comments::{CommentComposer, CommentItem}, context::CurrentUserContext,
 };
 
 fn use_paginated_comment_feed(

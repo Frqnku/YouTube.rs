@@ -1,9 +1,9 @@
 use leptos::prelude::*;
 
-use crate::app::{ThemeContext, ThemeMode};
 use crate::components::ui::Loader;
 use crate::components::ui::icons::{Icon, IconKind};
 use crate::components::layout::header::{buttons::menu_items::BackMenuItem, dropdown::LocationOption};
+use crate::context::theme::{ThemeContext, ThemeMode};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ActiveSubmenu {

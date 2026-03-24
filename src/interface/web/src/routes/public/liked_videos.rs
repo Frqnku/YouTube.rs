@@ -1,10 +1,10 @@
 use leptos::prelude::*;
 use crate::api::video::get_liked_videos;
-use crate::app::CurrentUserContext;
 use crate::components::ui::RequireAuth;
 use crate::components::ui::icons::IconKind;
 use crate::components::videos::VideoCard;
 use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
+use crate::context::CurrentUserContext;
 
 const LIKED_PAGE_SIZE: u32 = 6;
 

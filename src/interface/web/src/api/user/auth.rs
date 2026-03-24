@@ -9,7 +9,7 @@ use application::{commands::AuthenticateWithOAuth, dtos::OAuthUserDto, services:
 #[cfg(feature = "ssr")]
 use infrastructure::{repositories::PgUserRepository, services::{JwtService, GoogleOAuthService}};
 
-use crate::app::{ClientRequestMeta, CurrentUser};
+use crate::context::{ClientRequestMeta, CurrentUser};
 use crate::api::{_errors::{AppServerError, OptionExt, ValidateExt}, _helpers::{Cookie, CookieOptions}};
 
 #[server]

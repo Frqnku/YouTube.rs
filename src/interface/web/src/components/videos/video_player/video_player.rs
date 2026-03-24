@@ -10,12 +10,11 @@ use crate::{
         subscription::get_subscriber_count,
         video::{post_video_view, update_watched_seconds},
     },
-    app::CurrentUserContext,
     components::{
         _helpers::{CountFormat, format_count, format_relative_time},
         comments::CommentFeed,
         videos::video_player::{Channel, ReactionButtons, SubscribeButton},
-    },
+    }, context::CurrentUserContext,
 };
 
 #[component]
@@ -71,7 +70,7 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
     let subscriber_count = RwSignal::new(0usize);
     let subscriber_count_loaded = RwSignal::new(false);
     let channel_id_for_count = video.channel_id.clone();
-    
+
     // Load initial subscriber count
     let _count_resource = Resource::new(
         move || channel_id_for_count.clone(),

@@ -11,7 +11,7 @@ use crate::api::{_dtos::comment::CommentDto, _errors::AppServerError};
 #[cfg(feature = "ssr")]
 use crate::api::_errors::OptionExt;
 #[cfg(feature = "ssr")]
-use crate::app::CurrentUser;
+use crate::context::CurrentUser;
 
 #[server]
 pub async fn post_comment(

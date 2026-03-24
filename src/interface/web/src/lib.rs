@@ -5,8 +5,7 @@ pub mod shell;
 pub mod components;
 pub mod api;
 pub mod routes;
-#[cfg(feature = "server")]
-pub mod state;
+pub mod context;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

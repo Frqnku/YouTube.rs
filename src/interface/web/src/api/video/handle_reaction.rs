@@ -15,7 +15,7 @@ use infrastructure::repositories::PgVideoReactionRepository;
 
 use crate::api::_errors::AppServerError;
 #[cfg(feature = "ssr")]
-use crate::{api::_errors::OptionExt, app::CurrentUser};
+use crate::{api::_errors::OptionExt, context::CurrentUser};
 
 #[server]
 pub async fn get_video_reaction(video_id: String) -> Result<(bool, bool), AppServerError> {

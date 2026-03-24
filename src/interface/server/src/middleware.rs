@@ -9,7 +9,7 @@ use axum::{
 use axum_extra::extract::cookie::CookieJar;
 use application::services::TokenService;
 use infrastructure::services::JwtService;
-use web::app::{ClientRequestMeta, CurrentUser};
+use web::context::{ClientRequestMeta, CurrentUser};
 
 fn extract_client_ip(req: &Request) -> Option<String> {
     let forwarded = req

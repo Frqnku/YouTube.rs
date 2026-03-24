@@ -3,8 +3,8 @@ use leptos_router::hooks::use_location;
 
 use crate::{
     api::{_dtos::subscription::ChannelDto, subscription::get_subscriptions},
-    app::{CurrentUserContext, SubscriptionsContext},
     components::ui::{LineDivider, icons::{Icon, IconKind}},
+    context::{CurrentUserContext, SubscriptionsContext},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -4,8 +4,7 @@ use crate::{
 	api::{
 		_dtos::comment::CommentDto,
 		comment::post_comment,
-	},
-	app::CurrentUserContext,
+	}, context::CurrentUserContext,
 };
 
 #[component]

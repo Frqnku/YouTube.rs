@@ -11,7 +11,7 @@ use crate::api::{_dtos::comment::{CommentDto, CommentPageDto}, _errors::AppServe
 #[cfg(feature = "ssr")]
 use crate::api::_errors::OptionExt;
 #[cfg(feature = "ssr")]
-use crate::app::CurrentUser;
+use crate::context::CurrentUser;
 
 #[server]
 pub async fn get_video_comments(
