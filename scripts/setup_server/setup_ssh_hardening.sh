@@ -45,7 +45,7 @@ echo "🔧 Enabling public key authentication..."
 sudo sed -i 's/^#*PubkeyAuthentication.*/PubkeyAuthentication yes/' "$SSHD_CONFIG"
 
 echo "🔄 Restarting SSH service..."
-sudo systemctl restart sshd
+sudo systemctl restart ssh
 
 echo "✅ SSH hardening complete!"
 echo ""
