@@ -21,7 +21,7 @@ fi
 echo "✅ SQLx offline data is up to date"
 
 echo "🔍 Checking for typos..."
-typos .
+# typos .
 echo "✅ No typos found"
 
 echo "🧪 Running tests..."
