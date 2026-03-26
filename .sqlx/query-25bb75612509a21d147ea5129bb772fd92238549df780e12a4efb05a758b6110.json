@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n                    id,\n                    (updated_at < NOW() - ($3 * INTERVAL '1 second')) AS \"should_count!\"\n                 FROM video_views\n                 WHERE video_id = $1 AND user_id = $2\n                 ORDER BY updated_at DESC\n                 LIMIT 1\n                 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "should_count!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "25bb75612509a21d147ea5129bb772fd92238549df780e12a4efb05a758b6110"
+}

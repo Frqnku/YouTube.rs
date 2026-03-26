@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT u.id,\n\t\t\t\t\tu.name,\n\t\t\t\t\tu.profile_picture,\n\t\t\t\t\tc.banner_url,\n\t\t\t\t\tc.description,\n\t\t\t\t\tCOALESCE(c.subscriber_count, 0) AS \"subscriber_count!\",\n\t\t\t\t\t(\n\t\t\t\t\t\tSELECT COUNT(*)::bigint\n\t\t\t\t\t\tFROM videos v\n\t\t\t\t\t\tWHERE v.user_id = u.id\n\t\t\t\t\t) AS \"video_count!\"\n\t\t\t FROM users u\n\t\t\t LEFT JOIN channels c ON c.user_id = u.id\n\t\t\t WHERE u.id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "profile_picture",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "banner_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "subscriber_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "video_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "257f861acd70f366d45d24648df525f77d46207daedfb4c3ef5b6e0d27e722a9"
+}

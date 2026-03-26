@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n                    id,\n                    (updated_at < NOW() - ($3 * INTERVAL '1 second')) AS \"should_count!\"\n                 FROM video_views\n                 WHERE video_id = $1 AND ip_address = $2::text::inet\n                 ORDER BY updated_at DESC\n                 LIMIT 1\n                 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "should_count!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "f92ae479380bba65ccfc84fc63e7966611c5afeea5b8e3dc77c4508988a25fe4"
+}

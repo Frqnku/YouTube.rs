@@ -1,0 +1,116 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO videos (id, user_id, title, description, video_url, thumbnail_url, preview_url, duration_seconds, view_count, like_count, dislike_count)\n             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n             RETURNING\n                id,\n                user_id,\n                     (SELECT name FROM users WHERE users.id = videos.user_id) AS \"username!\",\n                     (SELECT profile_picture FROM users WHERE users.id = videos.user_id) AS \"user_picture?\",\n                title,\n                description,\n                video_url,\n                thumbnail_url,\n                preview_url,\n                duration_seconds,\n                NULL::integer AS watched_seconds,\n                view_count,\n                like_count,\n                dislike_count,\n                created_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "username!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_picture?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "title",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "description",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "video_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "thumbnail_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "preview_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "duration_seconds",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "watched_seconds",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "view_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 12,
+        "name": "like_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 13,
+        "name": "dislike_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 14,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "60f105db5a6b90ff04790580a99d77d838cf3f10ee59be6fd7280de50846ce63"
+}

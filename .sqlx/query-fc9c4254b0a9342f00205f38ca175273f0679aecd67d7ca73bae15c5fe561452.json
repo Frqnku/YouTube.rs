@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT t.id, t.name\n         FROM video_tags vt\n         JOIN tags t ON t.id = vt.tag_id\n         WHERE vt.video_id = $1\n         ORDER BY t.name ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "fc9c4254b0a9342f00205f38ca175273f0679aecd67d7ca73bae15c5fe561452"
+}
