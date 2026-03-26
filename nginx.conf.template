@@ -1,0 +1,87 @@
+# FLOW: Browser → nginx:8080(HTTP)/8443(HTTPS) → Rust App:3000 → Response back
+events {
+    worker_connections 1024;                    # 🔗 Max connections per worker
+}
+
+http {
+    include       /etc/nginx/mime.types;                 # 📄 File type mappings
+    default_type  application/octet-stream;              # 🔧 Default MIME type
+
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';    # 📝 Log format
+
+    # - Ubuntu: /etc/nginx/mime.types and /var/log/nginx/
+    # - macOS: /opt/homebrew/etc/nginx/mime.types and /opt/homebrew/var/log/nginx/
+    access_log /var/log/nginx/access.log main;                 # 📊 Request logs
+    error_log  /var/log/nginx/error.log;                       # 🚨 Error logs
+
+    sendfile on;                                         # ⚡ Fast file serving
+    keepalive_timeout 65;                               # 🔄 Connection reuse
+
+
+    # HTTP Server (port 80) --> http://${SERVER_IP}/
+    server {
+        listen 80;                                      # 🎯 HTTP nginx listens here
+        server_name localhost 127.0.0.1 ${SERVER_IP} ${DOMAIN} www.${DOMAIN};  # 🏠 Responds to localhost, IP and domain requests
+
+        # Local: Allow all IPs | Production: Add Cloudflare IP restrictions
+
+        location / {                                    # 🛣️ All paths (/, /login, /api, etc.)
+            proxy_pass http://app:3000;                # ➡️ Forward to Rust app (Docker service name)
+            proxy_set_header Host $host;               # 🏷️ Original host header
+            proxy_set_header X-Real-IP $remote_addr;   # 🌐 Client's real IP
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # 🔄 IP chain
+            proxy_set_header X-Forwarded-Proto $scheme;                    # 🔒 HTTP/HTTPS info
+
+            proxy_set_header X-Forwarded-Host $server_name;    # 🏷️ Server name
+            proxy_set_header Connection "";                     # 🔗 Clear connection header
+            proxy_http_version 1.1;                            # 📡 HTTP/1.1 for backend
+
+            proxy_connect_timeout 30s;                 # ⏱️ Connection timeout
+            proxy_send_timeout 30s;                    # ⏱️ Send timeout
+            proxy_read_timeout 30s;                    # ⏱️ Read timeout
+        }
+
+        location /health {                              # 💚 Health check endpoint
+            access_log off;                            # 🚫 Don't log health checks
+            return 200 "healthy\n";                    # ✅ Return OK status
+            add_header Content-Type text/plain;        # 📝 Set content type
+        }
+    }
+
+    # HTTPS Server (port 443) --> https://${DOMAIN}/
+    server {
+        listen 443 ssl;                                # 🔒 HTTPS nginx listens here
+        server_name localhost 127.0.0.1 ${SERVER_IP} ${DOMAIN} www.${DOMAIN};
+
+        # SSL Configuration
+        ssl_certificate /etc/nginx/ssl/nginx-selfsigned.crt;      # 📜 SSL certificate
+        ssl_certificate_key /etc/nginx/ssl/nginx-selfsigned.key;  # 🔑 SSL private key
+        ssl_protocols TLSv1.2 TLSv1.3;                            # 🔐 TLS versions
+        ssl_ciphers HIGH:!aNULL:!MD5;                             # 🔒 Cipher suites
+        ssl_prefer_server_ciphers on;                             # 🎯 Prefer server ciphers
+
+        location / {                                    # 🛣️ All paths (/, /login, /api, etc.)
+            proxy_pass http://app:3000;                # ➡️ Forward to Rust app (Docker service name)
+            proxy_set_header Host $host;               # 🏷️ Original host header
+            proxy_set_header X-Real-IP $remote_addr;   # 🌐 Client's real IP
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # 🔄 IP chain
+            proxy_set_header X-Forwarded-Proto $scheme;                    # 🔒 HTTP/HTTPS info
+
+            proxy_set_header X-Forwarded-Host $server_name;    # 🏷️ Server name
+            proxy_set_header Connection "";                     # 🔗 Clear connection header
+            proxy_http_version 1.1;                            # 📡 HTTP/1.1 for backend
+
+            proxy_connect_timeout 30s;                 # ⏱️ Connection timeout
+            proxy_send_timeout 30s;                    # ⏱️ Send timeout
+            proxy_read_timeout 30s;                    # ⏱️ Read timeout
+        }
+
+        location /health {                              # 💚 Health check endpoint
+            access_log off;                            # 🚫 Don't log health checks
+            return 200 "healthy\n";                    # ✅ Return OK status
+            add_header Content-Type text/plain;        # 📝 Set content type
+        }
+    }
+}
