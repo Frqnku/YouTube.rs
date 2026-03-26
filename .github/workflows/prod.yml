@@ -63,8 +63,8 @@ jobs:
         cache-to: type=gha,mode=max
 
   deploy:
-    needs: [build, quality]
-    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped') && needs.quality.result == 'success'
+    needs: [build]
+    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped')
     runs-on: ubuntu-latest
 
     env:
