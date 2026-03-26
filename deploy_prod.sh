@@ -25,7 +25,7 @@ echo "🔍 Checking for typos..."
 echo "✅ No typos found"
 
 echo "🧪 Running tests..."
-cargo nextest run -p app --features ssr
+cargo nextest run
 echo "✅ All tests passed"
 
 # Create timestamped deploy tag
