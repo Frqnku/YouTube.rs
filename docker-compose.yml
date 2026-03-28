@@ -17,6 +17,8 @@ services:
 
   app:
     image: ${DOCKER_USERNAME}/${DOCKER_REPOSITORY}:${IMAGE_TAG}
+    env_file:
+      - ~/.env
     environment:
       LEPTOS_OUTPUT_NAME: "youtube_clone"
       LEPTOS_SITE_ROOT: "/site"
