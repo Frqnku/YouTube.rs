@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   nginx:
     image: nginx:alpine
@@ -6,7 +8,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
+      - ~/ssl:/etc/nginx/ssl:ro
     depends_on:
       - app
     restart: always
@@ -16,7 +18,7 @@ services:
   app:
     image: ${DOCKER_USERNAME}/${DOCKER_REPOSITORY}:${IMAGE_TAG}
     environment:
-      LEPTOS_OUTPUT_NAME: "airbnb_clone_bootcamp"
+      LEPTOS_OUTPUT_NAME: "youtube_clone"
       LEPTOS_SITE_ROOT: "/site"
       LEPTOS_SITE_PKG_DIR: "pkg"
       LEPTOS_ASSETS_DIR: "public"
@@ -24,9 +26,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DATABASE: ${POSTGRES_DATABASE}
-      SESSION_TABLE_NAME: ${SESSION_TABLE_NAME}
       ENVIRONMENT: "production"
-      MAPBOX_ACCESS_TOKEN: ${MAPBOX_ACCESS_TOKEN}
       DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DATABASE}"
     expose:
       - "3000"
@@ -39,6 +39,7 @@ services:
 
   db:
     image: postgres:15.10-alpine
+    container_name: root-db-1
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
