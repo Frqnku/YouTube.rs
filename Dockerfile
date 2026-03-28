@@ -40,3 +40,28 @@ COPY ./.sqlx /app/.sqlx
 RUN npm install
 ENV LEPTOS_BIN_TARGET_TRIPLE=x86_64-unknown-linux-musl
 RUN cargo leptos build --release
+
+# ------- 4. RUNTIME STAGE ------- #
+FROM debian:bookworm-slim AS runtime
+
+# Add ca-certificates for HTTPS and PostgreSQL client for migrations if needed
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy compiled binary and migrations
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/server ./server
+COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/_setup_env.sh ./_setup_env.sh
+
+# Ensure binary is executable
+RUN chmod +x ./server
+
+# Expose port if needed (example 8080)
+EXPOSE 8080
+
+# Entrypoint
+ENTRYPOINT ["/app/server"]
