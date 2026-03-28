@@ -107,9 +107,9 @@ jobs:
         ${{ env.SSH }} "echo '${{ secrets.DOCKER_PASSWORD }}' | docker login -u '${{ secrets.DOCKER_USERNAME }}' --password-stdin"
 
     - name: Set IMAGE_TAG on server
-      if: github.event.inputs.skip_build != 'true'
       run: |
-        ${{ env.SSH }} "sed -i '/^IMAGE_TAG=/d' ~/.env && echo 'IMAGE_TAG=${{ needs.build.outputs.image_tag }}' >> ~/.env"
+        TAG="${{ needs.build.outputs.image_tag || 'latest' }}"
+        ${{ env.SSH }} "sed -i '/^IMAGE_TAG=/d' ~/.env && echo 'IMAGE_TAG=$TAG' >> ~/.env"
 
     - name: Start DB and sync password before app boots
       # POSTGRES_PASSWORD is only read on first DB init (empty volume).
