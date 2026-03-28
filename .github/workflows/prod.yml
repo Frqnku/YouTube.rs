@@ -131,7 +131,7 @@ jobs:
         ${{ env.SSH }} "
           export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           export DOCKER_REPOSITORY=${{ vars.DOCKER_REPOSITORY }}
-          export IMAGE_TAG=${{ needs.build.outputs.image_tag }}
+          export IMAGE_TAG=${{ needs.build.outputs.image_tag || 'latest' }}
           cd ~
           docker compose up -d
         "
