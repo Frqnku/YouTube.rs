@@ -9,9 +9,10 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
     libpq-dev \
-    nodejs npm \
     && rm -rf /var/lib/apt/lists/*
 
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
 RUN rustup toolchain install nightly
 RUN rustup default nightly
 RUN rustup target add x86_64-unknown-linux-musl

@@ -18,10 +18,10 @@ time = { workspace = true }
 sqlx = { workspace = true , features = ["runtime-tokio-rustls", "postgres", "macros"] }
 
 # OAuth
-oauth2 = { version = "4", features = ["reqwest"] }
+oauth2 = { version = "4.4.2", default-features = false, features = ["reqwest", "rustls-tls"] }
 
 # HTTP client
-reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 
 # JWT
 jsonwebtoken = "9.3"
