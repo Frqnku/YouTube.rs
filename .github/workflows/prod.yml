@@ -128,7 +128,13 @@ jobs:
 
     - name: Deploy app and nginx
       run: |
-        ${{ env.SSH }} "cd ~ && docker compose up -d"
+        ${{ env.SSH }} "
+          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          export DOCKER_REPOSITORY=${{ vars.DOCKER_REPOSITORY }}
+          export IMAGE_TAG=${{ needs.build.outputs.image_tag }}
+          cd ~
+          docker compose up -d
+        "
 
     - name: Smoke test
       run: |
