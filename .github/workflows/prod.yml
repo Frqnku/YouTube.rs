@@ -116,14 +116,22 @@ jobs:
       # Syncing here — after DB is healthy but before app starts — avoids the crash loop.
       run: |
         ${{ env.SSH }} "
+          set -e
           cd ~
           docker compose down
           docker compose pull
           docker compose up -d db
-          until docker exec root-db-1 pg_isready -U postgres; do sleep 2; done
-          PG_USER=\$(grep '^POSTGRES_USER=' ~/.env | cut -d= -f2-)
-          PG_PASS=\$(grep '^POSTGRES_PASSWORD=' ~/.env | cut -d= -f2-)
-          docker exec root-db-1 psql -U postgres -c \"ALTER USER \$PG_USER WITH PASSWORD '\$PG_PASS';\"
+          until docker exec root-db-1 pg_isready -U postgres -d postgres; do sleep 2; done
+
+          # Trim potential CRLF from .env values to avoid invisible auth mismatches.
+          PG_USER=\$(grep '^POSTGRES_USER=' ~/.env | cut -d= -f2- | tr -d '\\r')
+          PG_PASS=\$(grep '^POSTGRES_PASSWORD=' ~/.env | cut -d= -f2- | tr -d '\\r')
+
+          # Use psql variables for safe SQL literal handling even with special chars.
+          docker exec -u postgres root-db-1 psql -d postgres -v ON_ERROR_STOP=1 -v db_user=\"\$PG_USER\" -v db_pass=\"\$PG_PASS\" -c \"ALTER ROLE :\"db_user\" WITH PASSWORD :'db_pass';\"
+
+          # Verify the role can authenticate over TCP with the synchronized password.
+          docker exec -e PGPASSWORD=\"\$PG_PASS\" root-db-1 psql -h 127.0.0.1 -U \"\$PG_USER\" -d postgres -v ON_ERROR_STOP=1 -c \"SELECT 1;\"
         "
 
     - name: Deploy app and nginx
@@ -138,8 +146,18 @@ jobs:
 
     - name: Smoke test
       run: |
-        sleep 5
-        ${{ env.SSH }} "curl -sf http://localhost/health || (docker compose logs app --tail=20 && exit 1)"
+        ${{ env.SSH }} "
+          set -e
+          for i in \\$(seq 1 20); do
+            if curl -sf http://localhost/health > /dev/null; then
+              echo 'Smoke test passed'
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs app --tail=100
+          exit 1
+        "
 
     - name: Cleanup old Docker images
       # Each deploy pulls a new image tag — old tags accumulate and fill the disk.
