@@ -4,6 +4,8 @@ use leptos_meta::MetaTags;
 use crate::app::App;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
+    let css_href = format!("/{}/{}.css", options.site_pkg_dir, options.output_name);
+
     view! {
         <!DOCTYPE html>
         <html lang="en">
@@ -25,8 +27,8 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 </script>
 
                 // CSS
-                <link rel="preload" href="/pkg/youtube.css" r#as="style" fetchpriority="high" />
-                <link rel="stylesheet" href="/pkg/youtube.css" />
+                <link rel="preload" href=css_href.clone() r#as="style" fetchpriority="high" />
+                <link rel="stylesheet" href=css_href />
 
                 // OAuth providers
                 <script src="https://accounts.google.com/gsi/client" async defer></script>
