@@ -149,18 +149,7 @@ jobs:
 
     - name: Smoke test
       run: |
-        ${{ env.SSH }} "
-          set -e
-          for i in \\$(seq 1 20); do
-            if curl -sf http://localhost/health > /dev/null; then
-              echo 'Smoke test passed'
-              exit 0
-            fi
-            sleep 3
-          done
-          docker compose logs app --tail=100
-          exit 1
-        "
+        ${{ env.SSH }} "timeout 120 bash -c 'until curl -sf http://localhost/health > /dev/null 2>&1; do sleep 3; done; echo Smoke test passed' || (docker compose logs app --tail=100; exit 1)"
 
     - name: Cleanup old Docker images
       # Each deploy pulls a new image tag — old tags accumulate and fill the disk.
