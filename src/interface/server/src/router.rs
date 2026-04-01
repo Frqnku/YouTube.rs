@@ -27,8 +27,8 @@ pub async fn build_app_router(
     let routes = generate_route_list(|| view! { <App /> });
 
     Ok(Router::new()
-        .nest_service("/pkg", ServeDir::new("target/site/pkg"))
-        .nest_service("/assets", ServeDir::new("target/site/assets"))
+        .nest_service("/pkg", ServeDir::new("/site/pkg"))
+        .nest_service("/assets", ServeDir::new("/site/assets"))
         .nest_service("/videos", ServeDir::new("videos"))
         .route(
             "/api/{*fn_name}",

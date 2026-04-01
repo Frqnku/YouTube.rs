@@ -18,7 +18,7 @@ services:
     env_file:
       - ~/.env
     environment:
-      LEPTOS_OUTPUT_NAME: "youtube_clone"
+      LEPTOS_OUTPUT_NAME: "youtube"
       LEPTOS_SITE_ROOT: "/site"
       LEPTOS_SITE_PKG_DIR: "pkg"
       LEPTOS_ASSETS_DIR: "public"
