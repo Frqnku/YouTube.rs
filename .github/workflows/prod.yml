@@ -127,8 +127,11 @@ jobs:
           PG_USER=\$(grep '^POSTGRES_USER=' ~/.env | cut -d= -f2- | tr -d '\\r')
           PG_PASS=\$(grep '^POSTGRES_PASSWORD=' ~/.env | cut -d= -f2- | tr -d '\\r')
 
-          # Use psql variables for safe SQL literal handling even with special chars.
-          docker exec -u postgres root-db-1 psql -d postgres -v ON_ERROR_STOP=1 -v db_user=\"\$PG_USER\" -v db_pass=\"\$PG_PASS\" -c \"ALTER ROLE :\"db_user\" WITH PASSWORD :'db_pass';\"
+          # Escape single quotes in password for SQL safety ('' = one escaped quote in SQL)
+          PG_PASS_ESCAPED=\${PG_PASS//\\'/\\'\\'}
+
+          # Execute ALTER ROLE with properly escaped password
+          docker exec -u postgres root-db-1 psql -d postgres -v ON_ERROR_STOP=1 -c \"ALTER ROLE \\\"\$PG_USER\\\" WITH PASSWORD '\$PG_PASS_ESCAPED';\"
 
           # Verify the role can authenticate over TCP with the synchronized password.
           docker exec -e PGPASSWORD=\"\$PG_PASS\" root-db-1 psql -h 127.0.0.1 -U \"\$PG_USER\" -d postgres -v ON_ERROR_STOP=1 -c \"SELECT 1;\"
