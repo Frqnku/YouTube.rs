@@ -5,7 +5,7 @@ use crate::{
 		_dtos::comment::{CommentDto, CommentPageDto},
 		comment::{get_video_comment_count, get_video_comments},
 	},
-	components::comments::{CommentComposer, CommentItem}, context::CurrentUserContext,
+	components::{comments::{CommentComposer, CommentItem}, ui::SigninPromptModal}, context::CurrentUserContext,
 };
 
 fn use_paginated_comment_feed(
@@ -86,35 +86,6 @@ fn use_paginated_comment_feed(
 		load_more_error,
 		load_more,
 	)
-}
-
-#[component]
-fn CommentSigninPromptModal(open: RwSignal<bool>) -> impl IntoView {
-	view! {
-		<Show when=move || open.get()>
-			<div
-				class="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-4 md:items-center"
-				on:click=move |_| open.set(false)
-			>
-				<div
-					class="w-full max-w-sm rounded-xl bg-bg-secondary p-4 text-text shadow-xl"
-					on:click=move |event| event.stop_propagation()
-				>
-					<p class="text-sm text-text-secondary">"Sign in to write or like comments."</p>
-					<div class="mt-4 flex justify-end gap-2">
-						<button
-							type="button"
-							class="btn-secondary"
-							on:click=move |_| open.set(false)
-						>
-							"Later"
-						</button>
-						<a href="/signin" class="btn-primary">"Sign in"</a>
-					</div>
-				</div>
-			</div>
-		</Show>
-	}
 }
 
 #[component]
@@ -219,7 +190,11 @@ pub fn CommentFeed(video_id: String) -> impl IntoView {
 				<p class="text-sm text-red-500">"Unable to load more comments."</p>
 			</Show>
 
-			<CommentSigninPromptModal open=show_signin_for_modal />
+			<SigninPromptModal
+				open=show_signin_for_modal
+				title="Want to join the conversation ?".to_string()
+				message="Sign in to continue.".to_string()
+			/>
 		</section>
 	}
 }

@@ -70,6 +70,8 @@ fn LikeButton(
     video_id: String,
     is_authenticated: Signal<bool>,
     show_signin_prompt: RwSignal<bool>,
+    prompt_title: RwSignal<String>,
+    prompt_message: RwSignal<String>,
     reaction_state: RwSignal<ReactionState>,
     like_count: RwSignal<i64>,
     dislike_count: RwSignal<i64>,
@@ -91,31 +93,28 @@ fn LikeButton(
     let is_liked = Signal::derive(move || reaction_state.get() == ReactionState::Liked);
     let is_pending = like_action.pending();
 
-    let on_click = {
-        let is_authenticated = is_authenticated;
-        Callback::new(move |_| {
-            if !is_authenticated.get_untracked() {
-                show_signin_prompt.set(true);
-                return;
-            }
-
-            if is_pending.get_untracked() {
-                return;
-            }
-
-            let transition = next_like_transition(reaction_state.get_untracked());
-            reaction_state.set(transition.to);
-            update_reaction_counts(like_count, dislike_count, transition);
-            like_action.dispatch(transition);
-        })
-    };
-
     view! {
         <button
             type="button"
             class="flex items-center gap-1.5 px-4 py-2 text-sm text-text transition hover:bg-border"
             disabled=move || is_pending.get()
-            on:click=move |_| on_click.run(())
+            on:click=move |_| {
+                if !is_authenticated.get_untracked() {
+                    prompt_title.set("Like this video ?".to_string());
+                    prompt_message.set("Sign in to make your opinion count.".to_string());
+                    show_signin_prompt.set(true);
+                    return;
+                }
+
+                if is_pending.get_untracked() {
+                    return;
+                }
+
+                let transition = next_like_transition(reaction_state.get_untracked());
+                reaction_state.set(transition.to);
+                update_reaction_counts(like_count, dislike_count, transition);
+                like_action.dispatch(transition);
+            }
         >
             {move || {
                 if is_liked.get() {
@@ -134,6 +133,8 @@ fn DislikeButton(
     video_id: String,
     is_authenticated: Signal<bool>,
     show_signin_prompt: RwSignal<bool>,
+    prompt_title: RwSignal<String>,
+    prompt_message: RwSignal<String>,
     reaction_state: RwSignal<ReactionState>,
     like_count: RwSignal<i64>,
     dislike_count: RwSignal<i64>,
@@ -155,31 +156,28 @@ fn DislikeButton(
     let is_disliked = Signal::derive(move || reaction_state.get() == ReactionState::Disliked);
     let is_pending = dislike_action.pending();
 
-    let on_click = {
-        let is_authenticated = is_authenticated;
-        Callback::new(move |_| {
-            if !is_authenticated.get_untracked() {
-                show_signin_prompt.set(true);
-                return;
-            }
-
-            if is_pending.get_untracked() {
-                return;
-            }
-
-            let transition = next_dislike_transition(reaction_state.get_untracked());
-            reaction_state.set(transition.to);
-            update_reaction_counts(like_count, dislike_count, transition);
-            dislike_action.dispatch(transition);
-        })
-    };
-
     view! {
         <button
             type="button"
             class="flex items-center gap-1.5 px-4 py-2 text-sm text-text transition hover:bg-border"
             disabled=move || is_pending.get()
-            on:click=move |_| on_click.run(())
+            on:click=move |_| {
+                if !is_authenticated.get_untracked() {
+                    prompt_title.set("Dislike this video ?".to_string());
+                    prompt_message.set("Sign in to make your opinion count.".to_string());
+                    show_signin_prompt.set(true);
+                    return;
+                }
+
+                if is_pending.get_untracked() {
+                    return;
+                }
+
+                let transition = next_dislike_transition(reaction_state.get_untracked());
+                reaction_state.set(transition.to);
+                update_reaction_counts(like_count, dislike_count, transition);
+                dislike_action.dispatch(transition);
+            }
         >
             {move || {
                 if is_disliked.get() {
@@ -198,6 +196,8 @@ pub fn ReactionButtons(
     video: VideoPlayer,
     is_authenticated: Signal<bool>,
     show_signin_prompt: RwSignal<bool>,
+    prompt_title: RwSignal<String>,
+    prompt_message: RwSignal<String>,
 ) -> impl IntoView {
     let video_id = video.id.clone();
     let video_id_for_like = video_id.clone();
@@ -237,6 +237,8 @@ pub fn ReactionButtons(
                 video_id=video_id_for_like
                 is_authenticated=is_authenticated
                 show_signin_prompt=show_signin_prompt
+                prompt_title=prompt_title
+                prompt_message=prompt_message
                 reaction_state=reaction_state
                 like_count=like_count
                 dislike_count=dislike_count
@@ -246,6 +248,8 @@ pub fn ReactionButtons(
                 video_id=video_id_for_dislike
                 is_authenticated=is_authenticated
                 show_signin_prompt=show_signin_prompt
+                prompt_title=prompt_title
+                prompt_message=prompt_message
                 reaction_state=reaction_state
                 like_count=like_count
                 dislike_count=dislike_count

@@ -48,6 +48,8 @@ pub fn SubscribeButton(
 	is_authenticated: Signal<bool>,
 	show_signin_prompt: RwSignal<bool>,
 	subscriber_count: RwSignal<usize>,
+	prompt_title: RwSignal<String>,
+	prompt_message: RwSignal<String>,
 ) -> impl IntoView {
 	let is_subscribed = RwSignal::new(false);
 	let channel_id_for_status = channel_id.clone();
@@ -105,21 +107,6 @@ pub fn SubscribeButton(
 		}
 	});
 
-	let on_click = move |_| {
-		if !is_authenticated.get_untracked() {
-			show_signin_prompt.set(true);
-			return;
-		}
-
-		if toggle_subscription.pending().get_untracked() {
-			return;
-		}
-
-		let next_subscribed = !is_subscribed.get_untracked();
-		is_subscribed.set(next_subscribed);
-		toggle_subscription.dispatch((channel_id_for_click.clone(), next_subscribed));
-	};
-
 	let button_label = Signal::derive(move || {
 		if is_subscribed.get() {
 			"Subscribed".to_string()
@@ -141,7 +128,22 @@ pub fn SubscribeButton(
 			type="button"
 			class=move || button_class.get()
 			disabled=move || toggle_subscription.pending().get()
-			on:click=on_click
+			on:click=move |_| {
+				if !is_authenticated.get_untracked() {
+					prompt_title.set("Want to subscribe ?".to_string());
+					prompt_message.set("Sign in to subscribe to this channel.".to_string());
+					show_signin_prompt.set(true);
+					return;
+				}
+
+				if toggle_subscription.pending().get_untracked() {
+					return;
+				}
+
+				let next_subscribed = !is_subscribed.get_untracked();
+				is_subscribed.set(next_subscribed);
+				toggle_subscription.dispatch((channel_id_for_click.clone(), next_subscribed));
+			}
 		>
 			{move || button_label.get()}
 		</button>

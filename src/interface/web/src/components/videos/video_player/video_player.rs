@@ -13,40 +13,10 @@ use crate::{
     components::{
         _helpers::{CountFormat, format_count, format_relative_time},
         comments::CommentFeed,
+        ui::SigninPromptModal,
         videos::video_player::{Channel, ReactionButtons, SubscribeButton},
     }, context::CurrentUserContext,
 };
-
-#[component]
-fn SigninPromptModal(
-    open: RwSignal<bool>,
-) -> impl IntoView {
-    view! {
-        <Show when=move || open.get()>
-            <div
-                class="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-4 md:items-center"
-                on:click=move |_| open.set(false)
-            >
-                <div
-                    class="w-full max-w-sm rounded-xl bg-bg-secondary p-4 text-text shadow-xl"
-                    on:click=move |event| event.stop_propagation()
-                >
-                    <p class="text-sm text-text-secondary">"Sign in to like or dislike this video."</p>
-                    <div class="mt-4 flex justify-end gap-2">
-                        <button
-                            type="button"
-                            class="btn-secondary"
-                            on:click=move |_| open.set(false)
-                        >
-                            "Later"
-                        </button>
-                        <a href="/signin" class="btn-primary">"Sign in"</a>
-                    </div>
-                </div>
-            </div>
-        </Show>
-    }
-}
 
 #[component]
 pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) -> impl IntoView {
@@ -65,6 +35,8 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
     });
 
     let show_signin_prompt = RwSignal::new(false);
+    let signin_prompt_title = RwSignal::new("Like this video ?".to_string());
+    let signin_prompt_message = RwSignal::new("Sign in to make your opinion count.".to_string());
 
     // Subscriber count - initially 0, loaded async
     let subscriber_count = RwSignal::new(0usize);
@@ -135,8 +107,16 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
                             is_authenticated=is_authenticated
                             show_signin_prompt=show_signin_prompt
                             subscriber_count=subscriber_count
+                            prompt_title=signin_prompt_title
+                            prompt_message=signin_prompt_message
                         />
-                        <ReactionButtons video=video_for_reactions is_authenticated=is_authenticated show_signin_prompt=show_signin_prompt/>
+                        <ReactionButtons
+                            video=video_for_reactions
+                            is_authenticated=is_authenticated
+                            show_signin_prompt=show_signin_prompt
+                            prompt_title=signin_prompt_title
+                            prompt_message=signin_prompt_message
+                        />
                         <button class="btn-secondary">"Share"</button>
                     </div>
                 </div>
@@ -166,7 +146,13 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
                 <CommentFeed video_id=video.id.clone() />
             </div>
         </div>
-        <SigninPromptModal open=show_signin_prompt />
+        {move || view! {
+            <SigninPromptModal
+                open=show_signin_prompt
+                title=signin_prompt_title.get()
+                message=signin_prompt_message.get()
+            />
+        }}
         </>
     }
 }

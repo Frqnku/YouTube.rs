@@ -8,7 +8,7 @@ use crate::{
 		get_subscription_status,
 		post_subscription,
 	}},
-	components::_helpers::{CountFormat, format_count}, context::{CurrentUserContext, SubscriptionsContext},
+	components::{_helpers::{CountFormat, format_count}, ui::SigninPromptModal}, context::{CurrentUserContext, SubscriptionsContext},
 };
 
 #[component]
@@ -101,21 +101,6 @@ pub fn ChannelHeader(
 		}
 	});
 
-	let on_subscribe_click = Callback::new(move |_| {
-		if !is_authenticated.get_untracked() {
-			show_signin_prompt.set(true);
-			return;
-		}
-
-		if toggle_subscription.pending().get_untracked() {
-			return;
-		}
-
-		let next_subscribed = !is_subscribed.get_untracked();
-		is_subscribed.set(next_subscribed);
-		toggle_subscription.dispatch((channel_id_for_click.clone(), next_subscribed));
-	});
-
 	let subscribe_pending = Signal::derive(move || toggle_subscription.pending().get());
 
 	let profile_picture_alt = format!("{} profile picture", channel.name);
@@ -172,7 +157,20 @@ pub fn ChannelHeader(
 						type="button"
 						class=move || subscribe_class.get()
 						disabled=move || subscribe_pending.get()
-						on:click=move |event| on_subscribe_click.run(event)
+						on:click=move |_| {
+							if !is_authenticated.get_untracked() {
+								show_signin_prompt.set(true);
+								return;
+							}
+
+							if toggle_subscription.pending().get_untracked() {
+								return;
+							}
+
+							let next_subscribed = !is_subscribed.get_untracked();
+							is_subscribed.set(next_subscribed);
+							toggle_subscription.dispatch((channel_id_for_click.clone(), next_subscribed));
+						}
 					>
 						{move || subscribe_label.get()}
 					</button>
@@ -180,11 +178,10 @@ pub fn ChannelHeader(
 			</div>
 		</div>
 
-		<Show when=move || show_signin_prompt.get()>
-			<div class="mt-3 rounded-xl bg-bg-secondary p-3 text-sm text-text-secondary">
-				"Sign in to subscribe to this channel. "
-				<a href="/signin" class="font-medium text-text underline">"Sign in"</a>
-			</div>
-		</Show>
+		<SigninPromptModal
+			open=show_signin_prompt
+			title="Want to subscribe ?".to_string()
+			message="Sign in to subscribe to this channel.".to_string()
+		/>
 	}
 }

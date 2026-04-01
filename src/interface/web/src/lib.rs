@@ -3,6 +3,7 @@
 pub mod app;
 pub mod shell;
 pub mod components;
+pub mod hooks;
 pub mod api;
 pub mod routes;
 pub mod context;
