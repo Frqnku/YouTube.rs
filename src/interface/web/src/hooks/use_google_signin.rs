@@ -17,10 +17,14 @@ pub fn use_google_signin() -> Callback<()> {
         let redirect_to = web_sys::window()
             .and_then(|window| {
                 let location = window.location();
-                location
-                    .pathname()
-                    .ok()
-                    .map(|path| if path == "/signin" { "/".to_string() } else { path })
+                let path = location.pathname().ok()?;
+                if path == "/signin" {
+                    return Some("/".to_string());
+                }
+
+                let search = location.search().ok().unwrap_or_default();
+                let hash = location.hash().ok().unwrap_or_default();
+                Some(format!("{path}{search}{hash}"))
             })
             .unwrap_or_else(|| "/".to_string());
 

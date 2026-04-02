@@ -35,11 +35,14 @@ pub async fn oauth(
     };
 
     // 2️⃣ Validate state parameter against cookie
-    let csrf = oauth_state.split("&next=").next().unwrap_or_default();
+    let (csrf, redirect_to_raw) = oauth_state
+        .split_once("&next=")
+        .map(|(csrf, next)| (csrf, Some(next)))
+        .unwrap_or((&oauth_state, None));
     if cookie_state != csrf {
         return Err(AppServerError::new("invalid_oauth_state", "OAuth state parameter does not match cookie".to_string()));
     }
-    let redirect_to = oauth_state.split("&next=").nth(1);
+    let redirect_to = redirect_to_raw;
 
     // 3️⃣ Call infra OAuth service to get OAuthUserDto
     let oauth_service: Box<dyn OAuthService> = match provider {
