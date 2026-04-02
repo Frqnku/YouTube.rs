@@ -25,16 +25,27 @@ pub fn VideoCard(video: VideoCardDto) -> impl IntoView {
     let duration = format_duration(video.duration_seconds);
     let uploaded_ago = format_relative_time(&video.uploaded_at);
     let watch_url = format!("/watch?v={}", video.id);
+    let channel_url = format!("/channel?id={}", video.channel_id);
     let view_count = format!("{} views", format_count(video.view_count, CountFormat::Short));
     let is_previewing = RwSignal::new(false);
 
+    let watch_url_for_click = watch_url.clone();
     let thumbnail_url = video.thumbnail_url.clone();
     let preview_url = video.preview_url.clone();
     let title = video.title.clone();
+    let user = video.user.clone();
+    let user_picture = video.user_picture.clone().unwrap_or_default();
 
     view! {
         <article class="group">
-            <a href=watch_url class="block">
+            <div
+                class="block cursor-pointer"
+                on:click=move |_| {
+                    if let Some(window) = web_sys::window() {
+                        let _ = window.location().set_href(&watch_url_for_click);
+                    }
+                }
+            >
                 <div
                     class="relative aspect-video overflow-hidden rounded-xl bg-bg-secondary"
                     on:mouseenter=move |_| is_previewing.set(true)
@@ -69,18 +80,30 @@ pub fn VideoCard(video: VideoCardDto) -> impl IntoView {
                 </div>
 
                 <div class="mt-3 flex gap-3">
-                    <img
-                        src=video.user_picture.unwrap_or_default()
-                        alt=format!("{}'s profile picture", video.user)
-                        class="mt-1 h-9 w-9 shrink-0 rounded-full bg-bg-secondary object-cover"
-                    />
+                    <a
+                        href=channel_url.clone()
+                        class="mt-1 block h-9 w-9 shrink-0"
+                        on:click=move |event| event.stop_propagation()
+                    >
+                        <img
+                            src=user_picture
+                            alt=format!("{}'s profile picture", user)
+                            class="h-9 w-9 rounded-full bg-bg-secondary object-cover"
+                        />
+                    </a>
                     <div class="min-w-0">
                         <h3 class="line-clamp-2 text-sm font-medium text-text">{video.title}</h3>
-                        <p class="mt-1 text-sm text-text-secondary">{video.user}</p>
+                        <a
+                            href=channel_url
+                            class="mt-1 inline-block text-sm text-text-secondary hover:text-text"
+                            on:click=move |event| event.stop_propagation()
+                        >
+                            {video.user}
+                        </a>
                         <p class="text-sm text-text-muted">{view_count}<DotDivider />{uploaded_ago}</p>
                     </div>
                 </div>
-            </a>
+            </div>
         </article>
     }
 }

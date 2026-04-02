@@ -9,6 +9,7 @@ use application::dtos::video::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VideoCardDto {
 	pub id: String,
+	pub channel_id: String,
 	pub user: String,
 	pub user_picture: Option<String>,
 	pub title: String,
@@ -24,6 +25,7 @@ pub struct VideoCardDto {
 impl VideoCardDto {
 	pub fn new(
 		id: String,
+		channel_id: String,
 		user: String,
 		user_picture: Option<String>,
 		title: String,
@@ -37,6 +39,7 @@ impl VideoCardDto {
 	) -> Self {
 		Self {
 			id,
+			channel_id,
 			user,
 			user_picture,
 			title,
@@ -82,6 +85,7 @@ impl From<AppVideoCardPage> for VideoCardPage {
 				.map(|video| {
 					VideoCardDto::new(
 						video.id.to_string(),
+						video.channel_id.to_string(),
 						video.user,
 						video.user_picture,
 						video.title,

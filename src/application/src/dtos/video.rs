@@ -5,6 +5,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VideoCard {
 	pub id: Uuid,
+	pub channel_id: Uuid,
 	pub user: String,
 	pub user_picture: Option<String>,
 	pub title: String,
@@ -20,6 +21,7 @@ pub struct VideoCard {
 impl VideoCard {
 	pub fn new(
 		id: Uuid,
+		channel_id: Uuid,
 		user: String,
 		user_picture: Option<String>,
 		title: String,
@@ -33,6 +35,7 @@ impl VideoCard {
 	) -> Self {
 		Self {
 			id,
+			channel_id,
 			user,
 			user_picture,
 			title,
@@ -51,6 +54,7 @@ impl From<Video> for VideoCard {
 	fn from(video: Video) -> Self {
 		Self::new(
 			video.id,
+			video.author.id,
 			video.author.name,
 			video.author.profile_picture.map(|url| url.to_string()),
 			video.title,
@@ -207,6 +211,7 @@ mod tests {
 		let id = Uuid::new_v4();
 		let card = VideoCard::new(
 			id,
+			Uuid::new_v4(),
 			"Alice".to_string(),
 			Some("https://example.com/avatar.jpg".to_string()),
 			"Title".to_string(),
