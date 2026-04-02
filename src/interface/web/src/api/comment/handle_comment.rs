@@ -46,7 +46,10 @@ pub async fn post_comment(
 }
 
 #[server]
-pub async fn patch_comment(comment_id: String, content: String) -> Result<CommentDto, AppServerError> {
+pub async fn update_comment(
+	comment_id: String,
+	content: String,
+) -> Result<CommentDto, AppServerError> {
 	let pool = use_context::<sqlx::PgPool>()
 		.require_context("Missing pool")?;
 

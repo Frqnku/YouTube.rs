@@ -98,6 +98,12 @@ pub fn CommentFeed(video_id: String) -> impl IntoView {
 			.and_then(|ctx| ctx.current_user.get())
 			.is_some()
 	});
+	let current_user_id = Signal::derive(move || {
+		current_user_ctx
+			.as_ref()
+			.and_then(|ctx| ctx.current_user.get())
+			.map(|user| user.id)
+	});
 
 	let show_signin_prompt = RwSignal::new(false);
 	let comment_count = RwSignal::new(0_i64);
@@ -109,6 +115,10 @@ pub fn CommentFeed(video_id: String) -> impl IntoView {
 		move || video_id_state.get(),
 		move |video_id| async move { get_video_comment_count(video_id).await },
 	);
+	let refresh_count_action = Action::new(move |video_id: &String| {
+		let video_id = video_id.clone();
+		async move { get_video_comment_count(video_id).await }
+	});
 
 	Effect::new(move |_| {
 		if let Some(Ok(count)) = count_resource.get() {
@@ -116,9 +126,19 @@ pub fn CommentFeed(video_id: String) -> impl IntoView {
 		}
 	});
 
+	Effect::new(move |_| {
+		if let Some(Ok(count)) = refresh_count_action.value().get() {
+			comment_count.set(count.max(0));
+		}
+	});
+
 	let on_comment_created = Callback::new(move |comment: CommentDto| {
 		comments.update(|items| items.insert(0, comment));
 		comment_count.update(|count| *count += 1);
+	});
+	let on_comment_deleted = Callback::new(move |deleted_comment_id: String| {
+		comments.update(|items| items.retain(|comment| comment.id != deleted_comment_id));
+		refresh_count_action.dispatch(video_id_state.get_untracked());
 	});
 	let on_reply_created = Callback::new(move |_comment: CommentDto| {
 		comment_count.update(|count| *count += 1);
@@ -157,8 +177,10 @@ pub fn CommentFeed(video_id: String) -> impl IntoView {
 							<CommentItem
 								comment=comment
 								is_authenticated=is_authenticated_for_items
+								current_user_id=current_user_id
 								show_signin_prompt=show_signin_for_items
 								on_reply_created=on_reply_created_for_items
+								on_deleted=on_comment_deleted
 							/>
 						}
 					}
