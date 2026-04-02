@@ -4,7 +4,7 @@ use crate::{
     components::{
         ui::{icons::IconKind, LineDivider},
         layout::header::{
-            buttons::{menu_items::{BranchMenuItem, LogoutButton, MenuLink}, SigninFromSettingsButton},
+            buttons::{menu_items::{BranchMenuItem, LogoutButton, MenuLink}},
             dropdown::ActiveSubmenu,
         },
     },
@@ -58,22 +58,6 @@ pub fn RootDropdownMenu(
 
         <BranchMenuItem label="Appearance" icon=IconKind::Moon on_select=open_appearance />
         <BranchMenuItem label="Location" icon=IconKind::Globe on_select=open_locations />
-
-        {if is_authenticated {
-            view! {
-                <LineDivider />
-                <MenuLink label="Settings" icon=IconKind::Settings href="/settings" new_tab=false on_select=on_close />
-                <LineDivider />
-            }
-                .into_any()
-        } else {
-            view! {
-                <LineDivider />
-                <SigninFromSettingsButton />
-                <LineDivider />
-            }
-                .into_any()
-        }}
 
         <MenuLink label="Let's connect!" icon=IconKind::LinkedIn href="https://www.linkedin.com/in/ugo-tiberto-729a55279/" new_tab=true on_select=on_close />
     }
