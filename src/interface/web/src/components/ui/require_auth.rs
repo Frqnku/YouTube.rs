@@ -51,9 +51,16 @@ pub fn SigninPromptModal(
                     <p class="mt-3 text-center text-lg text-text-secondary">{message.clone()}</p>
 
                     <footer class="mt-6 flex justify-center">
-                        <button 
+                        <button
+                            type="button"
                             class="btn-primary text-base px-10 py-2"
-                            on:click=move |_| on_signin.run(())>"Sign in"</button>
+                            on:click=move |event| {
+                                event.prevent_default();
+                                on_signin.run(());
+                            }
+                        >
+                            "Sign in"
+                        </button>
                     </footer>
                 </section>
             </div>
