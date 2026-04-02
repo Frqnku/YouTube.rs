@@ -3,7 +3,7 @@ use leptos_router::hooks::use_query_map;
 
 use crate::api::_dtos::video::VideoCardPage;
 use crate::api::video::get_videos_by_search;
-use crate::components::ui::NotFound;
+use crate::components::ui::{Loader, NotFound};
 use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
 use crate::components::videos::VideoCard;
 
@@ -27,6 +27,7 @@ pub fn ResultsPage() -> impl IntoView {
 		videos,
 		_next_cursor,
 		_has_more,
+		initial_loaded,
 		initial_error,
 		load_more_error,
 		load_more,
@@ -42,8 +43,8 @@ pub fn ResultsPage() -> impl IntoView {
 	view! {
 		<div class="min-h-[calc(100dvh-3.5rem)] bg-bg px-4 py-5 md:px-6">
 			<div class="mb-5">
-				<h1 class="text-lg font-semibold text-text md:text-xl">"Search results"</h1>
-				<Show when=move || search_query.get().is_some()>
+				<Show when=move || search_query.get().is_some() && initial_loaded.get()>
+					<h1 class="text-lg font-semibold text-text md:text-xl">"Search results"</h1>
 					<p class="mt-1 text-sm text-text-secondary">
 						{move || format!("Results for \"{}\"", search_query.get().unwrap_or_default())}
 					</p>
@@ -66,6 +67,12 @@ pub fn ResultsPage() -> impl IntoView {
 					}
 				>
 					{move || {
+					if search_query.get().is_some() && !initial_loaded.get() {
+						return view! { <Loader /> }
+							.into_any()
+							.into_view();
+					}
+
 						if initial_error.get() {
 							return view! {
 								<article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
@@ -76,7 +83,7 @@ pub fn ResultsPage() -> impl IntoView {
 								.into_view();
 						}
 
-						if videos.get().is_empty() || search_query.get().is_none() {
+						if search_query.get().is_none() || videos.get().is_empty() {
 							view! { <NotFound message="No results found".to_string() /> }
 								.into_any()
 								.into_view()

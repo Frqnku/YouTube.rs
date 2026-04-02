@@ -132,6 +132,7 @@ pub fn HomePage() -> impl IntoView {
         videos,
         _next_cursor,
         _has_more,
+        _initial_loaded,
         initial_error,
         load_more_error,
         load_more,

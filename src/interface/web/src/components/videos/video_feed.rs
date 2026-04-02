@@ -38,6 +38,7 @@ pub fn use_paginated_feed<Key, FetchFn, Fut>(
     RwSignal<bool>,
     RwSignal<bool>,
     RwSignal<bool>,
+    RwSignal<bool>,
     Action<(Key, String), Result<VideoCardPage, ()>>,
 )
 where
@@ -48,6 +49,7 @@ where
     let videos = RwSignal::new(Vec::<VideoCardDto>::new());
     let next_cursor = RwSignal::new(None::<String>);
     let has_more = RwSignal::new(false);
+    let initial_loaded = RwSignal::new(false);
     let initial_error = RwSignal::new(false);
     let load_more_error = RwSignal::new(false);
 
@@ -76,12 +78,14 @@ where
 
         match result {
             Ok(page) => {
+                initial_loaded.set(true);
                 initial_error.set(false);
                 videos.set(page.items);
                 next_cursor.set(page.next_cursor);
                 has_more.set(page.has_more);
             }
             Err(_) => {
+                initial_loaded.set(true);
                 initial_error.set(true);
                 videos.set(Vec::new());
                 next_cursor.set(None);
@@ -134,6 +138,7 @@ where
         videos,
         next_cursor,
         has_more,
+        initial_loaded,
         initial_error,
         load_more_error,
         load_more,

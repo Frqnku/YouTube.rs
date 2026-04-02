@@ -14,8 +14,7 @@ const CHANNEL_PAGE_SIZE: u32 = 12;
 pub fn ChannelVideosSection(
     channel_id: Signal<Option<String>>,
 ) -> impl IntoView {
-	let (videos, _next_cursor, _has_more, initial_error, load_more_error, load_more) =
-		use_paginated_feed(channel_id, |maybe_channel_id, cursor| async move {
+	let feed = use_paginated_feed(channel_id, |maybe_channel_id, cursor| async move {
 			match maybe_channel_id {
 				Some(id) => get_channel_videos(id, Some(CHANNEL_PAGE_SIZE), cursor)
 					.await
@@ -23,6 +22,7 @@ pub fn ChannelVideosSection(
 				None => Ok(VideoCardPage::new(Vec::new(), None, false)),
 			}
 		});
+	let (videos, _next_cursor, _has_more, _initial_loaded, initial_error, load_more_error, load_more) = feed;
 
 	view! {
 		<>

@@ -14,6 +14,7 @@ pub fn HistoryPage() -> impl IntoView {
         videos,
         _next_cursor,
         _has_more,
+        initial_loaded,
         initial_error,
         load_more_error,
         load_more,
@@ -55,6 +56,12 @@ pub fn HistoryPage() -> impl IntoView {
                         }
                     >
                         {move || {
+                            if !initial_loaded.get() {
+                                return view! { <ResponsiveVideoCardSkeletons /> }
+                                    .into_any()
+                                    .into_view();
+                            }
+
                             if initial_error.get() {
                                 return view! {
                                     <article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
