@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 use gloo_timers::future::TimeoutFuture;
 use wasm_bindgen::JsCast;
-use web_sys::HtmlVideoElement;
+use web_sys::{window, HtmlVideoElement};
 use leptos_router::hooks::use_navigate;
 
 use crate::{
@@ -37,6 +37,7 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
     let show_signin_prompt = RwSignal::new(false);
     let signin_prompt_title = RwSignal::new("Like this video ?".to_string());
     let signin_prompt_message = RwSignal::new("Sign in to make your opinion count.".to_string());
+    let share_copied = RwSignal::new(false);
 
     // Subscriber count - initially 0, loaded async
     let subscriber_count = RwSignal::new(0usize);
@@ -117,7 +118,30 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
                             prompt_title=signin_prompt_title
                             prompt_message=signin_prompt_message
                         />
-                        <button class="inline-flex items-center gap-2 btn-secondary">
+                        <button
+                            class="relative inline-flex items-center gap-2 btn-secondary"
+                            on:click=move |_| {
+                                if let Some(win) = window() {
+                                    if let Ok(current_url) = win.location().href() {
+                                        let clipboard = win.navigator().clipboard();
+                                        let _ = clipboard.write_text(&current_url);
+
+                                        share_copied.set(true);
+                                        leptos::task::spawn_local(async move {
+                                            TimeoutFuture::new(1000).await;
+                                            share_copied.set(false);
+                                        });
+                                    }
+                                }
+                            }
+                        >
+                            {move || share_copied.get().then(|| {
+                                view! {
+                                    <span class="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 rounded-md bg-text px-2 py-1 text-xs font-medium text-bg shadow-sm">
+                                        "Copied!"
+                                    </span>
+                                }
+                            })}
                             <Icon kind=IconKind::Share />
                             "Share"
                         </button>
