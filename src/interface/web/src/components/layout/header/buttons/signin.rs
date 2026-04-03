@@ -1,9 +1,6 @@
 use leptos::prelude::*;
 
-use crate::{
-    components::ui::icons::{Icon, IconKind},
-    hooks::use_google_signin
-};
+use crate::hooks::use_google_signin;
 
 #[component]
 pub fn SigninButton() -> impl IntoView {
