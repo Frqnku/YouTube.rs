@@ -10,22 +10,38 @@ const HISTORY_PAGE_SIZE: u32 = 6;
 
 #[component]
 pub fn HistoryPage() -> impl IntoView {
+    let refresh_key = RwSignal::new(0_u32);
+    let did_init_reset = RwSignal::new(false);
+
     let (
         videos,
         _next_cursor,
         _has_more,
-        _initial_loaded,
+        initial_loaded,
         initial_error,
         load_more_error,
         load_more,
     ) = use_paginated_feed(
-        Signal::derive(|| ()),
-        |(), cursor| async move {
+        Signal::derive(move || ("history", refresh_key.get())),
+        |_, cursor| async move {
             get_history_videos(Some(HISTORY_PAGE_SIZE), cursor)
                 .await
                 .map_err(|_| ())
         },
     );
+
+    Effect::new(move |_| {
+        if did_init_reset.get_untracked() {
+            return;
+        }
+
+        did_init_reset.set(true);
+        videos.set(Vec::new());
+        initial_loaded.set(false);
+        initial_error.set(false);
+        load_more_error.set(false);
+        refresh_key.update(|value| *value = value.saturating_add(1));
+    });
 
     let current_user_ctx = use_context::<CurrentUserContext>();
     let is_authenticated = Signal::derive(move || {
@@ -39,6 +55,16 @@ pub fn HistoryPage() -> impl IntoView {
     let clean_history_result = clean_history_action.value();
     let history_is_cleaned = Signal::derive(move || {
         matches!(clean_history_result.get(), Some(Ok(())))
+    });
+
+    Effect::new(move |_| {
+        if matches!(clean_history_result.get(), Some(Ok(()))) {
+            videos.set(Vec::new());
+            initial_loaded.set(false);
+            initial_error.set(false);
+            load_more_error.set(false);
+            refresh_key.update(|value| *value = value.saturating_add(1));
+        }
     });
 
     let is_hydrated = RwSignal::new(false);
@@ -84,6 +110,12 @@ pub fn HistoryPage() -> impl IntoView {
                         }
                     >
                         {move || {
+                            if !initial_loaded.get() {
+                                return view! { <ResponsiveVideoCardSkeletons /> }
+                                    .into_any()
+                                    .into_view();
+                            }
+
                             if initial_error.get() {
                                 return view! {
                                     <article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">

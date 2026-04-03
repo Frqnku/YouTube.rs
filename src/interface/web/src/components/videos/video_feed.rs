@@ -39,7 +39,7 @@ pub fn use_paginated_feed<Key, FetchFn, Fut>(
     RwSignal<bool>,
     RwSignal<bool>,
     RwSignal<bool>,
-    Action<(Key, String), Result<VideoCardPage, ()>>,
+    Action<(Key, String), (Key, String, Result<VideoCardPage, ()>)>,
 )
 where
     Key: Clone + PartialEq + Send + Sync + 'static,
@@ -48,6 +48,7 @@ where
 {
     let videos = RwSignal::new(Vec::<VideoCardDto>::new());
     let next_cursor = RwSignal::new(None::<String>);
+    let last_dispatched_cursor = RwSignal::new(None::<String>);
     let has_more = RwSignal::new(false);
     let initial_loaded = RwSignal::new(false);
     let initial_error = RwSignal::new(false);
@@ -68,7 +69,10 @@ where
         let fetch_page = load_more_fetch_page.clone();
         let selected_key = selected_key.clone();
         let cursor = cursor.clone();
-        async move { fetch_page(selected_key, Some(cursor)).await }
+        async move {
+            let result = fetch_page(selected_key.clone(), Some(cursor.clone())).await;
+            (selected_key, cursor, result)
+        }
     });
 
     Effect::new(move |_| {
@@ -82,6 +86,7 @@ where
                 initial_error.set(false);
                 videos.set(page.items);
                 next_cursor.set(page.next_cursor);
+                last_dispatched_cursor.set(None);
                 has_more.set(page.has_more);
             }
             Err(_) => {
@@ -89,25 +94,36 @@ where
                 initial_error.set(true);
                 videos.set(Vec::new());
                 next_cursor.set(None);
+                last_dispatched_cursor.set(None);
                 has_more.set(false);
             }
         }
     });
 
     Effect::new(move |_| {
-        let Some(result) = load_more.value().get() else {
+        let Some((result_key, result_cursor, result)) = load_more.value().get() else {
             return;
         };
+
+        if result_key != key.get_untracked() {
+            return;
+        }
+
+        if last_dispatched_cursor.get_untracked().as_ref() != Some(&result_cursor) {
+            return;
+        }
 
         match result {
             Ok(page) => {
                 load_more_error.set(false);
                 videos.update(|items| items.extend(page.items));
                 next_cursor.set(page.next_cursor);
+                last_dispatched_cursor.set(None);
                 has_more.set(page.has_more);
             }
             Err(_) => {
                 load_more_error.set(true);
+                last_dispatched_cursor.set(None);
             }
         }
     });
@@ -119,12 +135,17 @@ where
                 return;
             }
 
-            if !has_more.get_untracked() || load_more.pending().get_untracked() {
+            if !has_more.get_untracked() {
                 return;
             }
 
             if let Some(cursor) = next_cursor.get_untracked() {
+                if last_dispatched_cursor.get_untracked().as_ref() == Some(&cursor) {
+                    return;
+                }
+
                 load_more_error.set(false);
+                last_dispatched_cursor.set(Some(cursor.clone()));
                 load_more.dispatch((key.get_untracked(), cursor));
             }
         });
@@ -144,5 +165,3 @@ where
         load_more,
     )
 }
-
-pub use use_paginated_feed as use_paginated_video_feed;

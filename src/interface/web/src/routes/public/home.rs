@@ -1,4 +1,5 @@
 use leptos::prelude::*;
+use leptos_router::hooks::use_location;
 use crate::api::video::{get_newest_videos, get_trending_videos, get_videos_by_tag};
 use crate::components::videos::VideoCard;
 use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
@@ -126,7 +127,7 @@ fn HomeFilters(
 }
 
 #[component]
-pub fn HomePage() -> impl IntoView {
+fn HomePageContent() -> impl IntoView {
     let current_feed = RwSignal::new(HomeFeed::Trending);
     let (
         videos,
@@ -193,5 +194,19 @@ pub fn HomePage() -> impl IntoView {
                 </div>
             </Show>
         </div>
+    }
+}
+
+#[component]
+pub fn HomePage() -> impl IntoView {
+    let location = use_location();
+
+    view! {
+        <Show
+            when=move || location.pathname.get() == "/"
+            fallback=move || view! { <div class="hidden"></div> }.into_any()
+        >
+            <HomePageContent />
+        </Show>
     }
 }

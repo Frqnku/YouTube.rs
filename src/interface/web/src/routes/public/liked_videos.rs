@@ -10,22 +10,38 @@ const LIKED_PAGE_SIZE: u32 = 6;
 
 #[component]
 pub fn LikedVideosPage() -> impl IntoView {
+    let refresh_key = RwSignal::new(0_u32);
+    let did_init_reset = RwSignal::new(false);
+
     let (
         videos,
         _next_cursor,
         _has_more,
-        _initial_loaded,
+        initial_loaded,
         initial_error,
         load_more_error,
         load_more,
     ) = use_paginated_feed(
-        Signal::derive(|| ()),
-        |(), cursor| async move {
+        Signal::derive(move || ("liked-videos", refresh_key.get())),
+        |_, cursor| async move {
             get_liked_videos(Some(LIKED_PAGE_SIZE), cursor)
                 .await
                 .map_err(|_| ())
         },
     );
+
+    Effect::new(move |_| {
+        if did_init_reset.get_untracked() {
+            return;
+        }
+
+        did_init_reset.set(true);
+        videos.set(Vec::new());
+        initial_loaded.set(false);
+        initial_error.set(false);
+        load_more_error.set(false);
+        refresh_key.update(|value| *value = value.saturating_add(1));
+    });
 
     let current_user_ctx = use_context::<CurrentUserContext>();
     let is_authenticated = Signal::derive(move || {
@@ -65,6 +81,12 @@ pub fn LikedVideosPage() -> impl IntoView {
                         }
                     >
                         {move || {
+                            if !initial_loaded.get() {
+                                return view! { <ResponsiveVideoCardSkeletons /> }
+                                    .into_any()
+                                    .into_view();
+                            }
+
                             if initial_error.get() {
                                 return view! {
                                     <article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">

@@ -1,5 +1,10 @@
 use leptos::prelude::*;
+#[cfg(target_arch = "wasm32")]
 use gloo_timers::future::TimeoutFuture;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, AtomicU32, Ordering},
+};
 use wasm_bindgen::JsCast;
 use web_sys::{window, HtmlVideoElement};
 use leptos_router::hooks::use_navigate;
@@ -17,6 +22,14 @@ use crate::{
         videos::video_player::{Channel, ReactionButtons, SubscribeButton},
     }, context::CurrentUserContext,
 };
+
+#[cfg(target_arch = "wasm32")]
+async fn delay_ms(ms: u32) {
+    TimeoutFuture::new(ms).await;
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+async fn delay_ms(_ms: u32) {}
 
 #[component]
 pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) -> impl IntoView {
@@ -128,7 +141,7 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
 
                                         share_copied.set(true);
                                         leptos::task::spawn_local(async move {
-                                            TimeoutFuture::new(1000).await;
+                                            delay_ms(1000).await;
                                             share_copied.set(false);
                                         });
                                     }
@@ -193,24 +206,25 @@ fn VideoPlayer(
     next_video_url: RwSignal<Option<String>>,
 ) -> impl IntoView {
     let navigate = use_navigate();
-    let watched_seconds = RwSignal::new(initial_watched_seconds);
-    let is_playing = RwSignal::new(false);
-    let video_id_for_interval = video_id.clone();
+    let watched_seconds_value = Arc::new(AtomicU32::new(initial_watched_seconds));
+    let is_playing_value = Arc::new(AtomicBool::new(false));
+    let is_mounted = Arc::new(AtomicBool::new(true));
 
     let update_watched_seconds_action = Action::new(|payload: &(String, u32)| {
         let (video_id, watched_seconds) = payload.clone();
         async move { update_watched_seconds(video_id, watched_seconds).await }
     });
 
+    let watched_seconds_for_immediate_factory = watched_seconds_value.clone();
     let make_immediate_update_handler = move |action: Action<(String, u32), _>, video_id: String| {
-        let watched_seconds = watched_seconds;
+        let watched_seconds_value = watched_seconds_for_immediate_factory.clone();
         let is_authenticated = is_authenticated;
 
         move |event: web_sys::Event| {
             if let Some(target) = event.target() {
                 if let Ok(video) = target.dyn_into::<HtmlVideoElement>() {
                     let seconds = video.current_time().floor() as u32;
-                    watched_seconds.set(seconds);
+                    watched_seconds_value.store(seconds, Ordering::Relaxed);
 
                     if is_authenticated.get_untracked() {
                         action.dispatch((video_id.clone(), seconds));
@@ -233,8 +247,9 @@ fn VideoPlayer(
         video_id.clone(),
     );
 
+    let watched_seconds_for_persist_factory = watched_seconds_value.clone();
     let make_persist_handler = move |action: Action<(String, u32), _>, video_id: String| {
-        let watched_seconds = watched_seconds;
+        let watched_seconds_value = watched_seconds_for_persist_factory.clone();
         let is_authenticated = is_authenticated;
 
         move || {
@@ -242,7 +257,7 @@ fn VideoPlayer(
                 return;
             }
 
-            action.dispatch((video_id.clone(), watched_seconds.get_untracked()));
+            action.dispatch((video_id.clone(), watched_seconds_value.load(Ordering::Relaxed)));
         }
     };
 
@@ -259,39 +274,46 @@ fn VideoPlayer(
         video_id.clone(),
     );
 
-    Effect::new(move |_| {
-        if !is_playing.get() {
-            return;
-        }
-
-        let is_playing = is_playing;
-        let watched_seconds = watched_seconds;
+    #[cfg(target_arch = "wasm32")]
+    {
+        let is_playing_value = is_playing_value.clone();
+        let watched_seconds_value = watched_seconds_value.clone();
+        let is_mounted = is_mounted.clone();
         let is_authenticated = is_authenticated;
         let update_watched_seconds_action = update_watched_seconds_action.clone();
-        let interval_video_id = video_id_for_interval.clone();
+        let interval_video_id = video_id.clone();
 
         leptos::task::spawn_local(async move {
-            while is_playing.get_untracked() {
-                TimeoutFuture::new(5000).await;
+            while is_mounted.load(Ordering::Relaxed) {
+                delay_ms(5000).await;
 
-                if !is_playing.get_untracked() {
+                if !is_mounted.load(Ordering::Relaxed) {
                     break;
                 }
 
-                if !is_authenticated.get_untracked() {
+                if !is_playing_value.load(Ordering::Relaxed) || !is_authenticated.get_untracked() {
                     continue;
                 }
 
                 update_watched_seconds_action
-                    .dispatch((interval_video_id.clone(), watched_seconds.get_untracked()));
+                    .dispatch((interval_video_id.clone(), watched_seconds_value.load(Ordering::Relaxed)));
             }
         });
-    });
+    }
 
+    let is_mounted_for_cleanup = is_mounted.clone();
+    let is_playing_for_cleanup = is_playing_value.clone();
     on_cleanup(move || {
-        is_playing.set(false);
+        is_mounted_for_cleanup.store(false, Ordering::Relaxed);
+        is_playing_for_cleanup.store(false, Ordering::Relaxed);
         on_cleanup_persist();
     });
+
+    let is_playing_for_play = is_playing_value.clone();
+    let is_playing_for_pause = is_playing_value.clone();
+    let is_playing_for_ended = is_playing_value.clone();
+    let watched_seconds_for_timeupdate = watched_seconds_value.clone();
+    let watched_seconds_for_loadedmetadata = watched_seconds_value.clone();
 
     view! {
         <video
@@ -302,15 +324,15 @@ fn VideoPlayer(
             playsinline
             autoplay
             on:play=move |event| {
-                is_playing.set(true);
+                is_playing_for_play.store(true, Ordering::Relaxed);
                 on_play_update(event.unchecked_into::<web_sys::Event>());
             }
             on:pause=move |_| {
-                is_playing.set(false);
+                is_playing_for_pause.store(false, Ordering::Relaxed);
                 on_pause_persist();
             }
             on:ended=move |_| {
-                is_playing.set(false);
+                is_playing_for_ended.store(false, Ordering::Relaxed);
                 on_ended_persist();
 
                 if let Some(url) = next_video_url.get_untracked() {
@@ -326,7 +348,7 @@ fn VideoPlayer(
             on:timeupdate=move |event| {
                 if let Some(target) = event.target() {
                     if let Ok(video) = target.dyn_into::<HtmlVideoElement>() {
-                        watched_seconds.set(video.current_time().floor() as u32);
+                        watched_seconds_for_timeupdate.store(video.current_time().floor() as u32, Ordering::Relaxed);
                     }
                 }
             }
@@ -344,7 +366,7 @@ fn VideoPlayer(
                             initial_watched_seconds
                         };
                         video.set_current_time(resume_at as f64);
-                        watched_seconds.set(resume_at);
+                        watched_seconds_for_loadedmetadata.store(resume_at, Ordering::Relaxed);
                     }
                 }
             }
