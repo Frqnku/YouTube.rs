@@ -6,3 +6,5 @@ pub mod handle_reaction;
 pub use handle_reaction::*;
 pub mod handle_view;
 pub use handle_view::*;
+pub mod handle_history;
+pub use handle_history::*;

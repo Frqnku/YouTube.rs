@@ -490,6 +490,17 @@ impl VideoHistoryRepository for PgVideoRepository {
 
         into_page(records, &page, newest_cursor)
     }
+
+    async fn clean_history_by_user_id(&self, user_id: Uuid) -> anyhow::Result<()> {
+        sqlx::query!(
+            "DELETE FROM video_views WHERE user_id = $1",
+            user_id
+        )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
 }
 
 #[async_trait::async_trait]

@@ -361,6 +361,16 @@ impl VideoHistoryRepository for InMemoryVideoRepository {
 
 		build_updated_page(items, page)
 	}
+
+	async fn clean_history_by_user_id(&self, user_id: Uuid) -> anyhow::Result<()> {
+		self
+			.history_entries
+			.lock()
+			.unwrap()
+			.retain(|entry| entry.user_id != user_id);
+
+		Ok(())
+	}
 }
 
 #[async_trait::async_trait]

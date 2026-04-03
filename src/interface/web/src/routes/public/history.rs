@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use crate::api::video::get_history_videos;
+use crate::api::video::{CleanHistory, get_history_videos};
 use crate::components::ui::icons::IconKind;
 use crate::components::videos::VideoCard;
 use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
@@ -14,7 +14,7 @@ pub fn HistoryPage() -> impl IntoView {
         videos,
         _next_cursor,
         _has_more,
-        initial_loaded,
+        _initial_loaded,
         initial_error,
         load_more_error,
         load_more,
@@ -35,8 +35,23 @@ pub fn HistoryPage() -> impl IntoView {
             .is_some()
     });
 
+    let clean_history_action = ServerAction::<CleanHistory>::new();
+    let clean_history_result = clean_history_action.value();
+    let history_is_cleaned = Signal::derive(move || {
+        matches!(clean_history_result.get(), Some(Ok(())))
+    });
+
+    let is_hydrated = RwSignal::new(false);
+    Effect::new(move |_| {
+        is_hydrated.set(true);
+    });
+
     view! {
         <div class="min-h-[calc(100dvh-3.5rem)] bg-bg px-4 py-5 md:px-6">
+            <Show
+                when=move || is_hydrated.get()
+                fallback=move || view! { <ResponsiveVideoCardSkeletons /> }.into_any()
+            >
             <Show when=move || is_authenticated.get()
                 fallback=move || view! {
                     <RequireAuth
@@ -46,8 +61,21 @@ pub fn HistoryPage() -> impl IntoView {
                     />
                 }.into_any()
             >
-                <h1 class="text-2xl font-semibold text-text">"History"</h1>
-                <p class="mt-1 text-sm text-text-secondary">"Recently watched videos"</p>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-semibold text-text">"History"</h1>
+                        <p class="mt-1 text-sm text-text-secondary">"Recently watched videos"</p>
+                    </div>
+                    <Show when=move || is_authenticated.get()>
+                        <button
+                            class="btn-secondary"
+                            on:click=move |_| { clean_history_action.dispatch(CleanHistory {}); }
+                        >
+                            "Clear history"
+                        </button>
+                    </Show>
+
+                </div>
 
                 <section class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3" data-section="history-grid">
                     <Suspense
@@ -56,12 +84,6 @@ pub fn HistoryPage() -> impl IntoView {
                         }
                     >
                         {move || {
-                            if !initial_loaded.get() {
-                                return view! { <ResponsiveVideoCardSkeletons /> }
-                                    .into_any()
-                                    .into_view();
-                            }
-
                             if initial_error.get() {
                                 return view! {
                                     <article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
@@ -72,7 +94,7 @@ pub fn HistoryPage() -> impl IntoView {
                                     .into_view();
                             }
 
-                            if videos.get().is_empty() {
+                            if videos.get().is_empty() || history_is_cleaned.get() {
                                 return view! {
                                     <article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
                                         "No history yet. Start watching videos and they will appear here."
@@ -106,6 +128,7 @@ pub fn HistoryPage() -> impl IntoView {
                         "Couldn't load more history videos. Keep scrolling to retry."
                     </div>
                 </Show>
+            </Show>
             </Show>
         </div>
     }

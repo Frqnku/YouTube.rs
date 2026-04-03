@@ -14,7 +14,7 @@ pub fn LikedVideosPage() -> impl IntoView {
         videos,
         _next_cursor,
         _has_more,
-        initial_loaded,
+        _initial_loaded,
         initial_error,
         load_more_error,
         load_more,
@@ -35,8 +35,17 @@ pub fn LikedVideosPage() -> impl IntoView {
             .is_some()
     });
 
+    let is_hydrated = RwSignal::new(false);
+    Effect::new(move |_| {
+        is_hydrated.set(true);
+    });
+
     view! {
         <div class="min-h-[calc(100dvh-3.5rem)] bg-bg px-4 py-5 md:px-6">
+            <Show
+                when=move || is_hydrated.get()
+                fallback=move || view! { <ResponsiveVideoCardSkeletons /> }.into_any()
+            >
             <Show when=move || is_authenticated.get()
                 fallback=move || view! {
                     <RequireAuth
@@ -56,12 +65,6 @@ pub fn LikedVideosPage() -> impl IntoView {
                         }
                     >
                         {move || {
-                            if !initial_loaded.get() {
-                                return view! { <ResponsiveVideoCardSkeletons /> }
-                                    .into_any()
-                                    .into_view();
-                            }
-
                             if initial_error.get() {
                                 return view! {
                                     <article class="col-span-full rounded-xl bg-bg-secondary p-4 text-sm text-text-secondary">
@@ -106,6 +109,7 @@ pub fn LikedVideosPage() -> impl IntoView {
                         "Couldn't load more liked videos. Keep scrolling to retry."
                     </div>
                 </Show>
+            </Show>
             </Show>
         </div>
     }

@@ -72,6 +72,7 @@ pub trait VideoRepository {
 #[async_trait::async_trait]
 pub trait VideoHistoryRepository {
     async fn list_history_by_user_id(&self, user_id: Uuid, page: PageRequest) -> anyhow::Result<VideoPage>;
+    async fn clean_history_by_user_id(&self, user_id: Uuid) -> anyhow::Result<()>;
 }
 
 #[async_trait::async_trait]
