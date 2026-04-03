@@ -84,7 +84,7 @@ pub fn BackMenuItem(on_select: Callback<()>) -> impl IntoView {
 }
 
 #[component]
-pub fn MenuLink(label: &'static str, icon: IconKind, href: &'static str, new_tab: bool, on_select: Callback<()>) -> impl IntoView {
+pub fn MenuLink(label: &'static str, icon: IconKind, href: &'static str, new_tab: bool, on_select: Callback<()>, #[prop(into, optional)] class: String) -> impl IntoView {
     view! {
         <a
             href=href
@@ -93,7 +93,7 @@ pub fn MenuLink(label: &'static str, icon: IconKind, href: &'static str, new_tab
             class="flex w-full items-center gap-2 px-4 py-2 text-left text-base text-text transition hover:bg-bg-tertiary"
             on:click=move |_| on_select.run(())
         >
-            <Icon kind=icon />
+            <Icon kind=icon class=class />
             <span>{label}</span>
         </a>
     }
