@@ -13,7 +13,7 @@ use crate::{
     components::{
         _helpers::{CountFormat, format_count, format_relative_time},
         comments::CommentFeed,
-        ui::SigninPromptModal,
+        ui::{SigninPromptModal, icons::{Icon, IconKind}},
         videos::video_player::{Channel, ReactionButtons, SubscribeButton},
     }, context::CurrentUserContext,
 };
@@ -117,7 +117,10 @@ pub fn WatchVideo(video: VideoPlayer, next_video_url: RwSignal<Option<String>>) 
                             prompt_title=signin_prompt_title
                             prompt_message=signin_prompt_message
                         />
-                        <button class="btn-secondary">"Share"</button>
+                        <button class="inline-flex items-center gap-2 btn-secondary">
+                            <Icon kind=IconKind::Share />
+                            "Share"
+                        </button>
                     </div>
                 </div>
 

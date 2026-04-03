@@ -3,7 +3,6 @@ use leptos::prelude::*;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IconKind {
     BellActive,
-    BellInactive,
     Check,
     ChevronLeft,
     ChevronRight,
@@ -19,6 +18,7 @@ pub enum IconKind {
     Menu,
     Moon,
     Search,
+    Share,
     ThumbsUp,
     ThumbsUpSelected,
     ThumbsDown,
@@ -34,7 +34,6 @@ pub fn Icon(
 ) -> impl IntoView {
     match kind {
         IconKind::BellActive => view! { <BellActiveIcon class=class /> }.into_any(),
-        IconKind::BellInactive => view! { <BellInactiveIcon class=class /> }.into_any(),
         IconKind::Check => view! { <CheckIcon class=class /> }.into_any(),
         IconKind::ChevronLeft => view! { <ChevronLeftIcon class=class /> }.into_any(),
         IconKind::ChevronRight => view! { <ChevronRightIcon class=class /> }.into_any(),
@@ -50,6 +49,7 @@ pub fn Icon(
         IconKind::Menu => view! { <MenuIcon class=class /> }.into_any(),
         IconKind::Moon => view! { <MoonIcon class=class /> }.into_any(),
         IconKind::Search => view! { <SearchIcon class=class /> }.into_any(),
+        IconKind::Share => view! { <ShareIcon class=class /> }.into_any(),
         IconKind::ThumbsUp => view! { <ThumbsUpIcon class=class /> }.into_any(),
         IconKind::ThumbsUpSelected => view! { <ThumbsUpSelectedIcon class=class /> }.into_any(),
         IconKind::ThumbsDown => view! { <ThumbsDownIcon class=class /> }.into_any(),
@@ -64,17 +64,7 @@ fn BellActiveIcon(
     class: String,
 ) -> impl IntoView {
     view! {
-        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M224 0c-17.7 0-32 14.3-32 32l0 19.2C119 66 64 130.6 64 208l0 18.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S19.4 416 32 416l384 0c12.6 0 24-7.4 29.2-18.9s3.1-25-5.3-34.4l-7.4-8.3C401.3 319.2 384 273.9 384 226.8l0-18.8c0-77.4-55-142-128-156.8L256 32c0-17.7-14.3-32-32-32zm45.3 493.3c12-12 18.7-28.3 18.7-45.3l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"></path></svg>
-    }
-}
-
-#[component]
-fn BellInactiveIcon(
-    #[prop(into, optional)]
-    class: String,
-) -> impl IntoView {
-    view! {
-        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M224 0c-17.7 0-32 14.3-32 32l0 19.2C119 66 64 130.6 64 208l0 18.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S19.4 416 32 416l384 0c12.6 0 24-7.4 29.2-18.9s3.1-25-5.3-34.4l-7.4-8.3C401.3 319.2 384 273.9 384 226.8l0-18.8c0-77.4-55-142-128-156.8L256 32c0-17.7-14.3-32-32-32zm45.3 493.3c12-12 18.7-28.3 18.7-45.3l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"></path></svg>
+        <svg stroke="currentColor" class=class fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M224 0c-17.7 0-32 14.3-32 32l0 19.2C119 66 64 130.6 64 208l0 18.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S19.4 416 32 416l384 0c12.6 0 24-7.4 29.2-18.9s3.1-25-5.3-34.4l-7.4-8.3C401.3 319.2 384 273.9 384 226.8l0-18.8c0-77.4-55-142-128-156.8L256 32c0-17.7-14.3-32-32-32zm45.3 493.3c12-12 18.7-28.3 18.7-45.3l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"></path></svg>
     }
 }
 
@@ -234,7 +224,7 @@ fn ShareIcon(
     class: String,
 ) -> impl IntoView {
     view! {
-        <svg stroke="currentColor" class=class fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M383.822 344.427c-16.045 0-31.024 5.326-41.721 15.979l-152.957-88.42c1.071-5.328 2.142-9.593 2.142-14.919 0-5.328-1.071-9.593-2.142-14.919l150.826-87.35c11.762 10.653 26.741 17.041 43.852 17.041 35.295 0 64.178-28.766 64.178-63.92C448 72.767 419.117 44 383.822 44c-35.297 0-64.179 28.767-64.179 63.92 0 5.327 1.065 9.593 2.142 14.919l-150.821 87.35c-11.767-10.654-26.741-17.041-43.856-17.041-35.296 0-63.108 28.766-63.108 63.92 0 35.153 28.877 63.92 64.178 63.92 17.115 0 32.089-6.389 43.856-17.042l151.891 88.421c-1.076 4.255-2.141 8.521-2.141 13.847 0 34.094 27.806 61.787 62.037 61.787 34.229 0 62.036-27.693 62.036-61.787.001-34.094-27.805-61.787-62.035-61.787z"></path></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" class=class width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3" fill="currentColor" stroke="none"></circle><circle cx="6" cy="12" r="3" fill="currentColor" stroke="none"></circle><circle cx="18" cy="19" r="3" fill="currentColor" stroke="none"></circle><path d="m8.59 13.51 6.83 3.98"></path><path d="m15.41 6.51-6.82 3.98"></path></svg>
     }
 }
 

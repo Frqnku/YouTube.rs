@@ -6,7 +6,7 @@ use crate::{
 		get_subscription_status,
 		post_subscription,
 	},
-	components::_helpers::{CountFormat, format_count}, context::SubscriptionsContext,
+	components::{_helpers::{CountFormat, format_count}, ui::icons::{Icon, IconKind}}, context::SubscriptionsContext,
 };
 
 #[component]
@@ -114,7 +114,6 @@ pub fn SubscribeButton(
 			"Subscribe".to_string()
 		}
 	});
-
 	let button_class = Signal::derive(move || {
 		if is_subscribed.get() {
 			"btn-secondary"
@@ -145,7 +144,12 @@ pub fn SubscribeButton(
 				toggle_subscription.dispatch((channel_id_for_click.clone(), next_subscribed));
 			}
 		>
-			{move || button_label.get()}
+			<span class="inline-flex items-center gap-2">
+				<Show when=move || is_subscribed.get()>
+					<Icon kind=IconKind::BellActive class="h-4 w-4 text-text-secondary" />
+				</Show>
+				<span>{move || button_label.get()}</span>
+			</span>
 		</button>
 	}
 }

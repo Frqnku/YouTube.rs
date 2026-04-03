@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use leptos::prelude::*;
+use crate::components::ui::icons::{Icon, IconKind};
 
 use crate::{
 	api::{_dtos::channel::ChannelDataDto, subscription::{
@@ -172,7 +173,12 @@ pub fn ChannelHeader(
 							toggle_subscription.dispatch((channel_id_for_click.clone(), next_subscribed));
 						}
 					>
-						{move || subscribe_label.get()}
+						<span class="inline-flex items-center gap-2">
+							<Show when=move || is_subscribed.get()>
+								<Icon kind=IconKind::BellActive class="h-4 w-4 text-text-secondary" />
+							</Show>
+							<span>{move || subscribe_label.get()}</span>
+						</span>
 					</button>
 				</div>
 			</div>
