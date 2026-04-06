@@ -62,6 +62,6 @@ pub fn RootDropdownMenu(
         <LineDivider />
 
         <MenuLink label="Source code" icon=IconKind::Github class="h-6 w-6" href="https://github.com/Frqnku/YouTube.rs" new_tab=true on_select=on_close />
-        <MenuLink label="Let's connect!" icon=IconKind::LinkedIn class="h-5 w-5" href="https://www.linkedin.com/in/ugo-tiberto-729a55279/" new_tab=true on_select=on_close />
+        <MenuLink label="Let's connect!" icon=IconKind::LinkedIn class="h-6 w-6" href="https://www.linkedin.com/in/ugo-tiberto-729a55279/" new_tab=true on_select=on_close />
     }
 }
