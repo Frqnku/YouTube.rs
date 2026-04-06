@@ -1,5 +1,6 @@
 use leptos::prelude::*;
 use leptos_router::hooks::use_location;
+use wasm_bindgen::prelude::*;
 use crate::api::video::{get_newest_videos, get_trending_videos, get_videos_by_tag};
 use crate::components::videos::VideoCard;
 use crate::components::videos::video_feed::{ResponsiveVideoCardSkeletons, use_paginated_feed};
@@ -86,6 +87,27 @@ enum HomeFeed {
 fn HomeFilters(
     current_feed: RwSignal<HomeFeed>,
 ) -> impl IntoView {
+    let (is_md_or_larger, set_is_md_or_larger) = signal(false);
+
+    Effect::new(move |_| {
+        if let Some(window) = web_sys::window() {
+            if let Ok(Some(mq)) = window.match_media("(min-width: 768px)") {
+                set_is_md_or_larger.set(mq.matches());
+
+                let callback = Closure::wrap(Box::new(move |_: web_sys::Event| {
+                    if let Some(window) = web_sys::window() {
+                        if let Ok(Some(m)) = window.match_media("(min-width: 768px)") {
+                            set_is_md_or_larger.set(m.matches());
+                        }
+                    }
+                }) as Box<dyn Fn(web_sys::Event)>);
+
+                let _ = mq.add_listener_with_opt_callback(Some(callback.as_ref().unchecked_ref()));
+                callback.forget();
+            }
+        }
+    });
+
     view! {
         <div
             class="sticky top-14 z-30 mb-5 bg-bg/95 py-3 backdrop-blur"
@@ -106,21 +128,23 @@ fn HomeFilters(
                 >
                     "New"
                 </button>
-                <For
-                    each=|| Tag::all().to_vec()
-                    key=|&tag| format!("{:?}", tag)
-                    children=move |tag| {
-                        view! {
-                            <button
-                                class="btn-tertiary font-semibold"
-                                class:btn-tertiary-active=move || current_feed.get() == HomeFeed::Tag(tag)
-                                on:click=move |_| current_feed.set(HomeFeed::Tag(tag))
-                            >
-                                {tag.label()}
-                            </button>
+                <Show when=move || is_md_or_larger.get()>
+                    <For
+                        each=|| Tag::all().to_vec()
+                        key=|&tag| format!("{:?}", tag)
+                        children=move |tag| {
+                            view! {
+                                <button
+                                    class="btn-tertiary font-semibold"
+                                    class:btn-tertiary-active=move || current_feed.get() == HomeFeed::Tag(tag)
+                                    on:click=move |_| current_feed.set(HomeFeed::Tag(tag))
+                                >
+                                    {tag.label()}
+                                </button>
+                            }
                         }
-                    }
-                />
+                    />
+                </Show>
             </div>
         </div>
     }
