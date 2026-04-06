@@ -4,7 +4,7 @@ use leptos_router::hooks::use_location;
 use crate::{
     api::{_dtos::subscription::ChannelDto, subscription::get_subscriptions},
     components::ui::{LineDivider, icons::{Icon, IconKind}},
-    context::{CurrentUserContext, SubscriptionsContext},
+    context::CurrentUserContext,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -25,14 +25,13 @@ impl SidebarItem {
 }
 
 #[component]
-pub fn Sidebar() -> impl IntoView {
+pub fn Sidebar(sidebar_open: RwSignal<bool>) -> impl IntoView {
     let selected_page = RwSignal::new(SidebarItem::Home);
     let is_hydrated = RwSignal::new(false);
 
     let location = use_location();
 
     let current_user_ctx = use_context::<CurrentUserContext>();
-    let subscriptions_ctx = use_context::<SubscriptionsContext>();
     let is_authenticated = Signal::derive(move || {
         current_user_ctx
             .as_ref()
@@ -40,21 +39,17 @@ pub fn Sidebar() -> impl IntoView {
             .is_some()
     });
 
-    let subscriptions_resource = Resource::new(
-        move || {
-            let trigger = subscriptions_ctx
-                .map(|ctx| ctx.refetch_trigger.get())
-                .unwrap_or(0);
-            (is_authenticated.get(), trigger)
-        },
-        move |(authed, _)| async move {
+    let subscriptions_resource = LocalResource::new(move || {
+        let authed = is_authenticated.get();
+
+        async move {
             if !authed {
                 Ok(vec![])
             } else {
                 get_subscriptions().await
             }
-        },
-    );
+        }
+    });
 
     Effect::new(move |_| {
         is_hydrated.set(true);
@@ -66,9 +61,19 @@ pub fn Sidebar() -> impl IntoView {
     });
 
     view! {
-        <aside class="hidden w-60 shrink-0 bg-bg md:block">
-            <Show when=move || is_hydrated.get()>
-                <nav class="sticky top-14 flex h-[calc(100vh-3.5rem)] flex-col px-3 py-4">
+        <Show when=move || is_hydrated.get()>
+            <Show when=move || sidebar_open.get()>
+                <div class="fixed inset-0 top-14 z-20 bg-black/40 md:hidden" on:click=move |_| sidebar_open.set(false)></div>
+            </Show>
+
+            <aside class=move || {
+                if sidebar_open.get() {
+                    "fixed left-0 top-14 z-60 w-60 shrink-0 bg-bg shadow-xl transition-transform duration-200 ease-out translate-x-0 md:sticky md:top-14 md:block md:h-[calc(100dvh-3.5rem)] md:self-start md:shadow-none"
+                } else {
+                    "fixed left-0 top-14 z-60 w-60 shrink-0 bg-bg shadow-xl transition-transform duration-200 ease-out -translate-x-full md:hidden"
+                }
+            }>
+                <nav class="flex h-[calc(100dvh-3.5rem)] flex-col px-3 py-4">
                     <div>
                         <a href="/" class="sidebar-item"
                             class:sidebar-item-active=move || matches!(selected_page.get(), SidebarItem::Home)>
@@ -160,7 +165,7 @@ pub fn Sidebar() -> impl IntoView {
                         </a>
                     </div>
                 </nav>
-            </Show>
-        </aside>
+            </aside>
+        </Show>
     }
 }

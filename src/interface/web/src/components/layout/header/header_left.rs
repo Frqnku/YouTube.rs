@@ -5,20 +5,25 @@ use crate::components::ui::icons::{Icon, IconKind};
 #[component]
 pub fn HeaderLeft(
     country_code: Signal<String>,
+    sidebar_open: RwSignal<bool>,
     mobile_search_open: RwSignal<bool>,
 ) -> impl IntoView {
     view! {
-        <div class=move || {
-            if mobile_search_open.get() {
-                "hidden items-center gap-3 md:flex md:gap-5"
-            } else {
-                "flex items-center gap-3 md:gap-5"
-            }
-        }>
-            <button class="icon-btn hidden md:inline-flex" title="Menu">
+        <div class="flex items-center gap-3 md:gap-5">
+            <button
+                type="button"
+                class="icon-btn"
+                title=move || if sidebar_open.get() { "Close sidebar" } else { "Open sidebar" }
+                aria-expanded=move || sidebar_open.get().to_string()
+                on:click=move |_| {
+                    sidebar_open.update(|open| *open = !*open);
+                }
+            >
                 <Icon kind=IconKind::Menu />
             </button>
-            <YouTubeLogo country_code />
+            <Show when=move || !mobile_search_open.get()>
+                <YouTubeLogo country_code />
+            </Show>
         </div>
     }
 }

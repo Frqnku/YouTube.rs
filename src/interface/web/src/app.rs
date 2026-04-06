@@ -17,14 +17,15 @@ pub fn App() -> impl IntoView {
     let (current_user_signal, current_client_signal, theme_mode) = setup_app_contexts();
     setup_user_resources(current_user_signal, current_client_signal);
     setup_theme_effect(theme_mode);
+    let sidebar_open = RwSignal::new(false);
 
     view! {
         <Meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
         <Router>
-            <Header />
+            <Header sidebar_open=sidebar_open />
             <div class="flex min-h-[calc(100dvh-3.5rem)] bg-bg">
-                <Sidebar />
+                <Sidebar sidebar_open=sidebar_open />
                 <main class="flex-1">
                     <Routes fallback=|| PageNotFound.into_view()>
                         <Route path=StaticSegment("") view=HomePage />
