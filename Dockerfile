@@ -55,7 +55,7 @@ WORKDIR /app
 # Copy compiled binary and migrations
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/server ./server
 COPY --from=builder /app/migrations ./migrations
-COPY --from=builder /app/_setup_env.sh ./_setup_env.sh
+COPY --from=builder /app/scripts/deploy/setup_env.sh ./scripts/deploy/setup_env.sh
 COPY --from=builder /app/target/site /site
 
 # Ensure binary is executable

@@ -18,6 +18,14 @@ on:
         options:
           - 'false'
           - 'true'
+      reset_db:
+        description: 'Drop the server database volume before deploying'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   # quality:
@@ -118,7 +126,11 @@ jobs:
         ${{ env.SSH }} "
           set -e
           cd ~
-          docker compose down
+          if [ '${{ github.event.inputs.reset_db }}' = 'true' ]; then
+            docker compose down -v --remove-orphans
+          else
+            docker compose down
+          fi
           docker compose pull
           docker compose up -d db
           until docker exec root-db-1 pg_isready -U postgres -d postgres; do sleep 2; done
