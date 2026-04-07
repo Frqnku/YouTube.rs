@@ -85,7 +85,7 @@ jobs:
     - name: Copy configs to server
       run: |
         ${{ env.SCP }} docker-compose.yml root@${{ vars.SERVER_IP }}:~
-        ${{ env.SCP }} nginx.conf root@${{ vars.SERVER_IP }}:~
+        ${{ env.SCP }} deploy/nginx/nginx.conf root@${{ vars.SERVER_IP }}:~
 
     - name: Generate SSL certs on server (if not present)
       run: |
