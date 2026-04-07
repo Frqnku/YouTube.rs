@@ -92,7 +92,7 @@ jobs:
 
     - name: Copy configs to server
       run: |
-        ${{ env.SSH }} "mkdir -p ~/deploy/nginx"
+        ${{ env.SSH }} "mkdir -p ~/deploy/nginx && rm -rf ~/deploy/nginx/nginx.conf"
         ${{ env.SCP }} docker-compose.yml root@${{ vars.SERVER_IP }}:~
         ${{ env.SCP }} deploy/nginx/nginx.conf root@${{ vars.SERVER_IP }}:~/deploy/nginx/nginx.conf
 
