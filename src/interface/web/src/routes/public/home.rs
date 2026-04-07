@@ -88,11 +88,13 @@ fn HomeFilters(
     current_feed: RwSignal<HomeFeed>,
 ) -> impl IntoView {
     let (is_md_or_larger, set_is_md_or_larger) = signal(false);
+    let (filters_ready, set_filters_ready) = signal(false);
 
     Effect::new(move |_| {
         if let Some(window) = web_sys::window() {
             if let Ok(Some(mq)) = window.match_media("(min-width: 768px)") {
                 set_is_md_or_larger.set(mq.matches());
+                set_filters_ready.set(true);
 
                 let callback = Closure::wrap(Box::new(move |_: web_sys::Event| {
                     if let Some(window) = web_sys::window() {
@@ -104,7 +106,11 @@ fn HomeFilters(
 
                 let _ = mq.add_listener_with_opt_callback(Some(callback.as_ref().unchecked_ref()));
                 callback.forget();
+            } else {
+                set_filters_ready.set(true);
             }
+        } else {
+            set_filters_ready.set(true);
         }
     });
 
@@ -113,39 +119,43 @@ fn HomeFilters(
             class="sticky top-14 z-30 mb-5 bg-bg/95 py-3 backdrop-blur"
             data-section="home-filters"
         >
-            <div class="flex flex-wrap items-center gap-3">
-                <button
-                    class="btn-tertiary font-semibold"
-                    class:btn-tertiary-active=move || current_feed.get() == HomeFeed::Trending
-                    on:click=move |_| current_feed.set(HomeFeed::Trending)
-                >
-                    "Trending"
-                </button>
-                <button
-                    class="btn-tertiary font-semibold"
-                    class:btn-tertiary-active=move || current_feed.get() == HomeFeed::New
-                    on:click=move |_| current_feed.set(HomeFeed::New)
-                >
-                    "New"
-                </button>
-                <Show when=move || is_md_or_larger.get()>
-                    <For
-                        each=|| Tag::all().to_vec()
-                        key=|&tag| format!("{:?}", tag)
-                        children=move |tag| {
-                            view! {
-                                <button
-                                    class="btn-tertiary font-semibold"
-                                    class:btn-tertiary-active=move || current_feed.get() == HomeFeed::Tag(tag)
-                                    on:click=move |_| current_feed.set(HomeFeed::Tag(tag))
-                                >
-                                    {tag.label()}
-                                </button>
+            <Show
+                when=move || filters_ready.get()
+            >
+                <div class="flex flex-wrap items-center gap-3">
+                    <button
+                        class="btn-tertiary font-semibold"
+                        class:btn-tertiary-active=move || current_feed.get() == HomeFeed::Trending
+                        on:click=move |_| current_feed.set(HomeFeed::Trending)
+                    >
+                        "Trending"
+                    </button>
+                    <button
+                        class="btn-tertiary font-semibold"
+                        class:btn-tertiary-active=move || current_feed.get() == HomeFeed::New
+                        on:click=move |_| current_feed.set(HomeFeed::New)
+                    >
+                        "New"
+                    </button>
+                    <Show when=move || is_md_or_larger.get()>
+                        <For
+                            each=|| Tag::all().to_vec()
+                            key=|&tag| format!("{:?}", tag)
+                            children=move |tag| {
+                                view! {
+                                    <button
+                                        class="btn-tertiary font-semibold"
+                                        class:btn-tertiary-active=move || current_feed.get() == HomeFeed::Tag(tag)
+                                        on:click=move |_| current_feed.set(HomeFeed::Tag(tag))
+                                    >
+                                        {tag.label()}
+                                    </button>
+                                }
                             }
-                        }
-                    />
-                </Show>
-            </div>
+                        />
+                    </Show>
+                </div>
+            </Show>
         </div>
     }
 }
