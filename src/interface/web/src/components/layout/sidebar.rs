@@ -4,7 +4,7 @@ use leptos_router::hooks::use_location;
 use crate::{
     api::{_dtos::subscription::ChannelDto, subscription::get_subscriptions},
     components::ui::{LineDivider, icons::{Icon, IconKind}},
-    context::CurrentUserContext,
+    context::{CurrentUserContext, SubscriptionsContext},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -30,6 +30,7 @@ pub fn Sidebar(sidebar_open: RwSignal<bool>) -> impl IntoView {
     let is_hydrated = RwSignal::new(false);
 
     let location = use_location();
+    let subscriptions_ctx = use_context::<SubscriptionsContext>();
 
     let current_user_ctx = use_context::<CurrentUserContext>();
     let is_authenticated = Signal::derive(move || {
@@ -41,6 +42,9 @@ pub fn Sidebar(sidebar_open: RwSignal<bool>) -> impl IntoView {
 
     let subscriptions_resource = LocalResource::new(move || {
         let authed = is_authenticated.get();
+        let _refetch_tick = subscriptions_ctx
+            .map(|ctx| ctx.refetch_trigger.get())
+            .unwrap_or_default();
 
         async move {
             if !authed {

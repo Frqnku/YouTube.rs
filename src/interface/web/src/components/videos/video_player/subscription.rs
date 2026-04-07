@@ -52,6 +52,7 @@ pub fn SubscribeButton(
 	prompt_message: RwSignal<String>,
 ) -> impl IntoView {
 	let is_subscribed = RwSignal::new(false);
+	let subscriptions_ctx = use_context::<SubscriptionsContext>();
 	let channel_id_for_status = channel_id.clone();
 	let channel_id_for_click = channel_id.clone();
 
@@ -98,7 +99,7 @@ pub fn SubscribeButton(
 				current_count.saturating_sub(1)
 			});
 			// Notify sidebar to refetch subscriptions list
-			if let Some(ctx) = use_context::<SubscriptionsContext>() {
+			if let Some(ctx) = subscriptions_ctx {
 				ctx.refetch_trigger.update(|n| *n += 1);
 			}
 		} else {
