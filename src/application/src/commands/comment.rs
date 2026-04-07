@@ -111,3 +111,130 @@ where
 		self.comment_repository.delete(comment_id, user_id).await
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use crate::_tests::repositories::InMemoryCommentRepository;
+
+	#[tokio::test]
+	async fn create_comment_trims_and_saves() {
+		let repo = InMemoryCommentRepository::new();
+		let command = CreateComment {
+			comment_repository: &repo,
+		};
+
+		let video_id = Uuid::new_v4();
+		let user_id = Uuid::new_v4();
+		let saved = command
+			.execute(
+				video_id.to_string(),
+				user_id.to_string(),
+				"Alice".to_string(),
+				Some("  https://example.com/pfp.png  ".to_string()),
+				None,
+				"  hello world  ".to_string(),
+			)
+			.await
+			.unwrap();
+
+		assert_eq!(saved.video_id, video_id);
+		assert_eq!(saved.author.id, user_id);
+		assert_eq!(saved.content, "hello world");
+		assert_eq!(repo.saved.lock().unwrap().len(), 1);
+	}
+
+	#[tokio::test]
+	async fn create_comment_rejects_empty_content() {
+		let repo = InMemoryCommentRepository::new();
+		let command = CreateComment {
+			comment_repository: &repo,
+		};
+
+		let result = command
+			.execute(
+				Uuid::new_v4().to_string(),
+				Uuid::new_v4().to_string(),
+				"Alice".to_string(),
+				None,
+				None,
+				"   ".to_string(),
+			)
+			.await;
+
+		assert!(result.is_err());
+		assert!(repo.saved.lock().unwrap().is_empty());
+	}
+
+	#[tokio::test]
+	async fn update_comment_content_calls_repository() {
+		let repo = InMemoryCommentRepository::new();
+		let command = UpdateCommentContent {
+			comment_repository: &repo,
+		};
+
+		let comment_id = Uuid::new_v4();
+		let user_id = Uuid::new_v4();
+		let updated = command
+			.execute(comment_id.to_string(), user_id.to_string(), "  updated  ".to_string())
+			.await
+			.unwrap();
+
+		assert_eq!(updated.content, "updated");
+		let calls = repo.updated.lock().unwrap();
+		assert_eq!(calls.len(), 1);
+		assert_eq!(calls[0].0, comment_id);
+		assert_eq!(calls[0].1, user_id);
+		assert_eq!(calls[0].2, "updated");
+	}
+
+	#[tokio::test]
+	async fn update_comment_content_rejects_too_long_content() {
+		let repo = InMemoryCommentRepository::new();
+		let command = UpdateCommentContent {
+			comment_repository: &repo,
+		};
+
+		let too_long = "a".repeat(281);
+		let result = command
+			.execute(Uuid::new_v4().to_string(), Uuid::new_v4().to_string(), too_long)
+			.await;
+
+		assert!(result.is_err());
+		assert!(repo.updated.lock().unwrap().is_empty());
+	}
+
+	#[tokio::test]
+	async fn delete_comment_calls_repository() {
+		let repo = InMemoryCommentRepository::new();
+		let command = DeleteComment {
+			comment_repository: &repo,
+		};
+
+		let comment_id = Uuid::new_v4();
+		let user_id = Uuid::new_v4();
+		command
+			.execute(comment_id.to_string(), user_id.to_string())
+			.await
+			.unwrap();
+
+		let calls = repo.deleted.lock().unwrap();
+		assert_eq!(calls.len(), 1);
+		assert_eq!(calls[0], (comment_id, user_id));
+	}
+
+	#[tokio::test]
+	async fn delete_comment_fails_on_invalid_comment_id() {
+		let repo = InMemoryCommentRepository::new();
+		let command = DeleteComment {
+			comment_repository: &repo,
+		};
+
+		let result = command
+			.execute("not-a-uuid".to_string(), Uuid::new_v4().to_string())
+			.await;
+
+		assert!(result.is_err());
+		assert!(repo.deleted.lock().unwrap().is_empty());
+	}
+}

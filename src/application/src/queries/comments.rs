@@ -121,3 +121,127 @@ where
 		self.comment_repository.count_by_video_id(video_id).await
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use crate::_tests::repositories::InMemoryCommentRepository;
+	use domain::comment::{CommentPage, CommentSort};
+	use uuid::Uuid;
+
+	#[tokio::test]
+	async fn list_video_comments_uses_parsed_args_and_sort() {
+		let repo = InMemoryCommentRepository::new();
+		*repo.list_result.lock().unwrap() = CommentPage::new(Vec::new(), Some("next".to_string()), true);
+		let query = ListVideoComments {
+			comment_repository: &repo,
+		};
+
+		let video_id = Uuid::new_v4();
+		let viewer_id = Uuid::new_v4();
+		let page = query
+			.execute(
+				video_id.to_string(),
+				25,
+				Some("cursor-1".to_string()),
+				Some("oldest".to_string()),
+				Some(viewer_id.to_string()),
+			)
+			.await
+			.unwrap();
+
+		assert!(page.has_more);
+		let calls = repo.list_calls.lock().unwrap();
+		assert_eq!(calls.len(), 1);
+		assert_eq!(calls[0].0, video_id);
+		assert_eq!(calls[0].2.sort, CommentSort::Oldest);
+		assert_eq!(calls[0].3, Some(viewer_id));
+	}
+
+	#[tokio::test]
+	async fn list_video_comments_rejects_invalid_sort() {
+		let repo = InMemoryCommentRepository::new();
+		let query = ListVideoComments {
+			comment_repository: &repo,
+		};
+
+		let result = query
+			.execute(
+				Uuid::new_v4().to_string(),
+				20,
+				None,
+				Some("wrong-sort".to_string()),
+				None,
+			)
+			.await;
+
+		assert!(result.is_err());
+		assert!(repo.list_calls.lock().unwrap().is_empty());
+	}
+
+	#[tokio::test]
+	async fn list_comment_replies_calls_repository() {
+		let repo = InMemoryCommentRepository::new();
+		*repo.replies_result.lock().unwrap() = CommentPage::new(Vec::new(), None, false);
+		let query = ListCommentReplies {
+			comment_repository: &repo,
+		};
+
+		let parent_id = Uuid::new_v4();
+		query
+			.execute(parent_id.to_string(), 0, None, Some("most-liked".to_string()), None)
+			.await
+			.unwrap();
+
+		let calls = repo.replies_calls.lock().unwrap();
+		assert_eq!(calls.len(), 1);
+		assert_eq!(calls[0].0, parent_id);
+		assert_eq!(calls[0].1.limit, 20);
+		assert_eq!(calls[0].1.sort, CommentSort::MostLiked);
+	}
+
+	#[tokio::test]
+	async fn get_comment_by_id_calls_repository() {
+		let repo = InMemoryCommentRepository::new();
+		*repo.find_result.lock().unwrap() = Some(Comment::new(
+			Uuid::new_v4(),
+			Uuid::new_v4(),
+			domain::comment::entity::CommentAuthor::new(Uuid::new_v4(), "Alice".to_string(), None),
+			None,
+			"hello".to_string(),
+			1,
+			0,
+			Some(false),
+		));
+		let query = GetCommentById {
+			comment_repository: &repo,
+		};
+
+		let comment_id = Uuid::new_v4();
+		let viewer_id = Uuid::new_v4();
+		let result = query
+			.execute(comment_id.to_string(), Some(viewer_id.to_string()))
+			.await
+			.unwrap();
+
+		assert!(result.is_some());
+		let calls = repo.find_calls.lock().unwrap();
+		assert_eq!(calls.len(), 1);
+		assert_eq!(calls[0], (comment_id, Some(viewer_id)));
+	}
+
+	#[tokio::test]
+	async fn count_video_comments_calls_repository() {
+		let repo = InMemoryCommentRepository::new();
+		*repo.count_result.lock().unwrap() = 17;
+		let query = CountVideoComments {
+			comment_repository: &repo,
+		};
+
+		let video_id = Uuid::new_v4();
+		let count = query.execute(video_id.to_string()).await.unwrap();
+
+		assert_eq!(count, 17);
+		assert_eq!(repo.count_calls.lock().unwrap()[0], video_id);
+	}
+}
