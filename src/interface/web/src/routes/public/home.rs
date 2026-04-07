@@ -162,7 +162,17 @@ fn HomeFilters(
 
 #[component]
 fn HomePageContent() -> impl IntoView {
+    let location = use_location();
     let current_feed = RwSignal::new(HomeFeed::Trending);
+    let home_refresh_key = RwSignal::new(0u64);
+
+    Effect::new(move |_| {
+        if location.pathname.get() == "/" {
+            current_feed.set(HomeFeed::Trending);
+            home_refresh_key.update(|n| *n += 1);
+        }
+    });
+
     let (
         videos,
         _next_cursor,
@@ -172,8 +182,8 @@ fn HomePageContent() -> impl IntoView {
         load_more_error,
         load_more,
     ) = use_paginated_feed(
-        Signal::derive(move || current_feed.get()),
-        |feed, cursor| async move {
+        Signal::derive(move || (current_feed.get(), home_refresh_key.get())),
+        |(feed, _refresh_key), cursor| async move {
             match feed {
                 HomeFeed::Trending => get_trending_videos(Some(HOME_PAGE_SIZE), cursor).await.map_err(|_| ()),
                 HomeFeed::New => get_newest_videos(Some(HOME_PAGE_SIZE), cursor).await.map_err(|_| ()),
