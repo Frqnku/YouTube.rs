@@ -28,12 +28,12 @@ on:
           - 'true'
 
 jobs:
-  # quality:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Check typos
-  #       uses: crate-ci/typos@master
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check typos
+        uses: crate-ci/typos@master
 
   build:
     runs-on: ubuntu-latest
