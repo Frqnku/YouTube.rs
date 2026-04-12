@@ -13,7 +13,7 @@ pub async fn configure_app_state(leptos_options: LeptosOptions) -> anyhow::Resul
         .context("DATABASE_URL not set")?;
 
     let pool = PgPoolOptions::new()
-        .max_connections(5)
+        .max_connections(20)
         .connect(&database_url)
         .await
         .with_context(|| format!("Failed to create Postgres connection pool. URL: {database_url}"))?;
