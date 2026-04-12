@@ -23,6 +23,11 @@ pub struct ClientRequestMeta {
     pub ip_address: Option<String>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct IncomingCookieHeader {
+    pub cookie_header: Option<String>,
+}
+
 #[derive(Clone, Copy)]
 pub struct ClientRequestMetaContext {
     pub client_meta: RwSignal<Option<ClientRequestMeta>>,

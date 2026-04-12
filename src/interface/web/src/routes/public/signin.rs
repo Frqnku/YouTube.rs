@@ -1,8 +1,9 @@
 use leptos::{prelude::*, server::codee::string::FromToStringCodec};
 use leptos_router::hooks::use_query_map;
-use leptos_use::use_cookie;
+use leptos_use::{use_cookie_with_options, UseCookieOptions};
 
 use crate::{api::user::auth::Oauth, components::ui::Loader};
+use crate::context::IncomingCookieHeader;
 
 #[derive(Clone, Copy)]
 enum OAuthState {
@@ -16,8 +17,39 @@ pub fn SigninPage() -> impl IntoView {
     let query_map = use_query_map();
     let code = move || query_map.with(|qm| qm.get("code").map(|t| t.to_string()));
     let state_from_oauth = move || query_map.with(|qm| qm.get("state").map(|t| t.to_string()));
-    let (state_from_cookie, set_state_cookie) = use_cookie::<String, FromToStringCodec>("oauth_state");
-    let (_, set_token) = use_cookie::<String, FromToStringCodec>("token");
+    let incoming_cookie_header = use_context::<IncomingCookieHeader>();
+
+    let state_cookie_options = {
+        let options = UseCookieOptions::default();
+        #[cfg(feature = "ssr")]
+        let options = options.ssr_cookies_header_getter({
+            let incoming_cookie_header = incoming_cookie_header.clone();
+            move || {
+                incoming_cookie_header
+                    .as_ref()
+                    .and_then(|header| header.cookie_header.clone())
+            }
+        });
+        options
+    };
+
+    let token_cookie_options = {
+        let options = UseCookieOptions::default();
+        #[cfg(feature = "ssr")]
+        let options = options.ssr_cookies_header_getter({
+            let incoming_cookie_header = incoming_cookie_header.clone();
+            move || {
+                incoming_cookie_header
+                    .as_ref()
+                    .and_then(|header| header.cookie_header.clone())
+            }
+        });
+        options
+    };
+
+    let (state_from_cookie, set_state_cookie) =
+        use_cookie_with_options::<String, FromToStringCodec>("oauth_state", state_cookie_options);
+    let (_, set_token) = use_cookie_with_options::<String, FromToStringCodec>("token", token_cookie_options);
 
     let oauth_action = ServerAction::<Oauth>::new();
     let oauth_state = RwSignal::new(OAuthState::Pending);

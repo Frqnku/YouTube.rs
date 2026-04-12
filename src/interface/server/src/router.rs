@@ -1,7 +1,7 @@
 use axum::{
     body::Body as AxumBody,
     extract::State,
-    http::Request,
+    http::{header::COOKIE, Request},
     middleware,
     response::{IntoResponse, Response},
     routing::get,
@@ -13,7 +13,7 @@ use leptos_axum::{
 };
 use tower_http::services::ServeDir;
 
-use web::{app::App, context::{ClientRequestMeta, CurrentUser, ProvideContextExt, state::AppState}, shell::shell};
+use web::{app::App, context::{ClientRequestMeta, CurrentUser, IncomingCookieHeader, ProvideContextExt, state::AppState}, shell::shell};
 
 use crate::middleware::{get_current_ip, get_current_user};
 
@@ -49,6 +49,7 @@ struct RequestContext {
     state: AppState,
     user: Option<CurrentUser>,
     client_meta: Option<ClientRequestMeta>,
+    cookie_header: Option<IncomingCookieHeader>,
 }
 
 impl RequestContext {
@@ -63,10 +64,19 @@ impl RequestContext {
             .get::<ClientRequestMeta>()
             .cloned();
 
+        let cookie_header = req
+            .headers()
+            .get(COOKIE)
+            .and_then(|value| value.to_str().ok())
+            .map(|value| IncomingCookieHeader {
+                cookie_header: Some(value.to_owned()),
+            });
+
         Self {
             state,
             user,
             client_meta,
+            cookie_header,
         }
     }
 }
@@ -82,6 +92,10 @@ impl ProvideContextExt for RequestContext {
 
         if let Some(meta) = &self.client_meta {
             provide_context(meta.clone());
+        }
+
+        if let Some(cookie_header) = &self.cookie_header {
+            provide_context(cookie_header.clone());
         }
     }
 }
