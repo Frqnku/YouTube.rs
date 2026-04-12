@@ -8,7 +8,7 @@ use wasm_bindgen::closure::Closure;
 use crate::components::layout::{header::Header, Sidebar};
 use crate::components::ui::NotFound;
 use crate::context::{
-    ressources::setup_user_resources,
+    resources::setup_user_resources,
     setup_app_contexts,
     theme::setup_theme_effect
 };

@@ -1,0 +1,9 @@
+[files]
+extend-exclude = [
+    "target",
+    "node_modules",
+    "migrations",
+]
+
+[default.extend-words]
+seeked = "seeked"
