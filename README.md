@@ -1,6 +1,7 @@
 # YouTube.rs - Fullstack Rust Systems Exploration
 
 Production-style fullstack Rust platform focused on architecture, performance, and systems design for media-heavy workloads.
+Demo: https://ytb-frqnku.live
 
 ## Motivation
 
